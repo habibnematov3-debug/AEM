@@ -1,0 +1,154 @@
+.event-card {
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, var(--surface) 0%, white 100%);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+.event-card--student {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 22px;
+}
+
+.event-card__image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  display: block;
+}
+
+.event-card__body {
+  display: grid;
+  gap: 14px;
+  padding: 22px 22px 24px;
+}
+
+.event-card__mini-topline {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.event-card__owner-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: rgba(103, 86, 255, 0.1);
+  color: #6756ff;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.event-card__body h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  line-height: 1.35;
+}
+
+.event-card__detail {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.event-card__detail svg {
+  width: 20px;
+  height: 20px;
+  color: #7c8798;
+  flex: 0 0 auto;
+}
+
+.event-card__actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.event-card__action-button {
+  min-height: 40px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: #6756ff;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.event-card__action-button--ghost {
+  background: rgba(103, 86, 255, 0.08);
+  color: #6756ff;
+}
+
+.event-card__topline,
+.event-card__footer,
+.event-card__meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.event-card__badge,
+.event-card__status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 0.92rem;
+}
+
+.event-card__badge {
+  background: rgba(11, 122, 117, 0.12);
+  color: var(--accent-dark);
+}
+
+.event-card__status--open {
+  background: rgba(11, 122, 117, 0.16);
+  color: var(--accent-dark);
+}
+
+.event-card__status--muted {
+  background: rgba(207, 138, 46, 0.16);
+  color: #8a5c1d;
+}
+
+.event-card h3 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+
+.event-card__description {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.event-card__meta {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.event-card__footer {
+  align-items: end;
+}
+
+.event-card__footer p,
+.event-card__cta {
+  margin: 4px 0 0;
+}
+
+.event-card__cta {
+  color: var(--accent-dark);
+  font-weight: 700;
+}

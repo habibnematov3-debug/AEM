@@ -1,0 +1,160 @@
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(14px);
+  background: rgba(251, 247, 239, 0.82);
+  border-bottom: 1px solid var(--border);
+}
+
+.site-header__inner {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 0;
+}
+
+.site-header--students {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.site-header__inner--students {
+  display: grid;
+  grid-template-columns: auto minmax(280px, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+
+.site-header__brand-group {
+  display: flex;
+  align-items: center;
+}
+
+.site-header__eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.site-header__brand {
+  font-size: 1.7rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.site-header__brand--students {
+  color: #6756ff;
+  letter-spacing: -0.04em;
+}
+
+.site-header__search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 0 18px;
+  border-radius: 20px;
+  background: #ffffff;
+  border: 1px solid rgba(29, 100, 182, 0.12);
+  box-shadow: 0 12px 28px rgba(15, 42, 77, 0.06);
+  color: #8a96a8;
+}
+
+.site-header__search svg {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+}
+
+.site-header__search input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 1.08rem;
+}
+
+.site-header__search input:focus {
+  outline: none;
+}
+
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.site-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.site-header__link {
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--muted);
+}
+
+.site-header__link--active {
+  background: var(--accent);
+  color: white;
+}
+
+.site-header--students .site-header__nav {
+  gap: 8px;
+}
+
+.site-header--students .site-header__link {
+  padding: 8px 14px;
+  border-radius: 12px;
+  color: #24364d;
+}
+
+.site-header--students .site-header__link--active {
+  background: rgba(103, 86, 255, 0.08);
+  color: #6756ff;
+}
+
+.site-header__profile {
+  width: 56px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #7b63ff 0%, #6248ff 100%);
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 16px 28px rgba(98, 72, 255, 0.22);
+}
+
+.site-header__profile svg {
+  width: 26px;
+  height: 26px;
+}
+
+@media (max-width: 720px) {
+  .site-header__inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .site-header__inner--students {
+    grid-template-columns: 1fr;
+  }
+
+  .site-header__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

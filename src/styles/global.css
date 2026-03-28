@@ -1,0 +1,49 @@
+:root {
+  --bg: #eef3fb;
+  --surface: rgba(255, 255, 255, 0.9);
+  --surface-strong: #f7faff;
+  --text: #182432;
+  --muted: #627084;
+  --border: rgba(27, 76, 144, 0.12);
+  --accent: #1d64b6;
+  --accent-dark: #154c8d;
+  --gold: #c8942f;
+  --shadow: 0 20px 50px rgba(15, 42, 77, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(200, 148, 47, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(29, 100, 182, 0.18), transparent 26%),
+    linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
+}
+
+a {
+  color: inherit;
+}
+
+button,
+a {
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+button:hover,
+a:hover {
+  transform: translateY(-1px);
+}

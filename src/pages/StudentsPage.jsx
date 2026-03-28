@@ -22,6 +22,13 @@ function StudentsPage({ events = studentPageData.events, searchValue = '' }) {
   return (
     <section className="students-events-page">
       <div className="students-events-page__intro">
+        <div className="page-logo-chip">
+          <img src="/ajou-logo.svg" alt="Ajou University in Tashkent logo" />
+          <div className="page-logo-chip__text">
+            <span>Ajou University</span>
+            <strong>Tashkent</strong>
+          </div>
+        </div>
         <p className="students-events-page__eyebrow">Welcome, {activeUser.name}</p>
         <h1>Upcoming Events</h1>
         <p>Discover and join exciting events happening at your university</p>

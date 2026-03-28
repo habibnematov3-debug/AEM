@@ -35,6 +35,13 @@ function OrganizerPage({ events = studentPageData.events, searchValue = '', onCr
     <section className="organizer-events-page">
       <div className="organizer-events-page__topbar">
         <div className="organizer-events-page__intro">
+          <div className="page-logo-chip">
+            <img src="/ajou-logo.svg" alt="Ajou University in Tashkent logo" />
+            <div className="page-logo-chip__text">
+              <span>Ajou University</span>
+              <strong>Tashkent</strong>
+            </div>
+          </div>
           <p className="organizer-events-page__eyebrow">Organizer workspace</p>
           <h1>My Events</h1>
           <p>Manage and view the events you've created</p>

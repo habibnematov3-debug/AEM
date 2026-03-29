@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useLocation } from 'react-router-dom'
 
 import '../styles/header.css'
 
@@ -15,6 +15,15 @@ const studentNavItems = [
 
 function Header({ variant = 'default', searchValue = '', onSearchChange = () => {} }) {
   const navItems = variant === 'students' ? studentNavItems : defaultNavItems
+  const location = useLocation()
+
+  function isNavItemActive(path) {
+    if (variant === 'students' && path === '/students') {
+      return location.pathname === '/students' || location.pathname.startsWith('/events/')
+    }
+
+    return location.pathname === path
+  }
 
   return (
     <header className={variant === 'students' ? 'site-header site-header--students' : 'site-header'}>
@@ -57,8 +66,10 @@ function Header({ variant = 'default', searchValue = '', onSearchChange = () => 
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) =>
-                  isActive ? 'site-header__link site-header__link--active' : 'site-header__link'
+                className={
+                  isNavItemActive(item.to)
+                    ? 'site-header__link site-header__link--active'
+                    : 'site-header__link'
                 }
               >
                 {item.label}

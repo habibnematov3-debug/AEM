@@ -11,7 +11,7 @@
 .route-card,
 .stat-card,
 .summary-pill {
-  border-radius: 28px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
 }
@@ -78,7 +78,7 @@
 .route-card,
 .stat-card,
 .summary-pill {
-  padding: 24px;
+  padding: var(--space-5);
   background: linear-gradient(180deg, var(--surface) 0%, white 100%);
 }
 
@@ -131,18 +131,20 @@
   min-height: 46px;
   padding: 0 18px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   text-decoration: none;
   font-weight: 700;
 }
 
 .button--primary {
-  background: var(--accent);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: white;
+  box-shadow: var(--shadow-sm);
 }
 
 .button--primary:hover {
-  background: var(--accent-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 @media (max-width: 720px) {

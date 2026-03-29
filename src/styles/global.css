@@ -1,14 +1,37 @@
 :root {
-  --bg: #eef3fb;
-  --surface: rgba(255, 255, 255, 0.9);
-  --surface-strong: #f7faff;
-  --text: #182432;
-  --muted: #627084;
+  --bg: #eef4fb;
+  --bg-soft: #f8fbff;
+  --surface: rgba(255, 255, 255, 0.92);
+  --surface-strong: #ffffff;
+  --surface-muted: #f5f9fe;
+  --text: #172538;
+  --muted: #66768c;
+  --muted-strong: #42556c;
   --border: rgba(27, 76, 144, 0.12);
+  --border-strong: rgba(27, 76, 144, 0.2);
   --accent: #1d64b6;
   --accent-dark: #154c8d;
+  --accent-soft: rgba(29, 100, 182, 0.1);
   --gold: #c8942f;
-  --shadow: 0 20px 50px rgba(15, 42, 77, 0.1);
+  --danger: #b93a54;
+  --danger-soft: rgba(185, 58, 84, 0.1);
+  --success: #1d8752;
+  --radius-sm: 14px;
+  --radius-md: 18px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+  --space-1: 8px;
+  --space-2: 12px;
+  --space-3: 16px;
+  --space-4: 20px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --shadow-sm: 0 8px 18px rgba(15, 42, 77, 0.06);
+  --shadow-md: 0 16px 32px rgba(15, 42, 77, 0.08);
+  --shadow-lg: 0 24px 56px rgba(15, 42, 77, 0.12);
+  --shadow: var(--shadow-md);
 }
 
 * {
@@ -24,26 +47,55 @@ body,
 body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.5;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(200, 148, 47, 0.14), transparent 24%),
-    radial-gradient(circle at top right, rgba(29, 100, 182, 0.18), transparent 26%),
-    linear-gradient(180deg, #f9fbff 0%, var(--bg) 100%);
+    radial-gradient(circle at top left, rgba(200, 148, 47, 0.12), transparent 24%),
+    radial-gradient(circle at top right, rgba(29, 100, 182, 0.16), transparent 28%),
+    linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
   color: inherit;
+  text-decoration: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
 }
 
 button,
-a {
-  transition:
-    transform 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease;
+input,
+textarea,
+select {
+  font: inherit;
 }
 
-button:hover,
-a:hover {
-  transform: translateY(-1px);
+button,
+a,
+input,
+textarea {
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+::placeholder {
+  color: #8a98aa;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(29, 100, 182, 0.14);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: rgba(29, 100, 182, 0.14);
+  color: var(--text);
 }

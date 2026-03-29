@@ -8,31 +8,31 @@
 .auth-card {
   width: min(460px, 100%);
   display: grid;
-  gap: 20px;
+  gap: var(--space-5);
   padding: 32px;
-  border-radius: 28px;
-  background: rgba(255, 255, 255, 0.94);
-  border: 1px solid rgba(29, 100, 182, 0.12);
-  box-shadow: 0 28px 60px rgba(15, 42, 77, 0.12);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
 }
 
 .auth-card__brand {
   display: grid;
   justify-items: center;
   text-align: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .auth-card__logo {
-  width: min(180px, 48vw);
+  width: min(176px, 48vw);
   height: auto;
-  display: block;
 }
 
 .auth-card__subtitle {
   margin: 0;
-  color: #58667b;
+  color: var(--muted);
   font-size: 1rem;
+  line-height: 1.5;
 }
 
 .auth-switcher {
@@ -40,17 +40,18 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   padding: 6px;
-  border-radius: 999px;
-  background: #f1f5fb;
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+  border: 1px solid rgba(29, 100, 182, 0.08);
 }
 
 .auth-switcher__button {
   min-height: 42px;
   padding: 0 16px;
   border: none;
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: transparent;
-  color: #5d6c82;
+  color: var(--muted);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -58,84 +59,100 @@
 
 .auth-switcher__button--active {
   background: white;
-  color: #1d64b6;
-  box-shadow: 0 8px 16px rgba(29, 100, 182, 0.1);
+  color: var(--accent-dark);
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-switcher__button:hover {
+  color: var(--muted-strong);
 }
 
 .auth-card__helper,
 .auth-card__note {
   margin: 0;
-  color: #66758a;
+  color: var(--muted);
   line-height: 1.6;
 }
 
 .auth-card__note {
   text-align: center;
   font-size: 0.94rem;
+  padding-top: var(--space-3);
+  border-top: 1px solid rgba(29, 100, 182, 0.08);
 }
 
 .auth-form {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .auth-form label {
   display: grid;
   gap: 8px;
   font-weight: 600;
-  color: #1e2d42;
+  color: var(--muted-strong);
+  font-size: 0.96rem;
 }
 
 .auth-form input {
   width: 100%;
-  min-height: 48px;
+  min-height: 50px;
   padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(29, 100, 182, 0.14);
-  background: #fbfdff;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
   color: var(--text);
-  font: inherit;
+}
+
+.auth-form input:hover {
+  border-color: var(--border-strong);
 }
 
 .auth-form input:focus {
-  outline: 2px solid rgba(29, 100, 182, 0.12);
-  border-color: rgba(29, 100, 182, 0.28);
+  outline: none;
+  border-color: rgba(29, 100, 182, 0.24);
+  box-shadow: 0 0 0 4px rgba(29, 100, 182, 0.08);
 }
 
 .auth-form__submit {
-  min-height: 48px;
+  min-height: 50px;
   border: none;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #1d64b6 0%, #154c8d 100%);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: white;
-  font: inherit;
   font-weight: 700;
   cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.auth-form__submit:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .auth-feedback {
   padding: 14px 16px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   font-size: 0.96rem;
   line-height: 1.5;
 }
 
 .auth-feedback--success {
-  color: #144b31;
-  background: rgba(42, 155, 94, 0.1);
-  border: 1px solid rgba(42, 155, 94, 0.16);
+  color: #145435;
+  background: rgba(29, 135, 82, 0.1);
+  border: 1px solid rgba(29, 135, 82, 0.16);
 }
 
 .auth-feedback--error {
-  color: #9d2338;
-  background: rgba(197, 57, 82, 0.08);
-  border: 1px solid rgba(197, 57, 82, 0.14);
+  color: #98243d;
+  background: rgba(185, 58, 84, 0.08);
+  border: 1px solid rgba(185, 58, 84, 0.14);
 }
 
 @media (max-width: 520px) {
   .auth-card {
     padding: 24px 20px;
-    border-radius: 22px;
+    border-radius: var(--radius-lg);
   }
 
   .auth-card__logo {

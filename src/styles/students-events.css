@@ -1,17 +1,18 @@
 .students-events-page {
   display: grid;
-  gap: 28px;
-  padding: 26px 6px 12px;
+  gap: var(--space-6);
+  padding: 32px 6px 12px;
 }
 
 .students-events-page__intro {
   display: grid;
-  gap: 10px;
+  gap: 12px;
+  max-width: 760px;
 }
 
 .students-events-page__eyebrow {
   margin: 0;
-  color: #7b63ff;
+  color: var(--accent);
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -20,14 +21,15 @@
 
 .students-events-page__intro h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 5vw, 4.2rem);
-  line-height: 0.98;
-  color: #122033;
+  font-size: clamp(2.7rem, 5vw, 4.25rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+  color: var(--text);
 }
 
 .students-events-page__intro p {
   margin: 0;
-  color: #64748b;
+  color: var(--muted);
   font-size: 1.15rem;
   line-height: 1.6;
 }
@@ -36,15 +38,18 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 24px;
+  align-items: stretch;
 }
 
 .students-events-empty {
   display: grid;
-  place-items: center;
-  min-height: 240px;
-  border-radius: 24px;
-  border: 1px solid rgba(29, 100, 182, 0.1);
-  background: rgba(255, 255, 255, 0.88);
+  justify-items: center;
+  gap: 10px;
+  min-height: 260px;
+  padding: 40px 24px;
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border);
+  background: var(--surface);
   box-shadow: var(--shadow);
   text-align: center;
 }
@@ -54,6 +59,13 @@
   margin: 0;
 }
 
+.students-events-empty h2 {
+  font-size: 1.45rem;
+  color: var(--text);
+}
+
 .students-events-empty p {
   color: var(--muted);
+  max-width: 420px;
+  line-height: 1.6;
 }

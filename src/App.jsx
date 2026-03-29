@@ -24,12 +24,18 @@ function App() {
   const [events, setEvents] = useState([])
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
+  const shouldLoadEventList =
+    location.pathname === '/students' || location.pathname === '/organizer'
   const isDashboardPage =
     location.pathname === '/students' ||
     location.pathname === '/organizer' ||
     location.pathname.startsWith('/events/')
 
   useEffect(() => {
+    if (!shouldLoadEventList) {
+      return
+    }
+
     let isMounted = true
 
     async function loadEvents() {
@@ -49,7 +55,7 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [shouldLoadEventList])
 
   async function handleSignIn(credentials) {
     try {

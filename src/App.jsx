@@ -139,7 +139,7 @@ function App() {
           />
           <Route
             path="/events/:eventId"
-            element={<EventDetailsPage />}
+            element={<EventDetailsPage currentUser={currentUser} />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

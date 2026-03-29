@@ -3,7 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import AEMUser, Event, UserSettings
+from .models import AEMUser, Event, Participation, UserSettings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -87,6 +87,18 @@ class LoginSerializer(serializers.Serializer):
 class EventSerializer(serializers.ModelSerializer):
     creator_id = serializers.IntegerField(read_only=True)
     creator_name = serializers.CharField(source='creator.full_name', read_only=True)
+    is_joined = serializers.SerializerMethodField()
+
+    def get_is_joined(self, obj):
+        current_user = self.context.get('current_user')
+        if current_user is None:
+            return False
+
+        return Participation.objects.filter(
+            user_id=current_user.id,
+            event_id=obj.id,
+            status=Participation.Statuses.JOINED,
+        ).exists()
 
     class Meta:
         model = Event
@@ -103,9 +115,20 @@ class EventSerializer(serializers.ModelSerializer):
             'start_time',
             'end_time',
             'moderation_status',
+            'is_joined',
             'created_at',
             'updated_at',
         )
+        read_only_fields = fields
+
+
+class ParticipationSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(read_only=True)
+    event_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Participation
+        fields = ('id', 'user_id', 'event_id', 'status', 'joined_at')
         read_only_fields = fields
 
 

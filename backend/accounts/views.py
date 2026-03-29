@@ -1,3 +1,4 @@
+from django.db import IntegrityError, transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
@@ -5,11 +6,12 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import AEMUser, Event
+from .models import AEMUser, Event, Participation
 from .serializers import (
     EventCreateSerializer,
     EventSerializer,
     LoginSerializer,
+    ParticipationSerializer,
     SignUpSerializer,
     UserSerializer,
 )
@@ -80,8 +82,18 @@ class EventListCreateAPIView(APIView):
     permission_classes = []
 
     def get(self, request):
+        current_user = get_session_user(request)
         events = Event.objects.select_related('creator').order_by('-created_at', '-id')
-        return Response({'results': EventSerializer(events, many=True).data}, status=status.HTTP_200_OK)
+        return Response(
+            {
+                'results': EventSerializer(
+                    events,
+                    many=True,
+                    context={'current_user': current_user},
+                ).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
     def post(self, request):
         current_user = get_session_user(request)
@@ -95,7 +107,7 @@ class EventListCreateAPIView(APIView):
         return Response(
             {
                 'message': 'Event created successfully.',
-                'event': EventSerializer(event).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -107,11 +119,15 @@ class EventDetailAPIView(APIView):
     permission_classes = []
 
     def get(self, request, event_id):
+        current_user = get_session_user(request)
         event = get_object_or_404(
             Event.objects.select_related('creator'),
             id=event_id,
         )
-        return Response(EventSerializer(event).data, status=status.HTTP_200_OK)
+        return Response(
+            EventSerializer(event, context={'current_user': current_user}).data,
+            status=status.HTTP_200_OK,
+        )
 
     def patch(self, request, event_id):
         event = get_object_or_404(
@@ -136,7 +152,7 @@ class EventDetailAPIView(APIView):
         return Response(
             {
                 'message': 'Event updated successfully.',
-                'event': EventSerializer(updated_event).data,
+                'event': EventSerializer(updated_event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_200_OK,
         )
@@ -166,4 +182,48 @@ class EventDetailAPIView(APIView):
                 'deleted_event_id': deleted_event_id,
             },
             status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventParticipateAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    @transaction.atomic
+    def post(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+
+        if Participation.objects.filter(user_id=current_user.id, event_id=event.id).exists():
+            return Response(
+                {'detail': 'You have already joined this event.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            participation = Participation.objects.create(
+                user=current_user,
+                event=event,
+                status=Participation.Statuses.JOINED,
+            )
+        except IntegrityError:
+            return Response(
+                {'detail': 'You have already joined this event.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                'message': 'You joined the event successfully.',
+                'participation': ParticipationSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_201_CREATED,
         )

@@ -82,6 +82,7 @@ function normalizeEvent(rawEvent) {
     category: rawEvent.category ?? 'general',
     status: formatStatusLabel(rawEvent.moderation_status),
     moderationStatus: rawEvent.moderation_status ?? 'pending',
+    isJoined: rawEvent.is_joined ?? false,
     creatorId,
     creatorName: rawEvent.creator_name ?? 'Unknown organizer',
     organizerId: creatorId,
@@ -220,5 +221,18 @@ export async function deleteEvent(eventId) {
   return {
     deletedEventId: String(payload.deleted_event_id),
     message: payload.message,
+  }
+}
+
+export async function participateInEvent(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/participate/`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+    participation: payload.participation ?? null,
   }
 }

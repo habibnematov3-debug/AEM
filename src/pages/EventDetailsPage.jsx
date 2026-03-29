@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { fetchEventById } from '../api/aemApi'
+import { fetchEventById, participateInEvent } from '../api/aemApi'
 import '../styles/event-details.css'
 
-function EventDetailsPage() {
+function EventDetailsPage({ currentUser }) {
   const navigate = useNavigate()
   const { eventId } = useParams()
   const [event, setEvent] = useState(null)
   const [status, setStatus] = useState('loading')
   const [errorMessage, setErrorMessage] = useState('')
+  const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' })
+  const [isJoining, setIsJoining] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -17,6 +19,7 @@ function EventDetailsPage() {
     async function loadEvent() {
       setStatus('loading')
       setErrorMessage('')
+      setActionFeedback({ type: '', message: '' })
 
       try {
         const fetchedEvent = await fetchEventById(eventId)
@@ -56,6 +59,28 @@ function EventDetailsPage() {
     }
 
     navigate('/students')
+  }
+
+  async function handleParticipate() {
+    if (!event || !currentUser || isJoining || event.isJoined) {
+      return
+    }
+
+    setIsJoining(true)
+    setActionFeedback({ type: '', message: '' })
+
+    try {
+      const result = await participateInEvent(event.id)
+      setEvent(result.event)
+      setActionFeedback({ type: 'success', message: result.message })
+    } catch (error) {
+      setActionFeedback({
+        type: 'error',
+        message: error.message || 'Could not join this event.',
+      })
+    } finally {
+      setIsJoining(false)
+    }
   }
 
   if (status === 'loading') {
@@ -100,6 +125,10 @@ function EventDetailsPage() {
     )
   }
 
+  const isCreator = Boolean(currentUser?.id) && currentUser.id === event.creatorId
+  const canParticipate = Boolean(currentUser?.id) && !isCreator
+  const hasJoined = Boolean(event.isJoined)
+
   return (
     <section className="event-details-page">
       <button type="button" className="event-details-back" onClick={handleBack}>
@@ -117,6 +146,35 @@ function EventDetailsPage() {
 
           <h1>{event.title}</h1>
           <p className="event-details-description">{event.description}</p>
+
+          <div className="event-details-actions">
+            {canParticipate ? (
+              <button
+                type="button"
+                className="event-details-primary"
+                onClick={handleParticipate}
+                disabled={isJoining || hasJoined}
+              >
+                {hasJoined ? 'Joined' : isJoining ? 'Joining...' : 'Participate'}
+              </button>
+            ) : isCreator ? (
+              <p className="event-details-inline-note">You created this event.</p>
+            ) : (
+              <p className="event-details-inline-note">Sign in to join this event.</p>
+            )}
+
+            {actionFeedback.message ? (
+              <p
+                className={
+                  actionFeedback.type === 'error'
+                    ? 'event-details-feedback event-details-feedback--error'
+                    : 'event-details-feedback event-details-feedback--success'
+                }
+              >
+                {actionFeedback.message}
+              </p>
+            ) : null}
+          </div>
 
           <div className="event-details-grid">
             <div className="event-details-item">

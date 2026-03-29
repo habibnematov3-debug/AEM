@@ -1,5 +1,5 @@
--- AEM MVP PostgreSQL schema v1
--- Final simplified version for pgAdmin 4
+-- AEM MVP PostgreSQL schema v1.2
+-- For pgAdmin 4
 -- Create a database first, for example: aem_db
 -- Then connect to that database and run this script.
 
@@ -33,7 +33,9 @@ CREATE TABLE settings (
         REFERENCES users (id)
         ON DELETE CASCADE,
     CONSTRAINT chk_settings_theme
-        CHECK (theme IN ('light', 'dark'))
+        CHECK (theme IN ('light', 'dark')),
+    CONSTRAINT chk_settings_language_code
+        CHECK (language_code IN ('en', 'ru', 'uz'))
 );
 
 CREATE TABLE events (
@@ -58,8 +60,12 @@ CREATE TABLE events (
         CHECK (CHAR_LENGTH(BTRIM(title)) > 0),
     CONSTRAINT chk_events_description_not_blank
         CHECK (CHAR_LENGTH(BTRIM(description)) > 0),
+    CONSTRAINT chk_events_category_not_blank
+        CHECK (CHAR_LENGTH(BTRIM(category)) > 0),
     CONSTRAINT chk_events_location_not_blank
         CHECK (CHAR_LENGTH(BTRIM(location)) > 0),
+    CONSTRAINT chk_events_image_url_not_blank
+        CHECK (image_url IS NULL OR CHAR_LENGTH(BTRIM(image_url)) > 0),
     CONSTRAINT chk_events_moderation_status
         CHECK (moderation_status IN ('pending', 'approved', 'rejected')),
     CONSTRAINT chk_events_time_order
@@ -70,6 +76,7 @@ CREATE TABLE participations (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     event_id BIGINT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'joined',
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_participations_user
         FOREIGN KEY (user_id)
@@ -79,6 +86,8 @@ CREATE TABLE participations (
         FOREIGN KEY (event_id)
         REFERENCES events (id)
         ON DELETE CASCADE,
+    CONSTRAINT chk_participations_status
+        CHECK (status IN ('joined', 'cancelled')),
     CONSTRAINT uq_participations_user_event
         UNIQUE (user_id, event_id)
 );
@@ -91,5 +100,8 @@ CREATE INDEX idx_events_moderation_status_event_date
 
 CREATE INDEX idx_participations_event_id
     ON participations (event_id);
+
+CREATE INDEX idx_participations_user_id
+    ON participations (user_id);
 
 COMMIT;

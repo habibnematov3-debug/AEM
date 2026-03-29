@@ -43,8 +43,10 @@
 
 .organizer-events-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
   gap: 24px;
+  align-items: stretch;
+  justify-content: start;
 }
 
 .organizer-events-page__create-button,
@@ -366,6 +368,10 @@
 
   .organizer-events-page__create-button {
     width: 100%;
+  }
+
+  .organizer-events-grid {
+    grid-template-columns: 1fr;
   }
 
   .create-event-form__actions {

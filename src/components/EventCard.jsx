@@ -7,7 +7,9 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
         <article className="event-card event-card--student">
-          <img className="event-card__image" src={event.image} alt={event.title} />
+          <div className="event-card__media">
+            <img className="event-card__image" src={event.image} alt={event.title} />
+          </div>
           <div className="event-card__body">
             <h3>{event.title}</h3>
             <div className="event-card__detail">
@@ -37,7 +39,9 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
   if (variant === 'organizer-minimal') {
     return (
       <article className="event-card event-card--student">
-        <img className="event-card__image" src={event.image} alt={event.title} />
+        <div className="event-card__media">
+          <img className="event-card__image" src={event.image} alt={event.title} />
+        </div>
         <div className="event-card__body">
           <div className="event-card__mini-topline">
             <span className="event-card__owner-badge">Your Event</span>

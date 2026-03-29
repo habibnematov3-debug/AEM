@@ -29,6 +29,14 @@
   border-radius: var(--radius-lg);
 }
 
+.event-card__media {
+  position: relative;
+  width: 100%;
+  height: 224px;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
 .event-card__link:hover .event-card--student,
 .event-card__link:focus-visible .event-card--student {
   transform: translateY(-2px);
@@ -37,12 +45,13 @@
 }
 
 .event-card__image {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  height: 224px;
+  height: 100%;
   object-fit: cover;
   object-position: center center;
   background: var(--surface-muted);
-  overflow: hidden;
 }
 
 .event-card__body {
@@ -74,6 +83,11 @@
   font-size: 1.22rem;
   line-height: 1.35;
   letter-spacing: -0.02em;
+  min-height: 3.3rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .event-card__detail {

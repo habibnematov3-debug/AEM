@@ -82,7 +82,7 @@ function buildFormState(initialValues) {
   }
 }
 
-function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSubmit }) {
+function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSubmit, titleId }) {
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
 
@@ -121,7 +121,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
       <div className="create-event-panel__header">
         <div>
           <p className="create-event-panel__eyebrow">{panelEyebrow}</p>
-          <h2>{panelTitle}</h2>
+          <h2 id={titleId}>{panelTitle}</h2>
         </div>
         <button type="button" className="create-event-panel__cancel" onClick={onCancel}>
           {closeLabel}

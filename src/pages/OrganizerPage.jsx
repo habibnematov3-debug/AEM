@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 
 import CreateEventForm from '../components/CreateEventForm'
 import EventCard from '../components/EventCard'
+import Modal from '../components/Modal'
 import { getCurrentMockUser, studentPageData } from '../data/mockData'
 import '../styles/organizer-events.css'
 import { useState } from 'react'
@@ -42,8 +43,8 @@ function OrganizerPage({
 
   function handleEdit(event) {
     setEventPendingDelete(null)
+    setIsCreateFormOpen(false)
     setEditingEvent(event)
-    setIsCreateFormOpen(true)
   }
 
   function handleUpdate(formData) {
@@ -104,11 +105,23 @@ function OrganizerPage({
 
       {isCreateFormOpen ? (
         <CreateEventForm
-          mode={editingEvent ? 'edit' : 'create'}
-          initialValues={editingEvent}
+          mode="create"
+          initialValues={null}
           onCancel={handleCancelForm}
-          onSubmit={editingEvent ? handleUpdate : handleCreate}
+          onSubmit={handleCreate}
         />
+      ) : null}
+
+      {editingEvent ? (
+        <Modal size="lg" onClose={handleCancelForm} labelledBy="edit-event-title">
+          <CreateEventForm
+            mode="edit"
+            initialValues={editingEvent}
+            onCancel={handleCancelForm}
+            onSubmit={handleUpdate}
+            titleId="edit-event-title"
+          />
+        </Modal>
       ) : null}
 
       {userEvents.length ? (
@@ -135,13 +148,8 @@ function OrganizerPage({
       )}
 
       {eventPendingDelete ? (
-        <div className="organizer-events-dialog-backdrop" role="presentation">
-          <div
-            className="organizer-events-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-event-title"
-          >
+        <Modal onClose={handleCancelDelete} labelledBy="delete-event-title">
+          <div className="organizer-events-dialog">
             <div className="organizer-events-dialog__copy">
               <p className="organizer-events-dialog__eyebrow">Delete event</p>
               <h2 id="delete-event-title">Are you sure you want to delete this event?</h2>
@@ -168,7 +176,7 @@ function OrganizerPage({
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       ) : null}
     </section>
   )

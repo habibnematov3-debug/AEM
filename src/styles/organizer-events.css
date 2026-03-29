@@ -211,17 +211,6 @@
   line-height: 1.6;
 }
 
-.organizer-events-dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.28);
-  backdrop-filter: blur(8px);
-}
-
 .organizer-events-dialog {
   width: min(100%, 480px);
   display: grid;

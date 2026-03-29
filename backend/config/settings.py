@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -32,12 +33,21 @@ def get_list_env(name, default):
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
+def get_str_env(name, default):
+    value = os.getenv(name)
+    return value if value is not None else default
+
+
 load_env_file(BASE_DIR / '.env')
 
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-aem-dev-key')
 DEBUG = get_bool_env('DJANGO_DEBUG', True)
 ALLOWED_HOSTS = get_list_env('DJANGO_ALLOWED_HOSTS', ['127.0.0.1', 'localhost', 'testserver'])
+RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
+
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
 
 
 INSTALLED_APPS = [
@@ -76,16 +86,27 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('AEM_DB_NAME', 'aem_db'),
-        'USER': os.getenv('AEM_DB_USER', 'postgres'),
-        'PASSWORD': os.getenv('AEM_DB_PASSWORD', 'postgres'),
-        'HOST': os.getenv('AEM_DB_HOST', 'localhost'),
-        'PORT': os.getenv('AEM_DB_PORT', '5432'),
+DATABASE_URL = os.getenv('DATABASE_URL')
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=False,
+        ),
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('AEM_DB_NAME', 'aem_db'),
+            'USER': os.getenv('AEM_DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('AEM_DB_PASSWORD', 'postgres'),
+            'HOST': os.getenv('AEM_DB_HOST', 'localhost'),
+            'PORT': os.getenv('AEM_DB_PORT', '5432'),
+        }
+    }
 
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -137,7 +158,15 @@ CSRF_TRUSTED_ORIGINS = get_list_env('AEM_CSRF_TRUSTED_ORIGINS', CORS_ALLOWED_ORI
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_NAME = 'aem_sessionid'
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_SECURE = get_bool_env('AEM_SESSION_COOKIE_SECURE', False)
-CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SECURE = get_bool_env('AEM_CSRF_COOKIE_SECURE', False)
+SESSION_COOKIE_SAMESITE = get_str_env(
+    'AEM_SESSION_COOKIE_SAMESITE',
+    'None' if os.getenv('RENDER') else 'Lax',
+)
+SESSION_COOKIE_SECURE = get_bool_env('AEM_SESSION_COOKIE_SECURE', bool(os.getenv('RENDER')))
+CSRF_COOKIE_SAMESITE = get_str_env(
+    'AEM_CSRF_COOKIE_SAMESITE',
+    'None' if os.getenv('RENDER') else 'Lax',
+)
+CSRF_COOKIE_SECURE = get_bool_env('AEM_CSRF_COOKIE_SECURE', bool(os.getenv('RENDER')))
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+USE_X_FORWARDED_HOST = True

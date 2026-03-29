@@ -4,7 +4,6 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r backend/requirements.txt
-    preDeployCommand: python backend/manage.py bootstrap_schema
     startCommand: gunicorn --chdir backend config.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY

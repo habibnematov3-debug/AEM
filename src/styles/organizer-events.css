@@ -180,6 +180,70 @@
   color: var(--muted);
 }
 
+.organizer-events-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(6px);
+}
+
+.organizer-events-dialog {
+  width: min(100%, 480px);
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(29, 100, 182, 0.12);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--shadow);
+}
+
+.organizer-events-dialog__copy {
+  display: grid;
+  gap: 10px;
+}
+
+.organizer-events-dialog__eyebrow {
+  margin: 0;
+  color: #b4233e;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.organizer-events-dialog__copy h2,
+.organizer-events-dialog__copy p {
+  margin: 0;
+}
+
+.organizer-events-dialog__copy p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.organizer-events-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.organizer-events-dialog__delete-button {
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: #c13d56;
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @media (max-width: 780px) {
   .organizer-events-page__topbar,
   .create-event-panel__header,
@@ -198,6 +262,14 @@
 
   .create-event-form__secondary,
   .create-event-form__primary {
+    width: 100%;
+  }
+
+  .organizer-events-dialog__actions {
+    flex-direction: column-reverse;
+  }
+
+  .organizer-events-dialog__delete-button {
     width: 100%;
   }
 }

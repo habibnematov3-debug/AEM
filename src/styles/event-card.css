@@ -99,6 +99,11 @@
   color: #6756ff;
 }
 
+.event-card__action-button--danger {
+  background: rgba(193, 61, 86, 0.1);
+  color: #b4233e;
+}
+
 .event-card__topline,
 .event-card__footer,
 .event-card__meta {

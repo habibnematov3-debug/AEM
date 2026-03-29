@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import '../styles/event-card.css'
 
-function EventCard({ event, variant = 'student', onEdit = () => {} }) {
+function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = () => {} }) {
   if (variant === 'student') {
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
@@ -77,6 +77,13 @@ function EventCard({ event, variant = 'student', onEdit = () => {} }) {
             >
               View
             </Link>
+            <button
+              type="button"
+              className="event-card__action-button event-card__action-button--danger"
+              onClick={() => onDelete(event)}
+            >
+              Delete
+            </button>
           </div>
         </div>
       </article>

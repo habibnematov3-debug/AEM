@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import {
   createMockEvent,
+  deleteMockEvent,
   getCurrentMockUser,
   getMockEvents,
   studentPageData,
@@ -45,6 +46,16 @@ function App() {
     return updatedEvent
   }
 
+  function handleDeleteEvent(eventId) {
+    const wasDeleted = deleteMockEvent(eventId)
+    if (!wasDeleted) {
+      return false
+    }
+
+    setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId))
+    return true
+  }
+
   return (
     <div className="app-shell">
       {!isAuthPage && (
@@ -69,6 +80,7 @@ function App() {
                 searchValue={studentSearch}
                 onCreateEvent={handleCreateEvent}
                 onUpdateEvent={handleUpdateEvent}
+                onDeleteEvent={handleDeleteEvent}
               />
             }
           />

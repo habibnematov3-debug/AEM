@@ -382,3 +382,15 @@ export function updateMockEvent({ eventId, eventData }) {
   saveMockEvents(nextEvents)
   return updatedEvent
 }
+
+export function deleteMockEvent(eventId) {
+  const currentEvents = getMockEvents()
+  const nextEvents = currentEvents.filter((event) => event.id !== eventId)
+
+  if (nextEvents.length === currentEvents.length) {
+    return false
+  }
+
+  saveMockEvents(nextEvents)
+  return true
+}

@@ -11,9 +11,11 @@ function OrganizerPage({
   searchValue = '',
   onCreateEvent,
   onUpdateEvent,
+  onDeleteEvent,
 }) {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
+  const [eventPendingDelete, setEventPendingDelete] = useState(null)
   const activeUser = getCurrentMockUser() ?? studentPageData.user
 
   const userEvents = useMemo(() => {
@@ -39,6 +41,7 @@ function OrganizerPage({
   }
 
   function handleEdit(event) {
+    setEventPendingDelete(null)
     setEditingEvent(event)
     setIsCreateFormOpen(true)
   }
@@ -58,6 +61,25 @@ function OrganizerPage({
     setIsCreateFormOpen(false)
   }
 
+  function handleRequestDelete(event) {
+    setEditingEvent(null)
+    setIsCreateFormOpen(false)
+    setEventPendingDelete(event)
+  }
+
+  function handleCancelDelete() {
+    setEventPendingDelete(null)
+  }
+
+  function handleConfirmDelete() {
+    if (!eventPendingDelete) {
+      return
+    }
+
+    onDeleteEvent(eventPendingDelete.id)
+    setEventPendingDelete(null)
+  }
+
   return (
     <section className="organizer-events-page">
       <div className="organizer-events-page__topbar">
@@ -72,6 +94,7 @@ function OrganizerPage({
           className="organizer-events-page__create-button"
           onClick={() => {
             setEditingEvent(null)
+            setEventPendingDelete(null)
             setIsCreateFormOpen(true)
           }}
         >
@@ -96,6 +119,7 @@ function OrganizerPage({
               event={event}
               variant="organizer-minimal"
               onEdit={handleEdit}
+              onDelete={handleRequestDelete}
             />
           ))}
         </div>
@@ -109,6 +133,43 @@ function OrganizerPage({
           </p>
         </div>
       )}
+
+      {eventPendingDelete ? (
+        <div className="organizer-events-dialog-backdrop" role="presentation">
+          <div
+            className="organizer-events-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-event-title"
+          >
+            <div className="organizer-events-dialog__copy">
+              <p className="organizer-events-dialog__eyebrow">Delete event</p>
+              <h2 id="delete-event-title">Are you sure you want to delete this event?</h2>
+              <p>
+                <strong>{eventPendingDelete.title}</strong> will be removed from My Events, the
+                students page, and the details page.
+              </p>
+            </div>
+
+            <div className="organizer-events-dialog__actions">
+              <button
+                type="button"
+                className="create-event-form__secondary"
+                onClick={handleCancelDelete}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="organizer-events-dialog__delete-button"
+                onClick={handleConfirmDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

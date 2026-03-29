@@ -34,8 +34,6 @@ function App() {
     location.pathname === '/organizer' ||
     location.pathname.startsWith('/events/')
 
-  const demoAccount = users.find((user) => user.id === 'student-1') ?? getDefaultCurrentMockUser()
-
   function handleSignIn(credentials) {
     const result = signInMockUser(credentials)
     if (result.ok) {
@@ -97,13 +95,7 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={
-              <AuthPage
-                demoAccount={demoAccount}
-                onSignIn={handleSignIn}
-                onSignUp={handleSignUp}
-              />
-            }
+            element={<AuthPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
           />
           <Route
             path="/students"

@@ -162,7 +162,7 @@ export function signInMockUser({ email, password }) {
   if (!existingUser) {
     return {
       ok: false,
-      message: 'Mock account not found. Try amina@ajou.uz with password student123.',
+      message: 'Invalid email or password.',
     }
   }
 
@@ -177,7 +177,7 @@ export function signUpMockUser({ fullName, email, password }) {
   if (existingUsers.some((user) => user.email.toLowerCase() === normalizedEmail)) {
     return {
       ok: false,
-      message: 'This email is already used in the mock database.',
+      message: 'This email is already registered.',
     }
   }
 

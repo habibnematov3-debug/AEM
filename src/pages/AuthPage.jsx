@@ -6,20 +6,35 @@ import '../styles/auth.css'
 const initialSignIn = { email: '', password: '' }
 const initialSignUp = { fullName: '', email: '', password: '' }
 
-function AuthPage({ demoAccount, onSignIn, onSignUp }) {
+const modeContent = {
+  signin: {
+    eyebrow: 'Welcome Back',
+    title: 'Sign in to your AEM account',
+    helper: 'Access university events, your activity, and organizer tools from one place.',
+    submitLabel: 'Sign In',
+    footerPrompt: "Don't have an account?",
+    footerAction: 'Create one',
+  },
+  signup: {
+    eyebrow: 'Create Account',
+    title: 'Join AEM and get started',
+    helper: 'Use your university email to discover events, participate, or manage your own.',
+    submitLabel: 'Create Account',
+    footerPrompt: 'Already have an account?',
+    footerAction: 'Sign in',
+  },
+}
+
+function AuthPage({ onSignIn, onSignUp }) {
   const navigate = useNavigate()
   const [mode, setMode] = useState('signin')
   const [signInData, setSignInData] = useState(initialSignIn)
   const [signUpData, setSignUpData] = useState(initialSignUp)
+  const [showSignInPassword, setShowSignInPassword] = useState(false)
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
 
-  const helperText = useMemo(() => {
-    if (mode === 'signin') {
-      return 'Sign in with the local mock account to open the student events page.'
-    }
-
-    return 'Create a local mock account for the MVP. No backend or real authentication is used.'
-  }, [mode])
+  const content = useMemo(() => modeContent[mode], [mode])
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -35,7 +50,8 @@ function AuthPage({ demoAccount, onSignIn, onSignUp }) {
       return
     }
 
-    setFeedback({ type: 'success', message: `Welcome back, ${result.user.name}. Redirecting...` })
+    const displayName = result.user.full_name ?? result.user.name ?? 'there'
+    setFeedback({ type: 'success', message: `Welcome back, ${displayName}. Redirecting...` })
     window.setTimeout(() => navigate('/students'), 500)
   }
 
@@ -53,141 +69,212 @@ function AuthPage({ demoAccount, onSignIn, onSignUp }) {
     setSignUpData(initialSignUp)
     setFeedback({
       type: 'success',
-      message: 'Mock account created. Sign in now to continue.',
+      message: 'Account created successfully. Sign in to continue.',
     })
   }
 
   return (
     <section className="auth-page">
-      <div className="auth-card">
-        <div className="auth-card__brand">
-          <img className="auth-card__logo" src="/logo.png" alt="AEM logo" />
-          <p className="auth-card__subtitle">Academic Event Manager</p>
-        </div>
-
-        <div className="auth-switcher" role="tablist" aria-label="Authentication mode">
-          <button
-            type="button"
-            className={
-              mode === 'signin'
-                ? 'auth-switcher__button auth-switcher__button--active'
-                : 'auth-switcher__button'
-            }
-            onClick={() => switchMode('signin')}
-          >
-            Sign In
-          </button>
-          <button
-            type="button"
-            className={
-              mode === 'signup'
-                ? 'auth-switcher__button auth-switcher__button--active'
-                : 'auth-switcher__button'
-            }
-            onClick={() => switchMode('signup')}
-          >
-            Sign Up
-          </button>
-        </div>
-
-        <p className="auth-card__helper">{helperText}</p>
-
-        {feedback.message ? (
-          <div
-            className={
-              feedback.type === 'error'
-                ? 'auth-feedback auth-feedback--error'
-                : 'auth-feedback auth-feedback--success'
-            }
-          >
-            {feedback.message}
+      <div className="auth-layout">
+        <aside className="auth-hero">
+          <div className="auth-hero__brand">
+            <img className="auth-hero__logo" src="/logo.png" alt="AEM logo" />
+            <div className="auth-hero__copy">
+              <p className="auth-hero__eyebrow">Academic Event Manager</p>
+              <h1>One place for student events, organizers, and campus activity.</h1>
+              <p>
+                AEM helps your university community discover events faster and manage them
+                with less friction.
+              </p>
+            </div>
           </div>
-        ) : null}
 
-        {mode === 'signin' ? (
-          <form className="auth-form" onSubmit={handleSignInSubmit}>
-            <label>
-              Email
-              <input
-                type="email"
-                value={signInData.email}
-                onChange={(event) =>
-                  setSignInData((current) => ({ ...current, email: event.target.value }))
+          <div className="auth-hero__highlights">
+            <article className="auth-highlight">
+              <span className="auth-highlight__index">01</span>
+              <div>
+                <strong>Discover</strong>
+                <p>Browse upcoming university events in a clean, centralized space.</p>
+              </div>
+            </article>
+            <article className="auth-highlight">
+              <span className="auth-highlight__index">02</span>
+              <div>
+                <strong>Manage</strong>
+                <p>Create, edit, and organize events with a simple dashboard workflow.</p>
+              </div>
+            </article>
+            <article className="auth-highlight">
+              <span className="auth-highlight__index">03</span>
+              <div>
+                <strong>Participate</strong>
+                <p>Keep sign-in and event activity tied to each user account.</p>
+              </div>
+            </article>
+          </div>
+        </aside>
+
+        <div className="auth-card">
+          <div className="auth-card__header">
+            <div>
+              <p className="auth-card__eyebrow">{content.eyebrow}</p>
+              <h2>{content.title}</h2>
+              <p className="auth-card__helper">{content.helper}</p>
+            </div>
+
+            <div className="auth-switcher" role="tablist" aria-label="Authentication mode">
+              <button
+                type="button"
+                className={
+                  mode === 'signin'
+                    ? 'auth-switcher__button auth-switcher__button--active'
+                    : 'auth-switcher__button'
                 }
-                placeholder="your.name@ajou.uz"
-                required
-              />
-            </label>
-
-            <label>
-              Password
-              <input
-                type="password"
-                value={signInData.password}
-                onChange={(event) =>
-                  setSignInData((current) => ({ ...current, password: event.target.value }))
+                onClick={() => switchMode('signin')}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                className={
+                  mode === 'signup'
+                    ? 'auth-switcher__button auth-switcher__button--active'
+                    : 'auth-switcher__button'
                 }
-                placeholder="Enter password"
-                required
-              />
-            </label>
+                onClick={() => switchMode('signup')}
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
 
-            <button type="submit" className="auth-form__submit">
-              Sign In
+          {feedback.message ? (
+            <div
+              className={
+                feedback.type === 'error'
+                  ? 'auth-feedback auth-feedback--error'
+                  : 'auth-feedback auth-feedback--success'
+              }
+            >
+              {feedback.message}
+            </div>
+          ) : null}
+
+          {mode === 'signin' ? (
+            <form className="auth-form" onSubmit={handleSignInSubmit}>
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={signInData.email}
+                  onChange={(event) =>
+                    setSignInData((current) => ({ ...current, email: event.target.value }))
+                  }
+                  placeholder="your.name@ajou.uz"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Password</span>
+                <div className="auth-password-field">
+                  <input
+                    type={showSignInPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    value={signInData.password}
+                    onChange={(event) =>
+                      setSignInData((current) => ({ ...current, password: event.target.value }))
+                    }
+                    placeholder="Enter your password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-field__toggle"
+                    onClick={() => setShowSignInPassword((current) => !current)}
+                    aria-label={showSignInPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignInPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </label>
+
+              <button type="submit" className="auth-form__submit">
+                {content.submitLabel}
+              </button>
+            </form>
+          ) : (
+            <form className="auth-form" onSubmit={handleSignUpSubmit}>
+              <label>
+                <span>Full Name</span>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  value={signUpData.fullName}
+                  onChange={(event) =>
+                    setSignUpData((current) => ({ ...current, fullName: event.target.value }))
+                  }
+                  placeholder="Your full name"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Email</span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={signUpData.email}
+                  onChange={(event) =>
+                    setSignUpData((current) => ({ ...current, email: event.target.value }))
+                  }
+                  placeholder="your.name@ajou.uz"
+                  required
+                />
+              </label>
+
+              <label>
+                <span>Password</span>
+                <div className="auth-password-field">
+                  <input
+                    type={showSignUpPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    value={signUpData.password}
+                    onChange={(event) =>
+                      setSignUpData((current) => ({ ...current, password: event.target.value }))
+                    }
+                    placeholder="Create a secure password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-field__toggle"
+                    onClick={() => setShowSignUpPassword((current) => !current)}
+                    aria-label={showSignUpPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showSignUpPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </label>
+
+              <button type="submit" className="auth-form__submit">
+                {content.submitLabel}
+              </button>
+            </form>
+          )}
+
+          <div className="auth-card__footer">
+            <span>{content.footerPrompt}</span>
+            <button
+              type="button"
+              className="auth-card__footer-link"
+              onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
+            >
+              {content.footerAction}
             </button>
-          </form>
-        ) : (
-          <form className="auth-form" onSubmit={handleSignUpSubmit}>
-            <label>
-              Full name
-              <input
-                type="text"
-                value={signUpData.fullName}
-                onChange={(event) =>
-                  setSignUpData((current) => ({ ...current, fullName: event.target.value }))
-                }
-                placeholder="Your full name"
-                required
-              />
-            </label>
-
-            <label>
-              Email
-              <input
-                type="email"
-                value={signUpData.email}
-                onChange={(event) =>
-                  setSignUpData((current) => ({ ...current, email: event.target.value }))
-                }
-                placeholder="your.name@ajou.uz"
-                required
-              />
-            </label>
-
-            <label>
-              Password
-              <input
-                type="password"
-                value={signUpData.password}
-                onChange={(event) =>
-                  setSignUpData((current) => ({ ...current, password: event.target.value }))
-                }
-                placeholder="Create password"
-                required
-              />
-            </label>
-
-            <button type="submit" className="auth-form__submit">
-              Create Account
-            </button>
-          </form>
-        )}
-
-        {demoAccount ? (
-          <p className="auth-card__note">
-            Mock login: {demoAccount.email} / {demoAccount.password}
-          </p>
-        ) : null}
+          </div>
+        </div>
       </div>
     </section>
   )

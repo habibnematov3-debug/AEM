@@ -99,6 +99,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
   const [errors, setErrors] = useState({})
   const [uploadedImage, setUploadedImage] = useState('')
   const [selectedFileName, setSelectedFileName] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const fileInputRef = useRef(null)
 
   const isEditMode = mode === 'edit'
@@ -116,6 +117,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
     setErrors({})
     setUploadedImage('')
     setSelectedFileName('')
+    setIsSubmitting(false)
 
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -127,7 +129,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
     setErrors((current) => ({ ...current, [field]: '' }))
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const nextErrors = validateEventForm(formData)
@@ -136,15 +138,21 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
       return
     }
 
-    onSubmit({
-      ...formData,
-      uploadedImage,
-      existingImage,
-    })
-    setFormData(initialFormState)
-    setErrors({})
-    setUploadedImage('')
-    setSelectedFileName('')
+    setIsSubmitting(true)
+
+    try {
+      await onSubmit({
+        ...formData,
+        uploadedImage,
+        existingImage,
+      })
+      setFormData(initialFormState)
+      setErrors({})
+      setUploadedImage('')
+      setSelectedFileName('')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   function handleOpenFilePicker() {
@@ -198,6 +206,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.title}
             onChange={(event) => updateField('title', event.target.value)}
             placeholder="Enter event title"
+            disabled={isSubmitting}
           />
           {errors.title ? <span className="create-event-form__error">{errors.title}</span> : null}
         </label>
@@ -209,6 +218,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             onChange={(event) => updateField('description', event.target.value)}
             placeholder="Describe the event"
             rows="4"
+            disabled={isSubmitting}
           />
           {errors.description ? (
             <span className="create-event-form__error">{errors.description}</span>
@@ -221,6 +231,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="date"
             value={formData.date}
             onChange={(event) => updateField('date', event.target.value)}
+            disabled={isSubmitting}
           />
           {errors.date ? <span className="create-event-form__error">{errors.date}</span> : null}
         </label>
@@ -231,6 +242,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="time"
             value={formData.startTime}
             onChange={(event) => updateField('startTime', event.target.value)}
+            disabled={isSubmitting}
           />
           {errors.startTime ? (
             <span className="create-event-form__error">{errors.startTime}</span>
@@ -243,6 +255,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="time"
             value={formData.endTime}
             onChange={(event) => updateField('endTime', event.target.value)}
+            disabled={isSubmitting}
           />
           {errors.endTime ? (
             <span className="create-event-form__error">{errors.endTime}</span>
@@ -256,6 +269,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.location}
             onChange={(event) => updateField('location', event.target.value)}
             placeholder="Enter location"
+            disabled={isSubmitting}
           />
           {errors.location ? (
             <span className="create-event-form__error">{errors.location}</span>
@@ -271,6 +285,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
                 type="button"
                 className="create-event-form__upload-button"
                 onClick={handleOpenFilePicker}
+                disabled={isSubmitting}
               >
                 Upload Image
               </button>
@@ -280,6 +295,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
                   type="button"
                   className="create-event-form__upload-button create-event-form__upload-button--ghost"
                   onClick={handleRemoveUploadedImage}
+                  disabled={isSubmitting}
                 >
                   Remove Upload
                 </button>
@@ -293,6 +309,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.imageUrl}
             onChange={(event) => updateField('imageUrl', event.target.value)}
             placeholder="Optional image URL"
+            disabled={isSubmitting}
           />
 
           <input
@@ -301,6 +318,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             accept="image/*"
             className="create-event-form__file-input"
             onChange={handleImageSelected}
+            disabled={isSubmitting}
           />
 
           <p className="create-event-form__helper">{imageHelperText}</p>
@@ -330,15 +348,21 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.category}
             onChange={(event) => updateField('category', event.target.value)}
             placeholder="Optional category"
+            disabled={isSubmitting}
           />
         </label>
 
         <div className="create-event-form__actions">
-          <button type="button" className="create-event-form__secondary" onClick={onCancel}>
+          <button
+            type="button"
+            className="create-event-form__secondary"
+            onClick={onCancel}
+            disabled={isSubmitting}
+          >
             Cancel
           </button>
-          <button type="submit" className="create-event-form__primary">
-            {submitLabel}
+          <button type="submit" className="create-event-form__primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Saving...' : submitLabel}
           </button>
         </div>
       </form>

@@ -192,3 +192,21 @@ export async function createEvent(formData) {
 
   return normalizeEvent(payload.event)
 }
+
+export async function updateEvent(eventId, formData) {
+  const payload = await apiRequest(`/api/events/${eventId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      title: formData.title,
+      description: formData.description,
+      event_date: formData.date,
+      start_time: formData.startTime,
+      end_time: formData.endTime,
+      location: formData.location,
+      image_url: formData.uploadedImage || formData.imageUrl || '',
+      category: formData.category || 'general',
+    }),
+  })
+
+  return normalizeEvent(payload.event)
+}

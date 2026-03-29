@@ -112,3 +112,31 @@ class EventDetailAPIView(APIView):
             id=event_id,
         )
         return Response(EventSerializer(event).data, status=status.HTTP_200_OK)
+
+    def patch(self, request, event_id):
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+        current_user = get_session_user(request)
+
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if event.creator_id != current_user.id:
+            return Response(
+                {'detail': 'You are not allowed to edit this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = EventCreateSerializer(instance=event, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_event = serializer.save()
+
+        return Response(
+            {
+                'message': 'Event updated successfully.',
+                'event': EventSerializer(updated_event).data,
+            },
+            status=status.HTTP_200_OK,
+        )

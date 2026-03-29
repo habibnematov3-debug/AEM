@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import {
   createEvent,
   fetchEvents,
+  updateEvent,
   getStoredCurrentUser,
   signInUser,
   signUpUser,
@@ -80,8 +81,12 @@ function App() {
     return createdEvent
   }
 
-  function handleUpdateEvent() {
-    return null
+  async function handleUpdateEvent(eventId, eventData) {
+    const updatedEvent = await updateEvent(eventId, eventData)
+    setEvents((currentEvents) =>
+      currentEvents.map((event) => (event.id === updatedEvent.id ? updatedEvent : event)),
+    )
+    return updatedEvent
   }
 
   function handleDeleteEvent() {

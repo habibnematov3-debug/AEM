@@ -138,7 +138,16 @@ class EventCreateSerializer(serializers.Serializer):
         return location
 
     def validate(self, attrs):
-        if attrs['end_time'] <= attrs['start_time']:
+        start_time = attrs.get(
+            'start_time',
+            self.instance.start_time if self.instance is not None else None,
+        )
+        end_time = attrs.get(
+            'end_time',
+            self.instance.end_time if self.instance is not None else None,
+        )
+
+        if start_time is not None and end_time is not None and end_time <= start_time:
             raise serializers.ValidationError(
                 {'end_time': 'End time must be later than start time.'},
             )
@@ -165,3 +174,21 @@ class EventCreateSerializer(serializers.Serializer):
         )
         event.save()
         return event
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        instance.title = validated_data.get('title', instance.title)
+        instance.description = validated_data.get('description', instance.description)
+        instance.category = (
+            validated_data.get('category', instance.category) or ''
+        ).strip() or 'general'
+        instance.location = validated_data.get('location', instance.location)
+        instance.image_url = (
+            validated_data.get('image_url', instance.image_url) or ''
+        ).strip() or None
+        instance.event_date = validated_data.get('event_date', instance.event_date)
+        instance.start_time = validated_data.get('start_time', instance.start_time)
+        instance.end_time = validated_data.get('end_time', instance.end_time)
+        instance.updated_at = timezone.now()
+        instance.save()
+        return instance

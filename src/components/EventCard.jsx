@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import '../styles/event-card.css'
 
-function EventCard({ event, variant = 'student' }) {
+function EventCard({ event, variant = 'student', onEdit = () => {} }) {
   if (variant === 'student') {
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
@@ -64,7 +64,11 @@ function EventCard({ event, variant = 'student' }) {
           </div>
 
           <div className="event-card__actions">
-            <button type="button" className="event-card__action-button">
+            <button
+              type="button"
+              className="event-card__action-button"
+              onClick={() => onEdit(event)}
+            >
               Edit
             </button>
             <Link

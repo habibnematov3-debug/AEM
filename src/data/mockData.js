@@ -339,6 +339,7 @@ export function createMockEvent({ eventData, currentUser }) {
     capacity: 0,
     registeredCount: 0,
     status: 'published',
+    creatorName: currentUser.name,
     organizerName: currentUser.name,
     creatorId: currentUser.id,
     organizerId: currentUser.id,
@@ -348,4 +349,36 @@ export function createMockEvent({ eventData, currentUser }) {
   const nextEvents = [nextEvent, ...getMockEvents()]
   saveMockEvents(nextEvents)
   return nextEvent
+}
+
+export function updateMockEvent({ eventId, eventData }) {
+  const currentEvents = getMockEvents()
+  const existingEvent = currentEvents.find((event) => event.id === eventId)
+
+  if (!existingEvent) {
+    return null
+  }
+
+  const updatedEvent = {
+    ...existingEvent,
+    title: eventData.title.trim(),
+    description: eventData.description.trim(),
+    date: new Date(`${eventData.date}T00:00:00`).toLocaleDateString('en-US', {
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+    }),
+    startTime: eventData.startTime,
+    endTime: eventData.endTime,
+    time: eventData.startTime,
+    venue: eventData.location.trim(),
+    location: eventData.location.trim(),
+    image: eventData.imageUrl.trim() || '/event-images/default-event.svg',
+    category: eventData.category.trim() || 'General',
+    updatedAt: new Date().toISOString(),
+  }
+
+  const nextEvents = currentEvents.map((event) => (event.id === eventId ? updatedEvent : event))
+  saveMockEvents(nextEvents)
+  return updatedEvent
 }

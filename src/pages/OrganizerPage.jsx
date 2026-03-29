@@ -6,8 +6,14 @@ import { getCurrentMockUser, studentPageData } from '../data/mockData'
 import '../styles/organizer-events.css'
 import { useState } from 'react'
 
-function OrganizerPage({ events = studentPageData.events, searchValue = '', onCreateEvent }) {
+function OrganizerPage({
+  events = studentPageData.events,
+  searchValue = '',
+  onCreateEvent,
+  onUpdateEvent,
+}) {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
+  const [editingEvent, setEditingEvent] = useState(null)
   const activeUser = getCurrentMockUser() ?? studentPageData.user
 
   const userEvents = useMemo(() => {
@@ -28,6 +34,27 @@ function OrganizerPage({ events = studentPageData.events, searchValue = '', onCr
 
   function handleCreate(formData) {
     onCreateEvent(formData)
+    setEditingEvent(null)
+    setIsCreateFormOpen(false)
+  }
+
+  function handleEdit(event) {
+    setEditingEvent(event)
+    setIsCreateFormOpen(true)
+  }
+
+  function handleUpdate(formData) {
+    if (!editingEvent) {
+      return
+    }
+
+    onUpdateEvent(editingEvent.id, formData)
+    setEditingEvent(null)
+    setIsCreateFormOpen(false)
+  }
+
+  function handleCancelForm() {
+    setEditingEvent(null)
     setIsCreateFormOpen(false)
   }
 
@@ -43,7 +70,10 @@ function OrganizerPage({ events = studentPageData.events, searchValue = '', onCr
         <button
           type="button"
           className="organizer-events-page__create-button"
-          onClick={() => setIsCreateFormOpen((current) => !current)}
+          onClick={() => {
+            setEditingEvent(null)
+            setIsCreateFormOpen(true)
+          }}
         >
           Create Event
         </button>
@@ -51,15 +81,22 @@ function OrganizerPage({ events = studentPageData.events, searchValue = '', onCr
 
       {isCreateFormOpen ? (
         <CreateEventForm
-          onCancel={() => setIsCreateFormOpen(false)}
-          onCreate={handleCreate}
+          mode={editingEvent ? 'edit' : 'create'}
+          initialValues={editingEvent}
+          onCancel={handleCancelForm}
+          onSubmit={editingEvent ? handleUpdate : handleCreate}
         />
       ) : null}
 
       {userEvents.length ? (
         <div className="organizer-events-grid">
           {userEvents.map((event) => (
-            <EventCard key={event.id} event={event} variant="organizer-minimal" />
+            <EventCard
+              key={event.id}
+              event={event}
+              variant="organizer-minimal"
+              onEdit={handleEdit}
+            />
           ))}
         </div>
       ) : (

@@ -2,7 +2,13 @@ import { useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import Header from './components/Header'
-import { createMockEvent, getCurrentMockUser, getMockEvents, studentPageData } from './data/mockData'
+import {
+  createMockEvent,
+  getCurrentMockUser,
+  getMockEvents,
+  studentPageData,
+  updateMockEvent,
+} from './data/mockData'
 import AuthPage from './pages/AuthPage'
 import EventDetailsPage from './pages/EventDetailsPage'
 import OrganizerPage from './pages/OrganizerPage'
@@ -25,6 +31,18 @@ function App() {
     const createdEvent = createMockEvent({ eventData, currentUser })
     setEvents((currentEvents) => [createdEvent, ...currentEvents])
     return createdEvent
+  }
+
+  function handleUpdateEvent(eventId, eventData) {
+    const updatedEvent = updateMockEvent({ eventId, eventData })
+    if (!updatedEvent) {
+      return null
+    }
+
+    setEvents((currentEvents) =>
+      currentEvents.map((event) => (event.id === eventId ? updatedEvent : event)),
+    )
+    return updatedEvent
   }
 
   return (
@@ -50,6 +68,7 @@ function App() {
                 events={events}
                 searchValue={studentSearch}
                 onCreateEvent={handleCreateEvent}
+                onUpdateEvent={handleUpdateEvent}
               />
             }
           />

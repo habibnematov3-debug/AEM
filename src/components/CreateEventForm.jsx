@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const initialFormState = {
   title: '',
@@ -45,9 +45,57 @@ function validateEventForm(formData) {
   return nextErrors
 }
 
-function CreateEventForm({ onCancel, onCreate }) {
-  const [formData, setFormData] = useState(initialFormState)
+function normalizeDateForInput(dateValue) {
+  if (!dateValue) {
+    return ''
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    return dateValue
+  }
+
+  const parsedDate = new Date(dateValue)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return ''
+  }
+
+  const year = parsedDate.getFullYear()
+  const month = String(parsedDate.getMonth() + 1).padStart(2, '0')
+  const day = String(parsedDate.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function buildFormState(initialValues) {
+  if (!initialValues) {
+    return initialFormState
+  }
+
+  return {
+    title: initialValues.title ?? '',
+    description: initialValues.description ?? '',
+    date: normalizeDateForInput(initialValues.date),
+    startTime: initialValues.startTime ?? initialValues.time ?? '',
+    endTime: initialValues.endTime ?? '',
+    location: initialValues.location ?? initialValues.venue ?? '',
+    imageUrl: initialValues.image ?? '',
+    category: initialValues.category ?? '',
+  }
+}
+
+function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSubmit }) {
+  const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
+
+  const isEditMode = mode === 'edit'
+  const panelEyebrow = isEditMode ? 'Existing event' : 'New event'
+  const panelTitle = isEditMode ? 'Edit Event' : 'Create Event'
+  const submitLabel = isEditMode ? 'Save Changes' : 'Create Event'
+  const closeLabel = isEditMode ? 'Cancel edit' : 'Close'
+
+  useEffect(() => {
+    setFormData(buildFormState(initialValues))
+    setErrors({})
+  }, [initialValues, mode])
 
   function updateField(field, value) {
     setFormData((current) => ({ ...current, [field]: value }))
@@ -63,7 +111,7 @@ function CreateEventForm({ onCancel, onCreate }) {
       return
     }
 
-    onCreate(formData)
+    onSubmit(formData)
     setFormData(initialFormState)
     setErrors({})
   }
@@ -72,11 +120,11 @@ function CreateEventForm({ onCancel, onCreate }) {
     <section className="create-event-panel">
       <div className="create-event-panel__header">
         <div>
-          <p className="create-event-panel__eyebrow">New event</p>
-          <h2>Create Event</h2>
+          <p className="create-event-panel__eyebrow">{panelEyebrow}</p>
+          <h2>{panelTitle}</h2>
         </div>
         <button type="button" className="create-event-panel__cancel" onClick={onCancel}>
-          Close
+          {closeLabel}
         </button>
       </div>
 
@@ -155,10 +203,10 @@ function CreateEventForm({ onCancel, onCreate }) {
         <label>
           Image URL
           <input
-            type="url"
+            type="text"
             value={formData.imageUrl}
             onChange={(event) => updateField('imageUrl', event.target.value)}
-            placeholder="Optional image URL"
+            placeholder="Optional image URL or local path"
           />
         </label>
 
@@ -177,7 +225,7 @@ function CreateEventForm({ onCancel, onCreate }) {
             Cancel
           </button>
           <button type="submit" className="create-event-form__primary">
-            Create Event
+            {submitLabel}
           </button>
         </div>
       </form>

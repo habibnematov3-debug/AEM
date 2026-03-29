@@ -1,10 +1,9 @@
 import { useMemo } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { getMockUserById } from '../data/mockData'
 import '../styles/event-details.css'
 
-function EventDetailsPage({ events = [] }) {
+function EventDetailsPage({ events = [], users = [] }) {
   const navigate = useNavigate()
   const { eventId } = useParams()
 
@@ -15,8 +14,8 @@ function EventDetailsPage({ events = [] }) {
 
   const organizerName = event
     ? event.organizerName ??
-      getMockUserById(event.creatorId)?.name ??
-      getMockUserById(event.organizerId)?.name ??
+      users.find((user) => user.id === event.creatorId)?.name ??
+      users.find((user) => user.id === event.organizerId)?.name ??
       'Unknown organizer'
     : ''
 

@@ -1,12 +1,9 @@
 import { useMemo } from 'react'
 
 import EventCard from '../components/EventCard'
-import { getCurrentMockUser, studentPageData } from '../data/mockData'
 import '../styles/students-events.css'
 
-function StudentsPage({ events = studentPageData.events, searchValue = '' }) {
-  const activeUser = getCurrentMockUser() ?? studentPageData.user
-
+function StudentsPage({ currentUser, events = [], searchValue = '' }) {
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
@@ -22,7 +19,9 @@ function StudentsPage({ events = studentPageData.events, searchValue = '' }) {
   return (
     <section className="students-events-page">
       <div className="students-events-page__intro">
-        <p className="students-events-page__eyebrow">Welcome, {activeUser.name}</p>
+        <p className="students-events-page__eyebrow">
+          Welcome, {currentUser?.name ?? 'Student'}
+        </p>
         <h1>Upcoming Events</h1>
         <p>Discover and join exciting events happening at your university</p>
       </div>

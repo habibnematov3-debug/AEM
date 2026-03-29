@@ -163,42 +163,6 @@ const defaultEvents = [
   },
 ]
 
-const organizerEvents = defaultEvents.filter((event) => event.creatorId === users.organizer.id)
-const totalCapacity = organizerEvents.reduce((sum, event) => sum + event.capacity, 0)
-const totalRegistered = organizerEvents.reduce((sum, event) => sum + event.registeredCount, 0)
-
-export const authOptions = [
-  {
-    id: 'student',
-    title: 'Student flow',
-    description: 'Browse events, inspect details, and see what is currently open.',
-    path: '/students',
-  },
-  {
-    id: 'organizer',
-    title: 'Organizer flow',
-    description: 'Review your event lineup, registrations, and event status at a glance.',
-    path: '/organizer',
-  },
-]
-
-export const studentPageData = {
-  user: users.student,
-  welcomeNote:
-    'This page behaves like the future attendee dashboard, but for now it reads from local mock data only.',
-  events: defaultEvents,
-}
-
-export const organizerPageData = {
-  user: users.organizer,
-  stats: [
-    { label: 'Events', value: organizerEvents.length },
-    { label: 'Registrations', value: totalRegistered },
-    { label: 'Open spots', value: totalCapacity - totalRegistered },
-  ],
-  events: organizerEvents,
-}
-
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 }
@@ -216,6 +180,10 @@ function normalizeUser(user) {
 
 function getDefaultMockUsers() {
   return [normalizeUser(users.student), normalizeUser(users.organizer)]
+}
+
+export function getDefaultCurrentMockUser() {
+  return normalizeUser(users.student)
 }
 
 export function getMockUsers() {

@@ -188,9 +188,10 @@
   box-shadow: var(--shadow-md);
 }
 
-.site-header__profile svg {
-  width: 22px;
-  height: 22px;
+.site-header__profile span {
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 @media (max-width: 720px) {

@@ -13,9 +13,11 @@ const studentNavItems = [
   { to: '/organizer', label: 'My Events' },
 ]
 
-function Header({ variant = 'default', searchValue = '', onSearchChange = () => {} }) {
+function Header({ variant = 'default', currentUser, searchValue = '', onSearchChange = () => {} }) {
   const navItems = variant === 'students' ? studentNavItems : defaultNavItems
   const location = useLocation()
+  const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
+  const profileLabel = currentUser?.name ? `${currentUser.name} profile` : 'Profile'
 
   function isNavItemActive(path) {
     if (variant === 'students' && path === '/students') {
@@ -78,13 +80,13 @@ function Header({ variant = 'default', searchValue = '', onSearchChange = () => 
           </nav>
 
           {variant === 'students' ? (
-            <button type="button" className="site-header__profile" aria-label="Profile">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="M12 12a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Zm0 2c-3.59 0-6.5 2.35-6.5 5.25 0 .41.34.75.75.75h11.5a.75.75 0 0 0 .75-.75C18.5 16.35 15.59 14 12 14Zm0-8.25a2.25 2.25 0 1 1 0 4.5 2.25 2.25 0 0 1 0-4.5Zm0 9.75c2.36 0 4.35 1.29 4.88 3H7.12c.53-1.71 2.52-3 4.88-3Z"
-                  fill="currentColor"
-                />
-              </svg>
+            <button
+              type="button"
+              className="site-header__profile"
+              aria-label={profileLabel}
+              title={currentUser?.name ?? 'Profile'}
+            >
+              <span>{profileInitial}</span>
             </button>
           ) : null}
         </div>

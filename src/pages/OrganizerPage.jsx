@@ -3,12 +3,12 @@ import { useMemo } from 'react'
 import CreateEventForm from '../components/CreateEventForm'
 import EventCard from '../components/EventCard'
 import Modal from '../components/Modal'
-import { getCurrentMockUser, studentPageData } from '../data/mockData'
 import '../styles/organizer-events.css'
 import { useState } from 'react'
 
 function OrganizerPage({
-  events = studentPageData.events,
+  currentUser,
+  events = [],
   searchValue = '',
   onCreateEvent,
   onUpdateEvent,
@@ -17,10 +17,9 @@ function OrganizerPage({
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [eventPendingDelete, setEventPendingDelete] = useState(null)
-  const activeUser = getCurrentMockUser() ?? studentPageData.user
 
   const userEvents = useMemo(() => {
-    const ownedEvents = events.filter((event) => event.creatorId === activeUser?.id)
+    const ownedEvents = events.filter((event) => event.creatorId === currentUser?.id)
     const query = searchValue.trim().toLowerCase()
 
     if (!query) {
@@ -31,9 +30,9 @@ function OrganizerPage({
       const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
       return haystack.includes(query)
     })
-  }, [activeUser, events, searchValue])
+  }, [currentUser, events, searchValue])
 
-  const hasAccountEvents = events.some((event) => event.creatorId === activeUser?.id)
+  const hasAccountEvents = events.some((event) => event.creatorId === currentUser?.id)
 
   function handleCreate(formData) {
     onCreateEvent(formData)

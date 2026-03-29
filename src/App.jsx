@@ -6,8 +6,11 @@ import {
   createMockEvent,
   deleteMockEvent,
   getCurrentMockUser,
+  getDefaultCurrentMockUser,
   getMockEvents,
-  studentPageData,
+  getMockUsers,
+  signInMockUser,
+  signUpMockUser,
   updateMockEvent,
 } from './data/mockData'
 import AuthPage from './pages/AuthPage'
@@ -19,6 +22,10 @@ import './styles/pages.css'
 
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
+  const [users, setUsers] = useState(() => getMockUsers())
+  const [currentUser, setCurrentUser] = useState(
+    () => getCurrentMockUser() ?? getDefaultCurrentMockUser(),
+  )
   const [events, setEvents] = useState(() => getMockEvents())
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
@@ -27,9 +34,29 @@ function App() {
     location.pathname === '/organizer' ||
     location.pathname.startsWith('/events/')
 
+  const demoAccount = users.find((user) => user.id === 'student-1') ?? getDefaultCurrentMockUser()
+
+  function handleSignIn(credentials) {
+    const result = signInMockUser(credentials)
+    if (result.ok) {
+      setCurrentUser(result.user)
+    }
+
+    return result
+  }
+
+  function handleSignUp(payload) {
+    const result = signUpMockUser(payload)
+    if (result.ok) {
+      setUsers(getMockUsers())
+    }
+
+    return result
+  }
+
   function handleCreateEvent(eventData) {
-    const currentUser = getCurrentMockUser() ?? studentPageData.user
-    const createdEvent = createMockEvent({ eventData, currentUser })
+    const activeUser = currentUser ?? getDefaultCurrentMockUser()
+    const createdEvent = createMockEvent({ eventData, currentUser: activeUser })
     setEvents((currentEvents) => [createdEvent, ...currentEvents])
     return createdEvent
   }
@@ -61,21 +88,38 @@ function App() {
       {!isAuthPage && (
         <Header
           variant={isDashboardPage ? 'students' : 'default'}
+          currentUser={currentUser}
           searchValue={studentSearch}
           onSearchChange={setStudentSearch}
         />
       )}
       <main className="page-shell">
         <Routes>
-          <Route path="/" element={<AuthPage />} />
+          <Route
+            path="/"
+            element={
+              <AuthPage
+                demoAccount={demoAccount}
+                onSignIn={handleSignIn}
+                onSignUp={handleSignUp}
+              />
+            }
+          />
           <Route
             path="/students"
-            element={<StudentsPage events={events} searchValue={studentSearch} />}
+            element={
+              <StudentsPage
+                currentUser={currentUser}
+                events={events}
+                searchValue={studentSearch}
+              />
+            }
           />
           <Route
             path="/organizer"
             element={
               <OrganizerPage
+                currentUser={currentUser}
                 events={events}
                 searchValue={studentSearch}
                 onCreateEvent={handleCreateEvent}
@@ -84,7 +128,10 @@ function App() {
               />
             }
           />
-          <Route path="/events/:eventId" element={<EventDetailsPage events={events} />} />
+          <Route
+            path="/events/:eventId"
+            element={<EventDetailsPage events={events} users={users} />}
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

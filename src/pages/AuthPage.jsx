@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { signInMockUser, signUpMockUser } from '../data/mockData'
 import '../styles/auth.css'
 
 const initialSignIn = { email: '', password: '' }
 const initialSignUp = { fullName: '', email: '', password: '' }
 
-function AuthPage() {
+function AuthPage({ demoAccount, onSignIn, onSignUp }) {
   const navigate = useNavigate()
   const [mode, setMode] = useState('signin')
   const [signInData, setSignInData] = useState(initialSignIn)
@@ -30,7 +29,7 @@ function AuthPage() {
   function handleSignInSubmit(event) {
     event.preventDefault()
 
-    const result = signInMockUser(signInData)
+    const result = onSignIn(signInData)
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
       return
@@ -43,7 +42,7 @@ function AuthPage() {
   function handleSignUpSubmit(event) {
     event.preventDefault()
 
-    const result = signUpMockUser(signUpData)
+    const result = onSignUp(signUpData)
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
       return
@@ -184,7 +183,11 @@ function AuthPage() {
           </form>
         )}
 
-        <p className="auth-card__note">Mock login: amina@ajou.uz / student123</p>
+        {demoAccount ? (
+          <p className="auth-card__note">
+            Mock login: {demoAccount.email} / {demoAccount.password}
+          </p>
+        ) : null}
       </div>
     </section>
   )

@@ -139,6 +139,88 @@
   grid-column: 1 / -1;
 }
 
+.create-event-form__image-group {
+  display: grid;
+  gap: 12px;
+}
+
+.create-event-form__image-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.create-event-form__image-header label {
+  gap: 0;
+}
+
+.create-event-form__image-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.create-event-form__upload-button {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted-strong);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.create-event-form__upload-button:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.create-event-form__upload-button--ghost {
+  color: var(--danger);
+  border-color: rgba(185, 58, 84, 0.12);
+  background: rgba(185, 58, 84, 0.05);
+}
+
+.create-event-form__file-input {
+  display: none;
+}
+
+.create-event-form__helper {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.create-event-form__preview {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(29, 100, 182, 0.08);
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.create-event-form__preview img {
+  width: 100%;
+  max-width: 220px;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(29, 100, 182, 0.08);
+  background: var(--surface-muted);
+}
+
+.create-event-form__preview span {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
 .create-event-form input,
 .create-event-form textarea {
   width: 100%;
@@ -291,6 +373,16 @@
 
   .create-event-form__secondary,
   .create-event-form__primary {
+    width: 100%;
+  }
+
+  .create-event-form__image-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .create-event-form__image-buttons,
+  .create-event-form__upload-button {
     width: 100%;
   }
 

@@ -20,6 +20,7 @@ const users = {
 const USERS_STORAGE_KEY = 'aem-mock-users'
 const SESSION_STORAGE_KEY = 'aem-mock-session'
 const EVENTS_STORAGE_KEY = 'aem-mock-events'
+const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 
 const defaultEvents = [
   {
@@ -262,6 +263,34 @@ function saveMockEvents(nextEvents) {
   }
 }
 
+function getTrimmedValue(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function resolveEventImage({ eventData, fallbackImage = '' }) {
+  const uploadedImage = getTrimmedValue(eventData.uploadedImage)
+  const imageUrl = getTrimmedValue(eventData.imageUrl)
+  const existingImage = getTrimmedValue(eventData.existingImage)
+
+  if (uploadedImage) {
+    return uploadedImage
+  }
+
+  if (imageUrl) {
+    return imageUrl
+  }
+
+  if (existingImage) {
+    return existingImage
+  }
+
+  if (fallbackImage) {
+    return fallbackImage
+  }
+
+  return DEFAULT_EVENT_IMAGE
+}
+
 export function getCurrentMockUser() {
   if (!canUseStorage()) {
     return normalizeUser(users.student)
@@ -318,6 +347,7 @@ export function signUpMockUser({ fullName, email, password }) {
 }
 
 export function createMockEvent({ eventData, currentUser }) {
+  const imageUrl = getTrimmedValue(eventData.imageUrl)
   const nextEvent = {
     id: `event-${Date.now()}`,
     title: eventData.title.trim(),
@@ -333,7 +363,8 @@ export function createMockEvent({ eventData, currentUser }) {
     venue: eventData.location.trim(),
     city: 'Tashkent',
     location: eventData.location.trim(),
-    image: eventData.imageUrl.trim() || '/event-images/default-event.svg',
+    image: resolveEventImage({ eventData }),
+    customImageUrl: eventData.uploadedImage ? '' : imageUrl,
     category: eventData.category.trim() || 'General',
     priceLabel: 'Free',
     capacity: 0,
@@ -359,6 +390,7 @@ export function updateMockEvent({ eventId, eventData }) {
     return null
   }
 
+  const imageUrl = getTrimmedValue(eventData.imageUrl)
   const updatedEvent = {
     ...existingEvent,
     title: eventData.title.trim(),
@@ -373,7 +405,10 @@ export function updateMockEvent({ eventId, eventData }) {
     time: eventData.startTime,
     venue: eventData.location.trim(),
     location: eventData.location.trim(),
-    image: eventData.imageUrl.trim() || '/event-images/default-event.svg',
+    image: resolveEventImage({ eventData, fallbackImage: existingEvent.image }),
+    customImageUrl: eventData.uploadedImage
+      ? ''
+      : imageUrl || existingEvent.customImageUrl || '',
     category: eventData.category.trim() || 'General',
     updatedAt: new Date().toISOString(),
   }

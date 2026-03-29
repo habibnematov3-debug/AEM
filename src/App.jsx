@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import {
   createEvent,
+  deleteEvent,
   fetchEvents,
   updateEvent,
   getStoredCurrentUser,
@@ -89,8 +90,12 @@ function App() {
     return updatedEvent
   }
 
-  function handleDeleteEvent() {
-    return false
+  async function handleDeleteEvent(eventId) {
+    const result = await deleteEvent(eventId)
+    setEvents((currentEvents) =>
+      currentEvents.filter((event) => event.id !== result.deletedEventId),
+    )
+    return result
   }
 
   return (

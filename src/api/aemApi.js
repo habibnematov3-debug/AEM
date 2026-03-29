@@ -210,3 +210,15 @@ export async function updateEvent(eventId, formData) {
 
   return normalizeEvent(payload.event)
 }
+
+export async function deleteEvent(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/`, {
+    method: 'DELETE',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    deletedEventId: String(payload.deleted_event_id),
+    message: payload.message,
+  }
+}

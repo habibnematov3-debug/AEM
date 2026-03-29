@@ -17,6 +17,7 @@ function OrganizerPage({
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [eventPendingDelete, setEventPendingDelete] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formFeedback, setFormFeedback] = useState({ type: '', message: '' })
 
   const userEvents = useMemo(() => {
@@ -92,16 +93,31 @@ function OrganizerPage({
   }
 
   function handleCancelDelete() {
+    if (isDeleting) {
+      return
+    }
     setEventPendingDelete(null)
   }
 
-  function handleConfirmDelete() {
+  async function handleConfirmDelete() {
     if (!eventPendingDelete) {
       return
     }
 
-    onDeleteEvent(eventPendingDelete.id)
-    setEventPendingDelete(null)
+    setIsDeleting(true)
+
+    try {
+      await onDeleteEvent(eventPendingDelete.id)
+      setFormFeedback({ type: 'success', message: 'Event deleted successfully.' })
+      setEventPendingDelete(null)
+    } catch (error) {
+      setFormFeedback({
+        type: 'error',
+        message: error.message || 'Could not delete the event.',
+      })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   return (
@@ -200,6 +216,7 @@ function OrganizerPage({
                 type="button"
                 className="create-event-form__secondary"
                 onClick={handleCancelDelete}
+                disabled={isDeleting}
               >
                 Cancel
               </button>
@@ -207,8 +224,9 @@ function OrganizerPage({
                 type="button"
                 className="organizer-events-dialog__delete-button"
                 onClick={handleConfirmDelete}
+                disabled={isDeleting}
               >
-                Delete
+                {isDeleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

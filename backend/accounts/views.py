@@ -140,3 +140,30 @@ class EventDetailAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+    def delete(self, request, event_id):
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+        current_user = get_session_user(request)
+
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if event.creator_id != current_user.id:
+            return Response(
+                {'detail': 'You are not allowed to delete this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        deleted_event_id = event.id
+        event.delete()
+
+        return Response(
+            {
+                'message': 'Event deleted successfully.',
+                'deleted_event_id': deleted_event_id,
+            },
+            status=status.HTTP_200_OK,
+        )

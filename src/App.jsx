@@ -1,18 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
-import Header from './components/Header'
 import {
-  createMockEvent,
-  deleteMockEvent,
-  getCurrentMockUser,
-  getDefaultCurrentMockUser,
-  getMockEvents,
-  getMockUsers,
-  signInMockUser,
-  signUpMockUser,
-  updateMockEvent,
-} from './data/mockData'
+  createEvent,
+  fetchEvents,
+  getStoredCurrentUser,
+  signInUser,
+  signUpUser,
+} from './api/aemApi'
+import Header from './components/Header'
 import AuthPage from './pages/AuthPage'
 import EventDetailsPage from './pages/EventDetailsPage'
 import OrganizerPage from './pages/OrganizerPage'
@@ -22,11 +18,12 @@ import './styles/pages.css'
 
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
-  const [users, setUsers] = useState(() => getMockUsers())
-  const [currentUser, setCurrentUser] = useState(
-    () => getCurrentMockUser() ?? getDefaultCurrentMockUser(),
-  )
-  const [events, setEvents] = useState(() => getMockEvents())
+  const [currentUser, setCurrentUser] = useState(() => getStoredCurrentUser())
+  const [users, setUsers] = useState(() => {
+    const storedUser = getStoredCurrentUser()
+    return storedUser ? [storedUser] : []
+  })
+  const [events, setEvents] = useState([])
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
   const isDashboardPage =
@@ -34,51 +31,66 @@ function App() {
     location.pathname === '/organizer' ||
     location.pathname.startsWith('/events/')
 
-  function handleSignIn(credentials) {
-    const result = signInMockUser(credentials)
-    if (result.ok) {
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadEvents() {
+      try {
+        const fetchedEvents = await fetchEvents()
+        if (isMounted) {
+          setEvents(fetchedEvents)
+        }
+      } catch {
+        if (isMounted) {
+          setEvents([])
+        }
+      }
+    }
+
+    loadEvents()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  async function handleSignIn(credentials) {
+    try {
+      const result = await signInUser(credentials)
       setCurrentUser(result.user)
+      setUsers(result.user ? [result.user] : [])
+      return result
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      }
     }
-
-    return result
   }
 
-  function handleSignUp(payload) {
-    const result = signUpMockUser(payload)
-    if (result.ok) {
-      setUsers(getMockUsers())
+  async function handleSignUp(payload) {
+    try {
+      const result = await signUpUser(payload)
+      return result
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      }
     }
-
-    return result
   }
 
-  function handleCreateEvent(eventData) {
-    const activeUser = currentUser ?? getDefaultCurrentMockUser()
-    const createdEvent = createMockEvent({ eventData, currentUser: activeUser })
+  async function handleCreateEvent(eventData) {
+    const createdEvent = await createEvent(eventData)
     setEvents((currentEvents) => [createdEvent, ...currentEvents])
     return createdEvent
   }
 
-  function handleUpdateEvent(eventId, eventData) {
-    const updatedEvent = updateMockEvent({ eventId, eventData })
-    if (!updatedEvent) {
-      return null
-    }
-
-    setEvents((currentEvents) =>
-      currentEvents.map((event) => (event.id === eventId ? updatedEvent : event)),
-    )
-    return updatedEvent
+  function handleUpdateEvent() {
+    return null
   }
 
-  function handleDeleteEvent(eventId) {
-    const wasDeleted = deleteMockEvent(eventId)
-    if (!wasDeleted) {
-      return false
-    }
-
-    setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId))
-    return true
+  function handleDeleteEvent() {
+    return false
   }
 
   return (

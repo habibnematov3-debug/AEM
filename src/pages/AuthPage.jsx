@@ -32,6 +32,7 @@ function AuthPage({ onSignIn, onSignUp }) {
   const [signUpData, setSignUpData] = useState(initialSignUp)
   const [showSignInPassword, setShowSignInPassword] = useState(false)
   const [showSignUpPassword, setShowSignUpPassword] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
 
   const content = useMemo(() => modeContent[mode], [mode])
@@ -41,26 +42,33 @@ function AuthPage({ onSignIn, onSignUp }) {
     setFeedback({ type: '', message: '' })
   }
 
-  function handleSignInSubmit(event) {
+  async function handleSignInSubmit(event) {
     event.preventDefault()
+    setIsSubmitting(true)
 
-    const result = onSignIn(signInData)
+    const result = await onSignIn(signInData)
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
+      setIsSubmitting(false)
       return
     }
 
     const displayName = result.user.full_name ?? result.user.name ?? 'there'
     setFeedback({ type: 'success', message: `Welcome back, ${displayName}. Redirecting...` })
-    window.setTimeout(() => navigate('/students'), 500)
+    window.setTimeout(() => {
+      setIsSubmitting(false)
+      navigate('/students')
+    }, 500)
   }
 
-  function handleSignUpSubmit(event) {
+  async function handleSignUpSubmit(event) {
     event.preventDefault()
+    setIsSubmitting(true)
 
-    const result = onSignUp(signUpData)
+    const result = await onSignUp(signUpData)
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
+      setIsSubmitting(false)
       return
     }
 
@@ -71,6 +79,7 @@ function AuthPage({ onSignIn, onSignUp }) {
       type: 'success',
       message: 'Account created successfully. Sign in to continue.',
     })
+    setIsSubmitting(false)
   }
 
   return (
@@ -164,10 +173,11 @@ function AuthPage({ onSignIn, onSignUp }) {
             <form className="auth-form" onSubmit={handleSignInSubmit}>
               <label>
                 <span>Email</span>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={signInData.email}
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    disabled={isSubmitting}
+                    value={signInData.email}
                   onChange={(event) =>
                     setSignInData((current) => ({ ...current, email: event.target.value }))
                   }
@@ -182,6 +192,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                   <input
                     type={showSignInPassword ? 'text' : 'password'}
                     autoComplete="current-password"
+                    disabled={isSubmitting}
                     value={signInData.password}
                     onChange={(event) =>
                       setSignInData((current) => ({ ...current, password: event.target.value }))
@@ -192,6 +203,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                   <button
                     type="button"
                     className="auth-password-field__toggle"
+                    disabled={isSubmitting}
                     onClick={() => setShowSignInPassword((current) => !current)}
                     aria-label={showSignInPassword ? 'Hide password' : 'Show password'}
                   >
@@ -200,18 +212,19 @@ function AuthPage({ onSignIn, onSignUp }) {
                 </div>
               </label>
 
-              <button type="submit" className="auth-form__submit">
-                {content.submitLabel}
+              <button type="submit" className="auth-form__submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Signing In...' : content.submitLabel}
               </button>
             </form>
           ) : (
             <form className="auth-form" onSubmit={handleSignUpSubmit}>
               <label>
                 <span>Full Name</span>
-                <input
-                  type="text"
-                  autoComplete="name"
-                  value={signUpData.fullName}
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    disabled={isSubmitting}
+                    value={signUpData.fullName}
                   onChange={(event) =>
                     setSignUpData((current) => ({ ...current, fullName: event.target.value }))
                   }
@@ -222,10 +235,11 @@ function AuthPage({ onSignIn, onSignUp }) {
 
               <label>
                 <span>Email</span>
-                <input
-                  type="email"
-                  autoComplete="email"
-                  value={signUpData.email}
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    disabled={isSubmitting}
+                    value={signUpData.email}
                   onChange={(event) =>
                     setSignUpData((current) => ({ ...current, email: event.target.value }))
                   }
@@ -240,6 +254,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                   <input
                     type={showSignUpPassword ? 'text' : 'password'}
                     autoComplete="new-password"
+                    disabled={isSubmitting}
                     value={signUpData.password}
                     onChange={(event) =>
                       setSignUpData((current) => ({ ...current, password: event.target.value }))
@@ -250,6 +265,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                   <button
                     type="button"
                     className="auth-password-field__toggle"
+                    disabled={isSubmitting}
                     onClick={() => setShowSignUpPassword((current) => !current)}
                     aria-label={showSignUpPassword ? 'Hide password' : 'Show password'}
                   >
@@ -258,8 +274,8 @@ function AuthPage({ onSignIn, onSignUp }) {
                 </div>
               </label>
 
-              <button type="submit" className="auth-form__submit">
-                {content.submitLabel}
+              <button type="submit" className="auth-form__submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Creating Account...' : content.submitLabel}
               </button>
             </form>
           )}
@@ -269,6 +285,7 @@ function AuthPage({ onSignIn, onSignUp }) {
             <button
               type="button"
               className="auth-card__footer-link"
+              disabled={isSubmitting}
               onClick={() => switchMode(mode === 'signin' ? 'signup' : 'signin')}
             >
               {content.footerAction}

@@ -263,6 +263,15 @@
   background: rgba(29, 100, 182, 0.08);
 }
 
+.auth-password-field__toggle:disabled,
+.auth-form__submit:disabled,
+.auth-card__footer-link:disabled {
+  opacity: 0.68;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .auth-form__submit {
   min-height: 54px;
   margin-top: 4px;

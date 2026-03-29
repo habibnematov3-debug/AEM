@@ -17,6 +17,7 @@ function OrganizerPage({
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [eventPendingDelete, setEventPendingDelete] = useState(null)
+  const [formFeedback, setFormFeedback] = useState({ type: '', message: '' })
 
   const userEvents = useMemo(() => {
     const ownedEvents = events.filter((event) => event.creatorId === currentUser?.id)
@@ -34,13 +35,22 @@ function OrganizerPage({
 
   const hasAccountEvents = events.some((event) => event.creatorId === currentUser?.id)
 
-  function handleCreate(formData) {
-    onCreateEvent(formData)
-    setEditingEvent(null)
-    setIsCreateFormOpen(false)
+  async function handleCreate(formData) {
+    try {
+      await onCreateEvent(formData)
+      setFormFeedback({ type: 'success', message: 'Event created successfully.' })
+      setEditingEvent(null)
+      setIsCreateFormOpen(false)
+    } catch (error) {
+      setFormFeedback({
+        type: 'error',
+        message: error.message || 'Could not create the event.',
+      })
+    }
   }
 
   function handleEdit(event) {
+    setFormFeedback({ type: '', message: '' })
     setEventPendingDelete(null)
     setIsCreateFormOpen(false)
     setEditingEvent(event)
@@ -57,11 +67,13 @@ function OrganizerPage({
   }
 
   function handleCancelForm() {
+    setFormFeedback({ type: '', message: '' })
     setEditingEvent(null)
     setIsCreateFormOpen(false)
   }
 
   function handleRequestDelete(event) {
+    setFormFeedback({ type: '', message: '' })
     setEditingEvent(null)
     setIsCreateFormOpen(false)
     setEventPendingDelete(event)
@@ -93,6 +105,7 @@ function OrganizerPage({
           type="button"
           className="organizer-events-page__create-button"
           onClick={() => {
+            setFormFeedback({ type: '', message: '' })
             setEditingEvent(null)
             setEventPendingDelete(null)
             setIsCreateFormOpen(true)
@@ -101,6 +114,18 @@ function OrganizerPage({
           Create Event
         </button>
       </div>
+
+      {formFeedback.message ? (
+        <div
+          className={
+            formFeedback.type === 'error'
+              ? 'organizer-events-page__feedback organizer-events-page__feedback--error'
+              : 'organizer-events-page__feedback organizer-events-page__feedback--success'
+          }
+        >
+          {formFeedback.message}
+        </div>
+      ) : null}
 
       {isCreateFormOpen ? (
         <CreateEventForm

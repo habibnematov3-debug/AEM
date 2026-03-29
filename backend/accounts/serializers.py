@@ -3,7 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import AEMUser, UserSettings
+from .models import AEMUser, Event, UserSettings
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -82,3 +82,86 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class EventSerializer(serializers.ModelSerializer):
+    creator_id = serializers.IntegerField(read_only=True)
+    creator_name = serializers.CharField(source='creator.full_name', read_only=True)
+
+    class Meta:
+        model = Event
+        fields = (
+            'id',
+            'creator_id',
+            'creator_name',
+            'title',
+            'description',
+            'category',
+            'location',
+            'image_url',
+            'event_date',
+            'start_time',
+            'end_time',
+            'moderation_status',
+            'created_at',
+            'updated_at',
+        )
+        read_only_fields = fields
+
+
+class EventCreateSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=200)
+    description = serializers.CharField()
+    category = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    location = serializers.CharField(max_length=200)
+    image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    event_date = serializers.DateField()
+    start_time = serializers.TimeField()
+    end_time = serializers.TimeField()
+
+    def validate_title(self, value):
+        title = value.strip()
+        if not title:
+            raise serializers.ValidationError('Event title is required.')
+        return title
+
+    def validate_description(self, value):
+        description = value.strip()
+        if not description:
+            raise serializers.ValidationError('Description is required.')
+        return description
+
+    def validate_location(self, value):
+        location = value.strip()
+        if not location:
+            raise serializers.ValidationError('Location is required.')
+        return location
+
+    def validate(self, attrs):
+        if attrs['end_time'] <= attrs['start_time']:
+            raise serializers.ValidationError(
+                {'end_time': 'End time must be later than start time.'},
+            )
+        return attrs
+
+    @transaction.atomic
+    def create(self, validated_data):
+        creator = self.context['creator']
+        now = timezone.now()
+
+        event = Event(
+            creator=creator,
+            title=validated_data['title'],
+            description=validated_data['description'],
+            category=validated_data.get('category', '').strip() or 'general',
+            location=validated_data['location'],
+            image_url=(validated_data.get('image_url') or '').strip() or None,
+            event_date=validated_data['event_date'],
+            start_time=validated_data['start_time'],
+            end_time=validated_data['end_time'],
+            moderation_status=Event.ModerationStatuses.PENDING,
+            created_at=now,
+            updated_at=now,
+        )
+        event.save()
+        return event

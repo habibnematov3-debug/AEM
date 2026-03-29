@@ -49,6 +49,25 @@
   justify-content: start;
 }
 
+.organizer-events-page__feedback {
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  font-size: 0.96rem;
+  line-height: 1.55;
+}
+
+.organizer-events-page__feedback--success {
+  color: #145435;
+  background: rgba(29, 135, 82, 0.1);
+  border: 1px solid rgba(29, 135, 82, 0.16);
+}
+
+.organizer-events-page__feedback--error {
+  color: #98243d;
+  background: rgba(185, 58, 84, 0.08);
+  border: 1px solid rgba(185, 58, 84, 0.14);
+}
+
 .organizer-events-page__create-button,
 .create-event-form__primary {
   min-height: 46px;

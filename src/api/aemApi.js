@@ -3,6 +3,19 @@ const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 const API_TIMEOUT_MS = 20000
 
+function sanitizeImageUrl(value) {
+  if (!value || typeof value !== 'string') {
+    return ''
+  }
+
+  const normalized = value.trim()
+  if (!normalized || normalized.toLowerCase().startsWith('data:image/')) {
+    return ''
+  }
+
+  return normalized
+}
+
 function formatEventDate(value) {
   if (!value) {
     return ''
@@ -65,7 +78,8 @@ function normalizeUser(rawUser) {
 
 function normalizeEvent(rawEvent) {
   const creatorId = rawEvent.creator_id != null ? String(rawEvent.creator_id) : ''
-  const imageUrl = rawEvent.image_url?.trim?.() ? rawEvent.image_url : DEFAULT_EVENT_IMAGE
+  const sanitizedCustomImageUrl = sanitizeImageUrl(rawEvent.image_url)
+  const imageUrl = sanitizedCustomImageUrl || DEFAULT_EVENT_IMAGE
 
   return {
     id: String(rawEvent.id),
@@ -79,7 +93,7 @@ function normalizeEvent(rawEvent) {
     city: 'Tashkent',
     location: rawEvent.location ?? '',
     image: imageUrl,
-    customImageUrl: rawEvent.image_url ?? '',
+    customImageUrl: sanitizedCustomImageUrl,
     category: rawEvent.category ?? 'general',
     status: formatStatusLabel(rawEvent.moderation_status),
     moderationStatus: rawEvent.moderation_status ?? 'pending',
@@ -222,7 +236,7 @@ export async function createEvent(formData) {
       start_time: formData.startTime,
       end_time: formData.endTime,
       location: formData.location,
-      image_url: formData.uploadedImage || formData.imageUrl || '',
+      image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
     }),
   })
@@ -240,7 +254,7 @@ export async function updateEvent(eventId, formData) {
       start_time: formData.startTime,
       end_time: formData.endTime,
       location: formData.location,
-      image_url: formData.uploadedImage || formData.imageUrl || '',
+      image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
     }),
   })

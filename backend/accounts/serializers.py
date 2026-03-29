@@ -6,6 +6,21 @@ from rest_framework import serializers
 from .models import AEMUser, Event, Participation, UserSettings
 
 
+def is_data_image_url(value):
+    return isinstance(value, str) and value.strip().lower().startswith('data:image/')
+
+
+def sanitize_image_url(value):
+    if not value:
+        return None
+
+    normalized = value.strip()
+    if not normalized or is_data_image_url(normalized):
+        return None
+
+    return normalized
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = AEMUser
@@ -87,7 +102,11 @@ class LoginSerializer(serializers.Serializer):
 class EventSerializer(serializers.ModelSerializer):
     creator_id = serializers.IntegerField(read_only=True)
     creator_name = serializers.CharField(source='creator.full_name', read_only=True)
+    image_url = serializers.SerializerMethodField()
     is_joined = serializers.SerializerMethodField()
+
+    def get_image_url(self, obj):
+        return sanitize_image_url(obj.image_url)
 
     def get_is_joined(self, obj):
         current_user = self.context.get('current_user')
@@ -160,6 +179,14 @@ class EventCreateSerializer(serializers.Serializer):
             raise serializers.ValidationError('Location is required.')
         return location
 
+    def validate_image_url(self, value):
+        sanitized = sanitize_image_url(value)
+        if value and sanitized is None:
+            raise serializers.ValidationError(
+                'Please provide a direct image URL. Device-uploaded base64 images are not supported in this MVP.',
+            )
+        return sanitized
+
     def validate(self, attrs):
         start_time = attrs.get(
             'start_time',
@@ -187,7 +214,7 @@ class EventCreateSerializer(serializers.Serializer):
             description=validated_data['description'],
             category=validated_data.get('category', '').strip() or 'general',
             location=validated_data['location'],
-            image_url=(validated_data.get('image_url') or '').strip() or None,
+            image_url=sanitize_image_url(validated_data.get('image_url')),
             event_date=validated_data['event_date'],
             start_time=validated_data['start_time'],
             end_time=validated_data['end_time'],
@@ -206,9 +233,9 @@ class EventCreateSerializer(serializers.Serializer):
             validated_data.get('category', instance.category) or ''
         ).strip() or 'general'
         instance.location = validated_data.get('location', instance.location)
-        instance.image_url = (
-            validated_data.get('image_url', instance.image_url) or ''
-        ).strip() or None
+        instance.image_url = sanitize_image_url(
+            validated_data.get('image_url', instance.image_url),
+        )
         instance.event_date = validated_data.get('event_date', instance.event_date)
         instance.start_time = validated_data.get('start_time', instance.start_time)
         instance.end_time = validated_data.get('end_time', instance.end_time)

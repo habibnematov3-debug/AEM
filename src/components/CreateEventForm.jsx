@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 
@@ -11,6 +11,10 @@ const initialFormState = {
   location: '',
   imageUrl: '',
   category: '',
+}
+
+function isDataImageUrl(value) {
+  return typeof value === 'string' && value.trim().toLowerCase().startsWith('data:image/')
 }
 
 function validateEventForm(formData) {
@@ -79,28 +83,15 @@ function buildFormState(initialValues) {
     startTime: initialValues.startTime ?? initialValues.time ?? '',
     endTime: initialValues.endTime ?? '',
     location: initialValues.location ?? initialValues.venue ?? '',
-    imageUrl: initialValues.customImageUrl ?? '',
+    imageUrl: isDataImageUrl(initialValues.customImageUrl) ? '' : initialValues.customImageUrl ?? '',
     category: initialValues.category ?? '',
   }
-}
-
-function readFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-
-    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
-    reader.onerror = () => reject(new Error('Could not read the selected image.'))
-    reader.readAsDataURL(file)
-  })
 }
 
 function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSubmit, titleId }) {
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
-  const [uploadedImage, setUploadedImage] = useState('')
-  const [selectedFileName, setSelectedFileName] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const fileInputRef = useRef(null)
 
   const isEditMode = mode === 'edit'
   const panelEyebrow = isEditMode ? 'Existing event' : 'New event'
@@ -108,20 +99,13 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
   const submitLabel = isEditMode ? 'Save Changes' : 'Create Event'
   const closeLabel = isEditMode ? 'Cancel edit' : 'Close'
   const existingImage = initialValues?.image ?? ''
-  const imagePreview = uploadedImage || formData.imageUrl.trim() || existingImage || DEFAULT_EVENT_IMAGE
-  const imageHelperText =
-    'Upload from your device or leave empty to use a default event image'
+  const imagePreview = formData.imageUrl.trim() || existingImage || DEFAULT_EVENT_IMAGE
+  const imageHelperText = 'Use a direct image URL, or leave this empty to use the default event image.'
 
   useEffect(() => {
     setFormData(buildFormState(initialValues))
     setErrors({})
-    setUploadedImage('')
-    setSelectedFileName('')
     setIsSubmitting(false)
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }, [initialValues, mode])
 
   function updateField(field, value) {
@@ -143,46 +127,12 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
     try {
       await onSubmit({
         ...formData,
-        uploadedImage,
         existingImage,
       })
       setFormData(initialFormState)
       setErrors({})
-      setUploadedImage('')
-      setSelectedFileName('')
     } finally {
       setIsSubmitting(false)
-    }
-  }
-
-  function handleOpenFilePicker() {
-    fileInputRef.current?.click()
-  }
-
-  async function handleImageSelected(event) {
-    const selectedFile = event.target.files?.[0]
-    if (!selectedFile || !selectedFile.type.startsWith('image/')) {
-      return
-    }
-
-    try {
-      const imageDataUrl = await readFileAsDataUrl(selectedFile)
-      setUploadedImage(imageDataUrl)
-      setSelectedFileName(selectedFile.name)
-    } catch {
-      setSelectedFileName('')
-      setUploadedImage('')
-    } finally {
-      event.target.value = ''
-    }
-  }
-
-  function handleRemoveUploadedImage() {
-    setUploadedImage('')
-    setSelectedFileName('')
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
     }
   }
 
@@ -279,28 +229,6 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
         <div className="create-event-form__full create-event-form__image-group">
           <div className="create-event-form__image-header">
             <label htmlFor="event-image-url">Image URL</label>
-
-            <div className="create-event-form__image-buttons">
-              <button
-                type="button"
-                className="create-event-form__upload-button"
-                onClick={handleOpenFilePicker}
-                disabled={isSubmitting}
-              >
-                Upload Image
-              </button>
-
-              {uploadedImage ? (
-                <button
-                  type="button"
-                  className="create-event-form__upload-button create-event-form__upload-button--ghost"
-                  onClick={handleRemoveUploadedImage}
-                  disabled={isSubmitting}
-                >
-                  Remove Upload
-                </button>
-              ) : null}
-            </div>
           </div>
 
           <input
@@ -309,15 +237,6 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.imageUrl}
             onChange={(event) => updateField('imageUrl', event.target.value)}
             placeholder="Optional image URL"
-            disabled={isSubmitting}
-          />
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="create-event-form__file-input"
-            onChange={handleImageSelected}
             disabled={isSubmitting}
           />
 
@@ -332,11 +251,9 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
               }}
             />
             <span>
-              {selectedFileName
-                ? `Selected file: ${selectedFileName}`
-                : imagePreview === DEFAULT_EVENT_IMAGE
-                  ? 'Default event image preview'
-                  : 'Current event image preview'}
+              {imagePreview === DEFAULT_EVENT_IMAGE
+                ? 'Default event image preview'
+                : 'Current event image preview'}
             </span>
           </div>
         </div>

@@ -19,10 +19,6 @@ import './styles/pages.css'
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
   const [currentUser, setCurrentUser] = useState(() => getStoredCurrentUser())
-  const [users, setUsers] = useState(() => {
-    const storedUser = getStoredCurrentUser()
-    return storedUser ? [storedUser] : []
-  })
   const [events, setEvents] = useState([])
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
@@ -57,7 +53,6 @@ function App() {
     try {
       const result = await signInUser(credentials)
       setCurrentUser(result.user)
-      setUsers(result.user ? [result.user] : [])
       return result
     } catch (error) {
       return {
@@ -134,7 +129,7 @@ function App() {
           />
           <Route
             path="/events/:eventId"
-            element={<EventDetailsPage events={events} users={users} />}
+            element={<EventDetailsPage />}
           />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

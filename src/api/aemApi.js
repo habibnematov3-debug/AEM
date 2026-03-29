@@ -170,6 +170,11 @@ export async function fetchEvents() {
   return (payload.results ?? []).map(normalizeEvent)
 }
 
+export async function fetchEventById(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/`)
+  return normalizeEvent(payload)
+}
+
 export async function createEvent(formData) {
   const payload = await apiRequest('/api/events/', {
     method: 'POST',

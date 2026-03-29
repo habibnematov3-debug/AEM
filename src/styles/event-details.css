@@ -129,6 +129,16 @@
   text-align: center;
 }
 
+.event-details-empty--info h1,
+.event-details-empty--error h1 {
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+}
+
+.event-details-empty--error {
+  border-color: rgba(184, 58, 58, 0.16);
+  background: linear-gradient(180deg, #fff, #fff7f7);
+}
+
 .event-details-empty .event-details-back {
   justify-self: flex-start;
 }

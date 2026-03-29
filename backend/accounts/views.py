@@ -1,5 +1,6 @@
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -98,3 +99,16 @@ class EventListCreateAPIView(APIView):
             },
             status=status.HTTP_201_CREATED,
         )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventDetailAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, event_id):
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+        return Response(EventSerializer(event).data, status=status.HTTP_200_OK)

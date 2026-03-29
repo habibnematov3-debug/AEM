@@ -1,23 +1,53 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
+import { fetchEventById } from '../api/aemApi'
 import '../styles/event-details.css'
 
-function EventDetailsPage({ events = [], users = [] }) {
+function EventDetailsPage() {
   const navigate = useNavigate()
   const { eventId } = useParams()
+  const [event, setEvent] = useState(null)
+  const [status, setStatus] = useState('loading')
+  const [errorMessage, setErrorMessage] = useState('')
 
-  const event = useMemo(
-    () => events.find((currentEvent) => currentEvent.id === eventId) ?? null,
-    [eventId, events],
-  )
+  useEffect(() => {
+    let isMounted = true
 
-  const organizerName = event
-    ? event.organizerName ??
-      users.find((user) => user.id === event.creatorId)?.name ??
-      users.find((user) => user.id === event.organizerId)?.name ??
-      'Unknown organizer'
-    : ''
+    async function loadEvent() {
+      setStatus('loading')
+      setErrorMessage('')
+
+      try {
+        const fetchedEvent = await fetchEventById(eventId)
+        if (!isMounted) {
+          return
+        }
+
+        setEvent(fetchedEvent)
+        setStatus('ready')
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setEvent(null)
+        if (error.status === 404) {
+          setStatus('not-found')
+          return
+        }
+
+        setErrorMessage(error.message || 'Could not load the event details.')
+        setStatus('error')
+      }
+    }
+
+    loadEvent()
+
+    return () => {
+      isMounted = false
+    }
+  }, [eventId])
 
   function handleBack() {
     if (window.history.length > 1) {
@@ -28,7 +58,21 @@ function EventDetailsPage({ events = [], users = [] }) {
     navigate('/students')
   }
 
-  if (!event) {
+  if (status === 'loading') {
+    return (
+      <section className="event-details-page">
+        <div className="event-details-empty event-details-empty--info">
+          <button type="button" className="event-details-back" onClick={handleBack}>
+            Back to Events
+          </button>
+          <h1>Loading event...</h1>
+          <p>Fetching the latest event details from the backend.</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (status === 'not-found') {
     return (
       <section className="event-details-page">
         <div className="event-details-empty">
@@ -36,7 +80,21 @@ function EventDetailsPage({ events = [], users = [] }) {
             Back to Events
           </button>
           <h1>Event not found</h1>
-          <p>The event you are trying to open does not exist in the current mock state.</p>
+          <p>The event you are trying to open does not exist.</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (status === 'error') {
+    return (
+      <section className="event-details-page">
+        <div className="event-details-empty event-details-empty--error">
+          <button type="button" className="event-details-back" onClick={handleBack}>
+            Back to Events
+          </button>
+          <h1>Could not load event</h1>
+          <p>{errorMessage}</p>
         </div>
       </section>
     )
@@ -67,11 +125,11 @@ function EventDetailsPage({ events = [], users = [] }) {
             </div>
             <div className="event-details-item">
               <span>Start time</span>
-              <strong>{event.startTime ?? event.time ?? 'TBD'}</strong>
+              <strong>{event.startTime || 'TBD'}</strong>
             </div>
             <div className="event-details-item">
               <span>End time</span>
-              <strong>{event.endTime ?? 'TBD'}</strong>
+              <strong>{event.endTime || 'TBD'}</strong>
             </div>
             <div className="event-details-item">
               <span>Location</span>
@@ -83,7 +141,7 @@ function EventDetailsPage({ events = [], users = [] }) {
             </div>
             <div className="event-details-item">
               <span>Organizer</span>
-              <strong>{organizerName}</strong>
+              <strong>{event.creatorName || event.organizerName || 'Unknown organizer'}</strong>
             </div>
           </div>
         </div>

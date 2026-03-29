@@ -62,7 +62,7 @@ function AuthPage() {
     <section className="auth-page">
       <div className="auth-card">
         <div className="auth-card__brand">
-          <h1>AEM</h1>
+          <img className="auth-card__logo" src="/logo.png" alt="AEM logo" />
           <p className="auth-card__subtitle">Academic Event Manager</p>
         </div>
 

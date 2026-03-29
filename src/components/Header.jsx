@@ -22,7 +22,7 @@ function Header({ variant = 'default', searchValue = '', onSearchChange = () => 
         <div className="site-header__brand-group">
           {variant === 'students' ? (
             <NavLink to="/students" className="site-header__brand site-header__brand--students">
-              AEM
+              <img src="/logo.png" alt="AEM logo" className="site-header__brand-logo" />
             </NavLink>
           ) : (
             <div>

@@ -49,8 +49,14 @@
 }
 
 .site-header__brand--students {
-  color: #6756ff;
-  letter-spacing: -0.04em;
+  display: inline-flex;
+  align-items: center;
+}
+
+.site-header__brand-logo {
+  width: 92px;
+  height: auto;
+  display: block;
 }
 
 .site-header__search {
@@ -156,5 +162,9 @@
   .site-header__actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .site-header__brand-logo {
+    width: 78px;
   }
 }

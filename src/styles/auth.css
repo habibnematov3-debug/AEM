@@ -23,11 +23,10 @@
   gap: 10px;
 }
 
-.auth-card h1 {
-  margin: 0;
-  font-size: 2.8rem;
-  line-height: 1;
-  color: #113362;
+.auth-card__logo {
+  width: min(180px, 48vw);
+  height: auto;
+  display: block;
 }
 
 .auth-card__subtitle {
@@ -137,5 +136,9 @@
   .auth-card {
     padding: 24px 20px;
     border-radius: 22px;
+  }
+
+  .auth-card__logo {
+    width: min(150px, 58vw);
   }
 }

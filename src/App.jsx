@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Header from './components/Header'
 import { createMockEvent, getCurrentMockUser, getMockEvents, studentPageData } from './data/mockData'
 import AuthPage from './pages/AuthPage'
+import EventDetailsPage from './pages/EventDetailsPage'
 import OrganizerPage from './pages/OrganizerPage'
 import StudentsPage from './pages/StudentsPage'
 import './styles/app.css'
@@ -15,7 +16,9 @@ function App() {
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
   const isDashboardPage =
-    location.pathname === '/students' || location.pathname === '/organizer'
+    location.pathname === '/students' ||
+    location.pathname === '/organizer' ||
+    location.pathname.startsWith('/events/')
 
   function handleCreateEvent(eventData) {
     const currentUser = getCurrentMockUser() ?? studentPageData.user
@@ -50,6 +53,7 @@ function App() {
               />
             }
           />
+          <Route path="/events/:eventId" element={<EventDetailsPage events={events} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

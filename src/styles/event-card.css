@@ -8,6 +8,12 @@
   box-shadow: var(--shadow);
 }
 
+.event-card__link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .event-card--student {
   gap: 0;
   padding: 0;
@@ -73,6 +79,9 @@
 }
 
 .event-card__action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 40px;
   padding: 0 16px;
   border: none;
@@ -81,6 +90,7 @@
   color: white;
   font: inherit;
   font-weight: 700;
+  text-decoration: none;
   cursor: pointer;
 }
 

@@ -29,6 +29,8 @@ const defaultEvents = [
     description:
       'Hands-on session for students who want to turn class projects into product demos.',
     date: 'April 15, 2026',
+    startTime: '18:30',
+    endTime: '20:30',
     time: '18:30',
     venue: 'Main Auditorium',
     city: 'Tashkent',
@@ -38,6 +40,7 @@ const defaultEvents = [
     capacity: 80,
     registeredCount: 54,
     status: 'Open',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-20T09:00:00.000Z',
@@ -49,6 +52,8 @@ const defaultEvents = [
     description:
       'Pitch your idea to mentors and get structured feedback before the semester demo.',
     date: 'April 22, 2026',
+    startTime: '17:00',
+    endTime: '21:00',
     time: '17:00',
     venue: 'University Stadium',
     city: 'Tashkent',
@@ -58,6 +63,7 @@ const defaultEvents = [
     capacity: 120,
     registeredCount: 91,
     status: 'Open',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-21T10:30:00.000Z',
@@ -69,6 +75,8 @@ const defaultEvents = [
     description:
       'Informal networking evening with alumni, recruiters, and final-year students.',
     date: 'April 18, 2026',
+    startTime: '19:15',
+    endTime: '21:15',
     time: '19:15',
     venue: 'Computer Science Building',
     city: 'Tashkent',
@@ -78,6 +86,7 @@ const defaultEvents = [
     capacity: 60,
     registeredCount: 60,
     status: 'Full',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-22T12:00:00.000Z',
@@ -89,6 +98,8 @@ const defaultEvents = [
     description:
       'Fast collaborative ideation session for product design, UX thinking, and student startups.',
     date: 'May 02, 2026',
+    startTime: '14:00',
+    endTime: '17:00',
     time: '14:00',
     venue: 'Creative Studio',
     city: 'Tashkent',
@@ -98,6 +109,7 @@ const defaultEvents = [
     capacity: 50,
     registeredCount: 27,
     status: 'Open',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-23T08:45:00.000Z',
@@ -109,6 +121,8 @@ const defaultEvents = [
     description:
       'Final presentations and live demonstrations from interdisciplinary robotics teams.',
     date: 'May 07, 2026',
+    startTime: '16:30',
+    endTime: '19:30',
     time: '16:30',
     venue: 'Engineering Arena',
     city: 'Tashkent',
@@ -118,6 +132,7 @@ const defaultEvents = [
     capacity: 140,
     registeredCount: 96,
     status: 'Open',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-24T14:10:00.000Z',
@@ -129,6 +144,8 @@ const defaultEvents = [
     description:
       'Relaxed outdoor movie night with snacks, music, and student community activities.',
     date: 'May 12, 2026',
+    startTime: '20:00',
+    endTime: '22:00',
     time: '20:00',
     venue: 'Campus Courtyard',
     city: 'Tashkent',
@@ -138,6 +155,7 @@ const defaultEvents = [
     capacity: 100,
     registeredCount: 61,
     status: 'Open',
+    organizerName: 'Tech Events Club',
     creatorId: 'organizer-1',
     organizerId: 'organizer-1',
     createdAt: '2026-03-25T16:20:00.000Z',
@@ -212,6 +230,10 @@ export function getMockUsers() {
   }
 
   return JSON.parse(storedUsers)
+}
+
+export function getMockUserById(userId) {
+  return getMockUsers().find((user) => user.id === userId) ?? null
 }
 
 function saveMockUsers(nextUsers) {
@@ -317,6 +339,7 @@ export function createMockEvent({ eventData, currentUser }) {
     capacity: 0,
     registeredCount: 0,
     status: 'published',
+    organizerName: currentUser.name,
     creatorId: currentUser.id,
     organizerId: currentUser.id,
     createdAt: new Date().toISOString(),

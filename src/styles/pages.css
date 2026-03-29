@@ -145,44 +145,6 @@
   background: var(--accent-dark);
 }
 
-.page-logo-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  width: fit-content;
-  padding: 10px 14px 10px 10px;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.88);
-  border: 1px solid rgba(29, 100, 182, 0.12);
-  box-shadow: 0 14px 32px rgba(15, 42, 77, 0.06);
-}
-
-.page-logo-chip img {
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  object-fit: contain;
-  background: white;
-}
-
-.page-logo-chip__text {
-  display: grid;
-  gap: 2px;
-}
-
-.page-logo-chip__text span {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.page-logo-chip__text strong {
-  color: #153a66;
-  font-size: 1rem;
-}
-
 @media (max-width: 720px) {
   .hero-panel,
   .route-card,
@@ -198,14 +160,5 @@
   .page-intro {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .page-logo-chip {
-    border-radius: 18px;
-  }
-
-  .page-logo-chip img {
-    width: 48px;
-    height: 48px;
   }
 }

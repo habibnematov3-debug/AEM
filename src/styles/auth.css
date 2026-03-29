@@ -20,22 +20,7 @@
   display: grid;
   justify-items: center;
   text-align: center;
-  gap: 8px;
-}
-
-.auth-card__logo {
-  width: 108px;
-  height: 108px;
-  object-fit: contain;
-}
-
-.auth-card__eyebrow {
-  margin: 0;
-  color: #6b7a90;
-  font-size: 0.82rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  gap: 10px;
 }
 
 .auth-card h1 {
@@ -152,10 +137,5 @@
   .auth-card {
     padding: 24px 20px;
     border-radius: 22px;
-  }
-
-  .auth-card__logo {
-    width: 92px;
-    height: 92px;
   }
 }

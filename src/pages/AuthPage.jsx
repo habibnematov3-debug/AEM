@@ -62,12 +62,6 @@ function AuthPage() {
     <section className="auth-page">
       <div className="auth-card">
         <div className="auth-card__brand">
-          <img
-            className="auth-card__logo"
-            src="/ajou-logo.svg"
-            alt="Ajou University in Tashkent logo"
-          />
-          <p className="auth-card__eyebrow">Ajou University in Tashkent</p>
           <h1>AEM</h1>
           <p className="auth-card__subtitle">Academic Event Manager</p>
         </div>

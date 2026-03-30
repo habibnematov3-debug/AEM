@@ -107,6 +107,10 @@
     0 0 0 4px rgba(29, 100, 182, 0.06);
 }
 
+.site-header__search-spacer {
+  min-height: 56px;
+}
+
 .site-header__actions {
   display: flex;
   align-items: center;
@@ -186,6 +190,12 @@
 .site-header__profile:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
+}
+
+.site-header__profile--active {
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 4px rgba(29, 100, 182, 0.12);
 }
 
 .site-header__profile span {

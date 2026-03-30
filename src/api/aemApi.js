@@ -73,6 +73,13 @@ function normalizeUser(rawUser) {
     role: rawUser.role ?? 'student',
     isActive: rawUser.is_active ?? true,
     createdAt: rawUser.created_at ?? null,
+    settings: {
+      theme: rawUser.settings?.theme ?? 'light',
+      languageCode: rawUser.settings?.language_code ?? 'en',
+      notificationsEnabled: rawUser.settings?.notifications_enabled ?? true,
+    },
+    createdEventsCount: rawUser.created_events_count ?? 0,
+    joinedEventsCount: rawUser.joined_events_count ?? 0,
   }
 }
 
@@ -193,6 +200,13 @@ export async function signInUser(credentials) {
   return { ok: true, user, message: payload.message }
 }
 
+export async function fetchCurrentUser() {
+  const payload = await apiRequest('/api/auth/me/')
+  const user = normalizeUser(payload.user)
+  storeCurrentUser(user)
+  return user
+}
+
 export async function signUpUser(formData) {
   const payload = await apiRequest('/api/auth/signup/', {
     method: 'POST',
@@ -214,6 +228,25 @@ export async function signUpUser(formData) {
 export async function logoutUser() {
   await apiRequest('/api/auth/logout/', { method: 'POST', body: JSON.stringify({}) })
   clearCurrentUser()
+}
+
+export async function updateCurrentUserProfile(profileData) {
+  const payload = await apiRequest('/api/auth/me/', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      full_name: profileData.fullName,
+      theme: profileData.theme,
+      language_code: profileData.languageCode,
+      notifications_enabled: profileData.notificationsEnabled,
+    }),
+  })
+
+  const user = normalizeUser(payload.user)
+  storeCurrentUser(user)
+  return {
+    user,
+    message: payload.message,
+  }
 }
 
 export async function fetchEvents() {

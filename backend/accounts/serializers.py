@@ -28,6 +28,40 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class UserSettingsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserSettings
+        fields = ('notifications_enabled', 'theme', 'language_code')
+        read_only_fields = fields
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    settings = UserSettingsSerializer(read_only=True)
+    created_events_count = serializers.SerializerMethodField()
+    joined_events_count = serializers.SerializerMethodField()
+
+    def get_created_events_count(self, obj):
+        return obj.created_events.count()
+
+    def get_joined_events_count(self, obj):
+        return obj.participations.filter(status=Participation.Statuses.JOINED).count()
+
+    class Meta:
+        model = AEMUser
+        fields = (
+            'id',
+            'full_name',
+            'email',
+            'role',
+            'is_active',
+            'created_at',
+            'settings',
+            'created_events_count',
+            'joined_events_count',
+        )
+        read_only_fields = fields
+
+
 class SignUpSerializer(serializers.Serializer):
     full_name = serializers.CharField(max_length=150)
     email = serializers.EmailField(max_length=254)
@@ -97,6 +131,59 @@ class LoginSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class ProfileUpdateSerializer(serializers.Serializer):
+    full_name = serializers.CharField(max_length=150, required=False)
+    theme = serializers.ChoiceField(
+        choices=[UserSettings.Themes.LIGHT, UserSettings.Themes.DARK],
+        required=False,
+    )
+    language_code = serializers.ChoiceField(choices=['en', 'ru', 'uz'], required=False)
+    notifications_enabled = serializers.BooleanField(required=False)
+
+    def validate_full_name(self, value):
+        full_name = value.strip()
+        if not full_name:
+            raise serializers.ValidationError('Full name is required.')
+        return full_name
+
+    @transaction.atomic
+    def update(self, instance, validated_data):
+        now = timezone.now()
+
+        if 'full_name' in validated_data:
+            instance.full_name = validated_data['full_name']
+            instance.updated_at = now
+            instance.save(update_fields=['full_name', 'updated_at'])
+
+        settings, _ = UserSettings.objects.get_or_create(
+            user=instance,
+            defaults={
+                'notifications_enabled': True,
+                'theme': UserSettings.Themes.LIGHT,
+                'language_code': 'en',
+                'created_at': now,
+                'updated_at': now,
+            },
+        )
+
+        settings_changed = False
+        if 'theme' in validated_data:
+            settings.theme = validated_data['theme']
+            settings_changed = True
+        if 'language_code' in validated_data:
+            settings.language_code = validated_data['language_code']
+            settings_changed = True
+        if 'notifications_enabled' in validated_data:
+            settings.notifications_enabled = validated_data['notifications_enabled']
+            settings_changed = True
+
+        if settings_changed:
+            settings.updated_at = now
+            settings.save(update_fields=['theme', 'language_code', 'notifications_enabled', 'updated_at'])
+
+        return instance
 
 
 class EventSerializer(serializers.ModelSerializer):

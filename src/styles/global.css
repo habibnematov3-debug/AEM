@@ -1,6 +1,10 @@
 :root {
   --bg: #eef4fb;
   --bg-soft: #f8fbff;
+  --bg-top-left: rgba(200, 148, 47, 0.12);
+  --bg-top-right: rgba(29, 100, 182, 0.16);
+  --bg-gradient-start: #fbfdff;
+  --bg-gradient-end: #eef4fb;
   --surface: rgba(255, 255, 255, 0.92);
   --surface-strong: #ffffff;
   --surface-muted: #f5f9fe;
@@ -34,6 +38,27 @@
   --shadow: var(--shadow-md);
 }
 
+:root[data-theme='dark'] {
+  --bg: #0f1724;
+  --bg-soft: #172131;
+  --bg-top-left: rgba(200, 148, 47, 0.08);
+  --bg-top-right: rgba(29, 100, 182, 0.12);
+  --bg-gradient-start: #0d1521;
+  --bg-gradient-end: #101a28;
+  --surface: rgba(18, 28, 43, 0.92);
+  --surface-strong: #122033;
+  --surface-muted: #152235;
+  --text: #e7eef8;
+  --muted: #9fb1c9;
+  --muted-strong: #c4d2e4;
+  --border: rgba(154, 181, 220, 0.14);
+  --border-strong: rgba(154, 181, 220, 0.28);
+  --accent-soft: rgba(88, 149, 224, 0.16);
+  --shadow-sm: 0 10px 22px rgba(0, 0, 0, 0.22);
+  --shadow-md: 0 18px 40px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.34);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -50,9 +75,9 @@ body {
   line-height: 1.5;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(200, 148, 47, 0.12), transparent 24%),
-    radial-gradient(circle at top right, rgba(29, 100, 182, 0.16), transparent 28%),
-    linear-gradient(180deg, #fbfdff 0%, var(--bg) 100%);
+    radial-gradient(circle at top left, var(--bg-top-left), transparent 24%),
+    radial-gradient(circle at top right, var(--bg-top-right), transparent 28%),
+    linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

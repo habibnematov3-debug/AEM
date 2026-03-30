@@ -8,10 +8,12 @@ from rest_framework.views import APIView
 
 from .models import AEMUser, Event, Participation
 from .serializers import (
+    CurrentUserSerializer,
     EventCreateSerializer,
     EventSerializer,
     LoginSerializer,
     ParticipationSerializer,
+    ProfileUpdateSerializer,
     SignUpSerializer,
     UserSerializer,
 )
@@ -74,6 +76,39 @@ class LogoutAPIView(APIView):
     def post(self, request):
         request.session.flush()
         return Response({'message': 'Logout successful.'}, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class CurrentUserAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        return Response(
+            {'user': CurrentUserSerializer(current_user).data},
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = ProfileUpdateSerializer(instance=current_user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        updated_user = serializer.save()
+
+        return Response(
+            {
+                'message': 'Profile updated successfully.',
+                'user': CurrentUserSerializer(updated_user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 @method_decorator(csrf_exempt, name='dispatch')

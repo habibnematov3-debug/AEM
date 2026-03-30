@@ -13,7 +13,13 @@ const studentNavItems = [
   { to: '/organizer', label: 'My Events' },
 ]
 
-function Header({ variant = 'default', currentUser, searchValue = '', onSearchChange = () => {} }) {
+function Header({
+  variant = 'default',
+  currentUser,
+  showSearch = true,
+  searchValue = '',
+  onSearchChange = () => {},
+}) {
   const navItems = variant === 'students' ? studentNavItems : defaultNavItems
   const location = useLocation()
   const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
@@ -45,7 +51,7 @@ function Header({ variant = 'default', currentUser, searchValue = '', onSearchCh
           )}
         </div>
 
-        {variant === 'students' ? (
+        {variant === 'students' && showSearch ? (
           <label className="site-header__search" aria-label="Search events">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -60,7 +66,7 @@ function Header({ variant = 'default', currentUser, searchValue = '', onSearchCh
               placeholder="Search events..."
             />
           </label>
-        ) : null}
+        ) : variant === 'students' ? <div className="site-header__search-spacer" /> : null}
 
         <div className="site-header__actions">
           <nav className="site-header__nav" aria-label="Main navigation">
@@ -80,14 +86,18 @@ function Header({ variant = 'default', currentUser, searchValue = '', onSearchCh
           </nav>
 
           {variant === 'students' ? (
-            <button
-              type="button"
-              className="site-header__profile"
+            <NavLink
+              to="/profile"
+              className={
+                location.pathname === '/profile'
+                  ? 'site-header__profile site-header__profile--active'
+                  : 'site-header__profile'
+              }
               aria-label={profileLabel}
               title={currentUser?.name ?? 'Profile'}
             >
               <span>{profileInitial}</span>
-            </button>
+            </NavLink>
           ) : null}
         </div>
       </div>

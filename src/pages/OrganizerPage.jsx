@@ -159,6 +159,7 @@ function OrganizerPage({
         <CreateEventForm
           mode="create"
           initialValues={null}
+          currentUserId={currentUser?.id}
           onCancel={handleCancelForm}
           onSubmit={handleCreate}
         />
@@ -169,6 +170,7 @@ function OrganizerPage({
           <CreateEventForm
             mode="edit"
             initialValues={editingEvent}
+            currentUserId={currentUser?.id}
             onCancel={handleCancelForm}
             onSubmit={handleUpdate}
             titleId="edit-event-title"

@@ -280,6 +280,20 @@ export async function updateCurrentUserProfile(profileData) {
 }
 
 export async function uploadProfileImageToSupabase(file, userId) {
+  return uploadImageToSupabase(file, {
+    folder: 'profile-images',
+    ownerId: userId,
+  })
+}
+
+export async function uploadEventImageToSupabase(file, userId) {
+  return uploadImageToSupabase(file, {
+    folder: 'event-images',
+    ownerId: userId,
+  })
+}
+
+async function uploadImageToSupabase(file, { folder, ownerId }) {
   const client = getSupabaseClient()
   if (!client) {
     throw new Error('Supabase upload is not configured yet.')
@@ -297,9 +311,10 @@ export async function uploadProfileImageToSupabase(file, userId) {
     throw new Error('Please upload an image smaller than 5 MB.')
   }
 
-  const safeUserId = userId ? String(userId) : 'guest'
+  const safeUserId = ownerId ? String(ownerId) : 'guest'
   const extension = file.name.includes('.') ? file.name.split('.').pop()?.toLowerCase() : 'jpg'
-  const filePath = `${safeUserId}/${Date.now()}-${crypto.randomUUID()}.${extension || 'jpg'}`
+  const safeFolder = folder ?? 'uploads'
+  const filePath = `${safeFolder}/${safeUserId}/${Date.now()}-${crypto.randomUUID()}.${extension || 'jpg'}`
 
   const { error: uploadError } = await client.storage
     .from(SUPABASE_STORAGE_BUCKET)

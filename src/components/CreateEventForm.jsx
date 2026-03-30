@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+
+import { isSupabaseUploadConfigured, uploadEventImageToSupabase } from '../api/aemApi'
 
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 
@@ -88,10 +90,19 @@ function buildFormState(initialValues) {
   }
 }
 
-function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSubmit, titleId }) {
+function CreateEventForm({
+  mode = 'create',
+  initialValues = null,
+  onCancel,
+  onSubmit,
+  titleId,
+  currentUserId,
+}) {
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const fileInputRef = useRef(null)
 
   const isEditMode = mode === 'edit'
   const panelEyebrow = isEditMode ? 'Existing event' : 'New event'
@@ -100,12 +111,15 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
   const closeLabel = isEditMode ? 'Cancel edit' : 'Close'
   const existingImage = initialValues?.image ?? ''
   const imagePreview = formData.imageUrl.trim() || existingImage || DEFAULT_EVENT_IMAGE
-  const imageHelperText = 'Use a direct image URL, or leave this empty to use the default event image.'
+  const imageHelperText = isSupabaseUploadConfigured()
+    ? 'Paste a direct image URL, upload from your device, or leave this empty to use the default event image.'
+    : 'Use a direct image URL, or leave this empty to use the default event image.'
 
   useEffect(() => {
     setFormData(buildFormState(initialValues))
     setErrors({})
     setIsSubmitting(false)
+    setIsUploadingImage(false)
   }, [initialValues, mode])
 
   function updateField(field, value) {
@@ -113,8 +127,40 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
     setErrors((current) => ({ ...current, [field]: '' }))
   }
 
+  function openFilePicker() {
+    fileInputRef.current?.click()
+  }
+
+  async function handleImageUpload(event) {
+    const selectedFile = event.target.files?.[0]
+    if (!selectedFile) {
+      return
+    }
+
+    setIsUploadingImage(true)
+
+    try {
+      const uploadedImageUrl = await uploadEventImageToSupabase(
+        selectedFile,
+        currentUserId ?? initialValues?.creatorId,
+      )
+      updateField('imageUrl', uploadedImageUrl)
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        imageUrl: error.message || 'Could not upload the event image.',
+      }))
+    } finally {
+      setIsUploadingImage(false)
+      event.target.value = ''
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isUploadingImage) {
+      return
+    }
 
     const nextErrors = validateEventForm(formData)
     if (Object.keys(nextErrors).length) {
@@ -156,7 +202,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.title}
             onChange={(event) => updateField('title', event.target.value)}
             placeholder="Enter event title"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.title ? <span className="create-event-form__error">{errors.title}</span> : null}
         </label>
@@ -168,7 +214,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             onChange={(event) => updateField('description', event.target.value)}
             placeholder="Describe the event"
             rows="4"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.description ? (
             <span className="create-event-form__error">{errors.description}</span>
@@ -181,7 +227,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="date"
             value={formData.date}
             onChange={(event) => updateField('date', event.target.value)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.date ? <span className="create-event-form__error">{errors.date}</span> : null}
         </label>
@@ -192,7 +238,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="time"
             value={formData.startTime}
             onChange={(event) => updateField('startTime', event.target.value)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.startTime ? (
             <span className="create-event-form__error">{errors.startTime}</span>
@@ -205,7 +251,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="time"
             value={formData.endTime}
             onChange={(event) => updateField('endTime', event.target.value)}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.endTime ? (
             <span className="create-event-form__error">{errors.endTime}</span>
@@ -219,7 +265,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.location}
             onChange={(event) => updateField('location', event.target.value)}
             placeholder="Enter location"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
           {errors.location ? (
             <span className="create-event-form__error">{errors.location}</span>
@@ -229,6 +275,32 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
         <div className="create-event-form__full create-event-form__image-group">
           <div className="create-event-form__image-header">
             <label htmlFor="event-image-url">Image URL</label>
+            <div className="create-event-form__image-buttons">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="create-event-form__file-input"
+                onChange={handleImageUpload}
+                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+              />
+              <button
+                type="button"
+                className="create-event-form__upload-button"
+                onClick={openFilePicker}
+                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+              >
+                {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+              </button>
+              <button
+                type="button"
+                className="create-event-form__upload-button create-event-form__upload-button--ghost"
+                onClick={() => updateField('imageUrl', '')}
+                disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
+              >
+                Remove Image
+              </button>
+            </div>
           </div>
 
           <input
@@ -237,10 +309,14 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.imageUrl}
             onChange={(event) => updateField('imageUrl', event.target.value)}
             placeholder="Optional image URL"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
 
           <p className="create-event-form__helper">{imageHelperText}</p>
+
+          {errors.imageUrl ? (
+            <span className="create-event-form__error">{errors.imageUrl}</span>
+          ) : null}
 
           <div className="create-event-form__preview">
             <img
@@ -265,7 +341,7 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             value={formData.category}
             onChange={(event) => updateField('category', event.target.value)}
             placeholder="Optional category"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           />
         </label>
 
@@ -274,11 +350,15 @@ function CreateEventForm({ mode = 'create', initialValues = null, onCancel, onSu
             type="button"
             className="create-event-form__secondary"
             onClick={onCancel}
-            disabled={isSubmitting}
+            disabled={isSubmitting || isUploadingImage}
           >
             Cancel
           </button>
-          <button type="submit" className="create-event-form__primary" disabled={isSubmitting}>
+          <button
+            type="submit"
+            className="create-event-form__primary"
+            disabled={isSubmitting || isUploadingImage}
+          >
             {isSubmitting ? 'Saving...' : submitLabel}
           </button>
         </div>

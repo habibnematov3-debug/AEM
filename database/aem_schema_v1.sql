@@ -26,6 +26,7 @@ CREATE TABLE settings (
     notifications_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     theme VARCHAR(20) NOT NULL DEFAULT 'light',
     language_code VARCHAR(10) NOT NULL DEFAULT 'en',
+    profile_image_url TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT fk_settings_user

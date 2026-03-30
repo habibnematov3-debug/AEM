@@ -29,9 +29,14 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserSettingsSerializer(serializers.ModelSerializer):
+    profile_image_url = serializers.SerializerMethodField()
+
+    def get_profile_image_url(self, obj):
+        return sanitize_image_url(obj.profile_image_url)
+
     class Meta:
         model = UserSettings
-        fields = ('notifications_enabled', 'theme', 'language_code')
+        fields = ('notifications_enabled', 'theme', 'language_code', 'profile_image_url')
         read_only_fields = fields
 
 
@@ -107,6 +112,7 @@ class SignUpSerializer(serializers.Serializer):
             notifications_enabled=True,
             theme=UserSettings.Themes.LIGHT,
             language_code='en',
+            profile_image_url=None,
             created_at=now,
             updated_at=now,
         )
@@ -141,12 +147,24 @@ class ProfileUpdateSerializer(serializers.Serializer):
     )
     language_code = serializers.ChoiceField(choices=['en', 'ru', 'uz'], required=False)
     notifications_enabled = serializers.BooleanField(required=False)
+    profile_image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     def validate_full_name(self, value):
         full_name = value.strip()
         if not full_name:
             raise serializers.ValidationError('Full name is required.')
         return full_name
+
+    def validate_profile_image_url(self, value):
+        if value in (None, ''):
+            return None
+
+        sanitized = sanitize_image_url(value)
+        if sanitized is None:
+            raise serializers.ValidationError(
+                'Please provide a direct profile image URL. Base64 images are not supported.',
+            )
+        return sanitized
 
     @transaction.atomic
     def update(self, instance, validated_data):
@@ -163,6 +181,7 @@ class ProfileUpdateSerializer(serializers.Serializer):
                 'notifications_enabled': True,
                 'theme': UserSettings.Themes.LIGHT,
                 'language_code': 'en',
+                'profile_image_url': None,
                 'created_at': now,
                 'updated_at': now,
             },
@@ -178,10 +197,21 @@ class ProfileUpdateSerializer(serializers.Serializer):
         if 'notifications_enabled' in validated_data:
             settings.notifications_enabled = validated_data['notifications_enabled']
             settings_changed = True
+        if 'profile_image_url' in validated_data:
+            settings.profile_image_url = validated_data['profile_image_url']
+            settings_changed = True
 
         if settings_changed:
             settings.updated_at = now
-            settings.save(update_fields=['theme', 'language_code', 'notifications_enabled', 'updated_at'])
+            settings.save(
+                update_fields=[
+                    'theme',
+                    'language_code',
+                    'notifications_enabled',
+                    'profile_image_url',
+                    'updated_at',
+                ],
+            )
 
         return instance
 

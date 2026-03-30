@@ -9,6 +9,7 @@ function buildFormData(currentUser) {
     theme: currentUser?.settings?.theme ?? 'light',
     languageCode: currentUser?.settings?.languageCode ?? 'en',
     notificationsEnabled: currentUser?.settings?.notificationsEnabled ?? true,
+    profileImageUrl: currentUser?.profileImageUrl ?? currentUser?.settings?.profileImageUrl ?? '',
   }
 }
 
@@ -43,6 +44,8 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
       .map((part) => part.charAt(0).toUpperCase())
       .join('')
   }, [currentUser])
+
+  const previewImageUrl = formData.profileImageUrl?.trim() || ''
 
   const memberSince = currentUser?.createdAt
     ? new Date(currentUser.createdAt).toLocaleDateString('en-US', {
@@ -90,7 +93,13 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
     <section className="profile-page">
       <div className="profile-page__hero">
         <div className="profile-page__identity">
-          <div className="profile-page__avatar">{profileInitials}</div>
+          <div className="profile-page__avatar">
+            {previewImageUrl ? (
+              <img src={previewImageUrl} alt={`${currentUser?.name ?? 'User'} profile`} />
+            ) : (
+              profileInitials
+            )}
+          </div>
           <div className="profile-page__copy">
             <p className="profile-page__eyebrow">Account overview</p>
             <h1>{currentUser?.name ?? 'Profile'}</h1>
@@ -164,6 +173,17 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
             </label>
 
             <label>
+              Profile Image URL
+              <input
+                type="url"
+                placeholder="https://example.com/avatar.jpg"
+                value={formData.profileImageUrl}
+                onChange={(event) => updateField('profileImageUrl', event.target.value)}
+                disabled={isSaving}
+              />
+            </label>
+
+            <label>
               Theme
               <select
                 value={formData.theme}
@@ -211,12 +231,13 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
           <h2>What you can do here</h2>
           <ul className="profile-card__list">
             <li>Update your full name</li>
+            <li>Set a profile photo from a direct image URL</li>
             <li>Switch between light and dark mode</li>
             <li>Choose your preferred interface language</li>
             <li>Control whether notifications are enabled</li>
           </ul>
           <p className="profile-card__note">
-            Profile photo upload can be added later as a separate database-backed feature.
+            For now, profile photos use a direct image URL to keep the app fast and stable.
           </p>
         </article>
       </div>

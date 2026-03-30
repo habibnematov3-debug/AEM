@@ -47,6 +47,7 @@ class UserSettings(models.Model):
     notifications_enabled = models.BooleanField(default=True)
     theme = models.CharField(max_length=20, choices=Themes.choices, default=Themes.LIGHT)
     language_code = models.CharField(max_length=10, default='en')
+    profile_image_url = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 

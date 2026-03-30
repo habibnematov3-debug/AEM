@@ -24,6 +24,7 @@ function Header({
   const location = useLocation()
   const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
   const profileLabel = currentUser?.name ? `${currentUser.name} profile` : 'Profile'
+  const profileImageUrl = currentUser?.profileImageUrl ?? currentUser?.settings?.profileImageUrl ?? ''
 
   function isNavItemActive(path) {
     if (variant === 'students' && path === '/students') {
@@ -96,7 +97,11 @@ function Header({
               aria-label={profileLabel}
               title={currentUser?.name ?? 'Profile'}
             >
-              <span>{profileInitial}</span>
+              {profileImageUrl ? (
+                <img src={profileImageUrl} alt={profileLabel} className="site-header__profile-image" />
+              ) : (
+                <span>{profileInitial}</span>
+              )}
             </NavLink>
           ) : null}
         </div>

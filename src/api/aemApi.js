@@ -77,7 +77,9 @@ function normalizeUser(rawUser) {
       theme: rawUser.settings?.theme ?? 'light',
       languageCode: rawUser.settings?.language_code ?? 'en',
       notificationsEnabled: rawUser.settings?.notifications_enabled ?? true,
+      profileImageUrl: sanitizeImageUrl(rawUser.settings?.profile_image_url),
     },
+    profileImageUrl: sanitizeImageUrl(rawUser.settings?.profile_image_url),
     createdEventsCount: rawUser.created_events_count ?? 0,
     joinedEventsCount: rawUser.joined_events_count ?? 0,
   }
@@ -238,6 +240,7 @@ export async function updateCurrentUserProfile(profileData) {
       theme: profileData.theme,
       language_code: profileData.languageCode,
       notifications_enabled: profileData.notificationsEnabled,
+      profile_image_url: sanitizeImageUrl(profileData.profileImageUrl),
     }),
   })
 

@@ -1,7 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+const CLOUDINARY_CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME ?? ''
+const CLOUDINARY_UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET ?? ''
 const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 const API_TIMEOUT_MS = 20000
+const CLOUDINARY_TIMEOUT_MS = 60000
 
 function sanitizeImageUrl(value) {
   if (!value || typeof value !== 'string') {
@@ -43,6 +46,10 @@ function formatStatusLabel(value) {
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+}
+
+export function isCloudinaryUploadConfigured() {
+  return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET)
 }
 
 function storeCurrentUser(user) {
@@ -250,6 +257,66 @@ export async function updateCurrentUserProfile(profileData) {
     user,
     message: payload.message,
   }
+}
+
+export async function uploadProfileImageToCloudinary(file) {
+  if (!isCloudinaryUploadConfigured()) {
+    throw new Error('Cloudinary upload is not configured yet.')
+  }
+
+  if (!(file instanceof File)) {
+    throw new Error('Please choose an image file.')
+  }
+
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Only image files are supported.')
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Please upload an image smaller than 5 MB.')
+  }
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET)
+  formData.append('folder', 'aem/profile-photos')
+
+  const controller = new AbortController()
+  const timeoutId = window.setTimeout(() => controller.abort(), CLOUDINARY_TIMEOUT_MS)
+  let response
+
+  try {
+    response = await fetch(
+      `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      },
+    )
+  } catch (error) {
+    window.clearTimeout(timeoutId)
+
+    if (error.name === 'AbortError') {
+      throw new Error('Image upload is taking too long. Please try again.')
+    }
+
+    throw new Error('Could not upload the image to Cloudinary.')
+  }
+
+  window.clearTimeout(timeoutId)
+
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(payload?.error?.message ?? 'Cloudinary upload failed.')
+  }
+
+  const uploadedImageUrl = sanitizeImageUrl(payload.secure_url ?? payload.url)
+  if (!uploadedImageUrl) {
+    throw new Error('Cloudinary did not return a valid image URL.')
+  }
+
+  return uploadedImageUrl
 }
 
 export async function fetchEvents() {

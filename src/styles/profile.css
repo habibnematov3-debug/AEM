@@ -125,7 +125,9 @@
 }
 
 .profile-card__logout,
-.profile-form__primary {
+.profile-form__primary,
+.profile-form__secondary,
+.profile-form__ghost {
   min-height: 44px;
   width: fit-content;
   padding: 0 16px;
@@ -199,6 +201,35 @@
   background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: #fff;
   box-shadow: var(--shadow-sm);
+}
+
+.profile-form__secondary {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted-strong);
+  border: 1px solid var(--border);
+}
+
+.profile-form__ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+}
+
+.profile-form__photo-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile-form__file-input {
+  display: none;
+}
+
+.profile-form__hint {
+  margin: -4px 0 0;
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.5;
 }
 
 .profile-card__feedback {

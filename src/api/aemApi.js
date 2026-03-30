@@ -1,7 +1,13 @@
+import { createClient } from '@supabase/supabase-js'
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? ''
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
+const SUPABASE_STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'profile-images'
 const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 const API_TIMEOUT_MS = 20000
+let supabaseClient = null
 
 function sanitizeImageUrl(value) {
   if (!value || typeof value !== 'string') {
@@ -43,6 +49,27 @@ function formatStatusLabel(value) {
 
 function canUseStorage() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+}
+
+function getSupabaseClient() {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return null
+  }
+
+  if (!supabaseClient) {
+    supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    })
+  }
+
+  return supabaseClient
+}
+
+export function isSupabaseUploadConfigured() {
+  return Boolean(getSupabaseClient())
 }
 
 function storeCurrentUser(user) {
@@ -250,6 +277,49 @@ export async function updateCurrentUserProfile(profileData) {
     user,
     message: payload.message,
   }
+}
+
+export async function uploadProfileImageToSupabase(file, userId) {
+  const client = getSupabaseClient()
+  if (!client) {
+    throw new Error('Supabase upload is not configured yet.')
+  }
+
+  if (!(file instanceof File)) {
+    throw new Error('Please choose an image file.')
+  }
+
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Only image files are supported.')
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('Please upload an image smaller than 5 MB.')
+  }
+
+  const safeUserId = userId ? String(userId) : 'guest'
+  const extension = file.name.includes('.') ? file.name.split('.').pop()?.toLowerCase() : 'jpg'
+  const filePath = `${safeUserId}/${Date.now()}-${crypto.randomUUID()}.${extension || 'jpg'}`
+
+  const { error: uploadError } = await client.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: '3600',
+      upsert: false,
+      contentType: file.type,
+    })
+
+  if (uploadError) {
+    throw new Error(uploadError.message || 'Could not upload the image to Supabase.')
+  }
+
+  const { data } = client.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(filePath)
+  const publicUrl = sanitizeImageUrl(data?.publicUrl)
+  if (!publicUrl) {
+    throw new Error('Supabase did not return a valid public image URL.')
+  }
+
+  return publicUrl
 }
 
 export async function fetchEvents() {

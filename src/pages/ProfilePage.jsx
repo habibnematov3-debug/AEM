@@ -1,6 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import {
+  isSupabaseUploadConfigured,
+  uploadProfileImageToSupabase,
+} from '../api/aemApi'
 import '../styles/profile.css'
 
 function buildFormData(currentUser) {
@@ -25,8 +29,10 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => buildFormData(currentUser))
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const fileInputRef = useRef(null)
 
   useEffect(() => {
     setFormData(buildFormData(currentUser))
@@ -59,8 +65,43 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
     setFormData((current) => ({ ...current, [field]: value }))
   }
 
+  function openFilePicker() {
+    fileInputRef.current?.click()
+  }
+
+  async function handlePhotoUpload(event) {
+    const selectedFile = event.target.files?.[0]
+    if (!selectedFile) {
+      return
+    }
+
+    setIsUploadingPhoto(true)
+    setFeedback({ type: '', message: '' })
+
+    try {
+      const uploadedImageUrl = await uploadProfileImageToSupabase(selectedFile, currentUser?.id)
+      updateField('profileImageUrl', uploadedImageUrl)
+      setFeedback({
+        type: 'success',
+        message: 'Photo uploaded. Click Save Changes to update your profile.',
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || 'Could not upload the profile photo.',
+      })
+    } finally {
+      setIsUploadingPhoto(false)
+      event.target.value = ''
+    }
+  }
+
   async function handleSubmit(event) {
     event.preventDefault()
+    if (isUploadingPhoto) {
+      return
+    }
+
     setIsSaving(true)
     setFeedback({ type: '', message: '' })
 
@@ -163,7 +204,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 type="text"
                 value={formData.fullName}
                 onChange={(event) => updateField('fullName', event.target.value)}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               />
             </label>
 
@@ -179,21 +220,41 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 placeholder="https://example.com/avatar.jpg"
                 value={formData.profileImageUrl}
                 onChange={(event) => updateField('profileImageUrl', event.target.value)}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               />
             </label>
 
-            <button
-              type="button"
-              className="profile-form__ghost"
-              onClick={() => updateField('profileImageUrl', '')}
-              disabled={isSaving || !formData.profileImageUrl}
-            >
-              Remove Photo
-            </button>
+            <div className="profile-form__photo-tools">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="profile-form__file-input"
+                onChange={handlePhotoUpload}
+                disabled={isSaving || isUploadingPhoto || !isSupabaseUploadConfigured()}
+              />
+              <button
+                type="button"
+                className="profile-form__secondary"
+                onClick={openFilePicker}
+                disabled={isSaving || isUploadingPhoto || !isSupabaseUploadConfigured()}
+              >
+                {isUploadingPhoto ? 'Uploading...' : 'Upload from Device'}
+              </button>
+              <button
+                type="button"
+                className="profile-form__ghost"
+                onClick={() => updateField('profileImageUrl', '')}
+                disabled={isSaving || isUploadingPhoto || !formData.profileImageUrl}
+              >
+                Remove Photo
+              </button>
+            </div>
 
             <p className="profile-form__hint">
-              Use a direct image URL. This keeps the app fast and avoids heavy file uploads.
+              {isSupabaseUploadConfigured()
+                ? 'You can paste a direct image URL or upload a photo from your device to Supabase Storage.'
+                : 'Supabase upload is not configured yet. You can still use a direct image URL.'}
             </p>
 
             <label>
@@ -201,7 +262,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               <select
                 value={formData.theme}
                 onChange={(event) => updateField('theme', event.target.value)}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               >
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
@@ -213,7 +274,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               <select
                 value={formData.languageCode}
                 onChange={(event) => updateField('languageCode', event.target.value)}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               >
                 <option value="en">English</option>
                 <option value="ru">Russian</option>
@@ -226,7 +287,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 type="checkbox"
                 checked={formData.notificationsEnabled}
                 onChange={(event) => updateField('notificationsEnabled', event.target.checked)}
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               />
               <span>Email Notifications</span>
             </label>
@@ -235,7 +296,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               <button
                 type="submit"
                 className="profile-form__primary"
-                disabled={isSaving}
+                disabled={isSaving || isUploadingPhoto}
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -248,13 +309,13 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
           <h2>What you can do here</h2>
           <ul className="profile-card__list">
             <li>Update your full name</li>
-            <li>Set a profile photo from a direct image URL</li>
+            <li>Set a profile photo from a direct image URL or Supabase upload</li>
             <li>Switch between light and dark mode</li>
             <li>Choose your preferred interface language</li>
             <li>Control whether notifications are enabled</li>
           </ul>
           <p className="profile-card__note">
-            For now, profile photos use a direct image URL to keep the app fast and stable.
+            Uploaded photos are stored outside your database. Only the final public URL is saved.
           </p>
         </article>
       </div>

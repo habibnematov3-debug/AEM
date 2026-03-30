@@ -126,6 +126,7 @@
 
 .profile-card__logout,
 .profile-form__primary,
+.profile-form__secondary,
 .profile-form__ghost {
   min-height: 44px;
   width: fit-content;
@@ -202,10 +203,26 @@
   box-shadow: var(--shadow-sm);
 }
 
+.profile-form__secondary {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--muted-strong);
+  border: 1px solid var(--border);
+}
+
 .profile-form__ghost {
   background: transparent;
   color: var(--muted);
   border: 1px dashed var(--border);
+}
+
+.profile-form__photo-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.profile-form__file-input {
+  display: none;
 }
 
 .profile-form__hint {

@@ -5,6 +5,8 @@ import {
   isSupabaseUploadConfigured,
   uploadProfileImageToSupabase,
 } from '../api/aemApi'
+import { useI18n } from '../i18n/LanguageContext'
+import { getLanguageLocale } from '../i18n/translations'
 import '../styles/profile.css'
 
 function buildFormData(currentUser) {
@@ -19,13 +21,14 @@ function buildFormData(currentUser) {
 
 function formatRole(role) {
   if (!role) {
-    return 'User'
+    return 'user'
   }
 
-  return role.charAt(0).toUpperCase() + role.slice(1)
+  return role.toLowerCase()
 }
 
 function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
+  const { languageCode, t } = useI18n()
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => buildFormData(currentUser))
   const [isSaving, setIsSaving] = useState(false)
@@ -54,12 +57,30 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
   const previewImageUrl = formData.profileImageUrl?.trim() || ''
 
   const memberSince = currentUser?.createdAt
-    ? new Date(currentUser.createdAt).toLocaleDateString('en-US', {
+    ? new Date(currentUser.createdAt).toLocaleDateString(getLanguageLocale(languageCode), {
         month: 'long',
         day: 'numeric',
         year: 'numeric',
       })
-    : 'Unknown'
+    : t('common.tbd')
+
+  const roleValue = formatRole(currentUser?.role)
+  const roleLabel =
+    roleValue === 'student'
+      ? t('common.defaultStudent')
+      : roleValue === 'organizer'
+        ? t('common.organizer')
+        : roleValue === 'admin'
+          ? languageCode === 'ru'
+            ? 'Админ'
+            : languageCode === 'uz'
+              ? 'Admin'
+              : 'Admin'
+          : languageCode === 'ru'
+            ? 'Пользователь'
+            : languageCode === 'uz'
+              ? 'Foydalanuvchi'
+              : 'User'
 
   function updateField(field, value) {
     setFormData((current) => ({ ...current, [field]: value }))
@@ -83,12 +104,12 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
       updateField('profileImageUrl', uploadedImageUrl)
       setFeedback({
         type: 'success',
-        message: 'Photo uploaded. Click Save Changes to update your profile.',
+        message: t('profile.photoUploaded'),
       })
     } catch (error) {
       setFeedback({
         type: 'error',
-        message: error.message || 'Could not upload the profile photo.',
+        message: error.message || t('profile.uploadPhotoError'),
       })
     } finally {
       setIsUploadingPhoto(false)
@@ -108,11 +129,11 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
     try {
       const result = await onUpdateProfile(formData)
       setFormData(buildFormData(result.user))
-      setFeedback({ type: 'success', message: result.message })
+      setFeedback({ type: 'success', message: t('profile.profileUpdated') })
     } catch (error) {
       setFeedback({
         type: 'error',
-        message: error.message || 'Could not update the profile.',
+        message: error.message || t('profile.updateProfileError'),
       })
     } finally {
       setIsSaving(false)
@@ -136,33 +157,33 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
         <div className="profile-page__identity">
           <div className="profile-page__avatar">
             {previewImageUrl ? (
-              <img src={previewImageUrl} alt={`${currentUser?.name ?? 'User'} profile`} />
+              <img src={previewImageUrl} alt={`${currentUser?.name ?? 'User'} ${t('header.profile')}`} />
             ) : (
               profileInitials
             )}
           </div>
           <div className="profile-page__copy">
-            <p className="profile-page__eyebrow">Account overview</p>
-            <h1>{currentUser?.name ?? 'Profile'}</h1>
-            <p>{currentUser?.email ?? 'No email available'}</p>
+            <p className="profile-page__eyebrow">{t('profile.accountOverview')}</p>
+            <h1>{currentUser?.name ?? t('header.profile')}</h1>
+            <p>{currentUser?.email ?? t('common.noEmail')}</p>
           </div>
         </div>
 
         <div className="profile-page__meta">
           <div className="profile-page__meta-card">
-            <span>Role</span>
-            <strong>{formatRole(currentUser?.role)}</strong>
+            <span>{t('common.role')}</span>
+            <strong>{roleLabel}</strong>
           </div>
           <div className="profile-page__meta-card">
-            <span>Created Events</span>
+            <span>{t('common.createdEvents')}</span>
             <strong>{currentUser?.createdEventsCount ?? 0}</strong>
           </div>
           <div className="profile-page__meta-card">
-            <span>Joined Events</span>
+            <span>{t('common.joinedEvents')}</span>
             <strong>{currentUser?.joinedEventsCount ?? 0}</strong>
           </div>
           <div className="profile-page__meta-card">
-            <span>Member Since</span>
+            <span>{t('common.memberSince')}</span>
             <strong>{memberSince}</strong>
           </div>
         </div>
@@ -172,8 +193,8 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
         <article className="profile-card">
           <div className="profile-card__header">
             <div>
-              <p className="profile-card__eyebrow">Personal Info</p>
-              <h2>Profile settings</h2>
+              <p className="profile-card__eyebrow">{t('profile.personalInfo')}</p>
+              <h2>{t('profile.profileSettings')}</h2>
             </div>
             <button
               type="button"
@@ -181,7 +202,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               onClick={handleLogout}
               disabled={isLoggingOut}
             >
-              {isLoggingOut ? 'Signing out...' : 'Sign Out'}
+              {isLoggingOut ? t('common.signingOut') : t('common.signOut')}
             </button>
           </div>
 
@@ -199,7 +220,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
 
           <form className="profile-form" onSubmit={handleSubmit}>
             <label>
-              Full Name
+              {t('common.fullName')}
               <input
                 type="text"
                 value={formData.fullName}
@@ -209,12 +230,12 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
             </label>
 
             <label>
-              Email
+              {t('common.email')}
               <input type="email" value={currentUser?.email ?? ''} disabled />
             </label>
 
             <label>
-              Profile Image URL
+              {t('common.profileImageUrl')}
               <input
                 type="url"
                 placeholder="https://example.com/avatar.jpg"
@@ -239,7 +260,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 onClick={openFilePicker}
                 disabled={isSaving || isUploadingPhoto || !isSupabaseUploadConfigured()}
               >
-                {isUploadingPhoto ? 'Uploading...' : 'Upload from Device'}
+                {isUploadingPhoto ? t('profile.uploading') : t('profile.uploadFromDevice')}
               </button>
               <button
                 type="button"
@@ -247,38 +268,38 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 onClick={() => updateField('profileImageUrl', '')}
                 disabled={isSaving || isUploadingPhoto || !formData.profileImageUrl}
               >
-                Remove Photo
+                {t('common.removePhoto')}
               </button>
             </div>
 
             <p className="profile-form__hint">
               {isSupabaseUploadConfigured()
-                ? 'You can paste a direct image URL or upload a photo from your device to Supabase Storage.'
-                : 'Supabase upload is not configured yet. You can still use a direct image URL.'}
+                ? t('profile.photoHintConfigured')
+                : t('profile.photoHintFallback')}
             </p>
 
             <label>
-              Theme
+              {t('common.theme')}
               <select
                 value={formData.theme}
                 onChange={(event) => updateField('theme', event.target.value)}
                 disabled={isSaving || isUploadingPhoto}
               >
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
+                <option value="light">{t('profile.light')}</option>
+                <option value="dark">{t('profile.dark')}</option>
               </select>
             </label>
 
             <label>
-              Interface Language
+              {t('common.language')}
               <select
                 value={formData.languageCode}
                 onChange={(event) => updateField('languageCode', event.target.value)}
                 disabled={isSaving || isUploadingPhoto}
               >
-                <option value="en">English</option>
-                <option value="ru">Russian</option>
-                <option value="uz">Uzbek</option>
+                <option value="en">{t('profile.english')}</option>
+                <option value="ru">{t('profile.russian')}</option>
+                <option value="uz">{t('profile.uzbek')}</option>
               </select>
             </label>
 
@@ -289,7 +310,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 onChange={(event) => updateField('notificationsEnabled', event.target.checked)}
                 disabled={isSaving || isUploadingPhoto}
               />
-              <span>Email Notifications</span>
+              <span>{t('common.notifications')}</span>
             </label>
 
             <div className="profile-form__actions">
@@ -298,25 +319,23 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
                 className="profile-form__primary"
                 disabled={isSaving || isUploadingPhoto}
               >
-                {isSaving ? 'Saving...' : 'Save Changes'}
+                {isSaving ? t('common.saving') : t('common.saveChanges')}
               </button>
             </div>
           </form>
         </article>
 
         <article className="profile-card profile-card--info">
-          <p className="profile-card__eyebrow">About this profile</p>
-          <h2>What you can do here</h2>
+          <p className="profile-card__eyebrow">{t('profile.accountOverview')}</p>
+          <h2>{t('profile.whatYouCanDo')}</h2>
           <ul className="profile-card__list">
-            <li>Update your full name</li>
-            <li>Set a profile photo from a direct image URL or Supabase upload</li>
-            <li>Switch between light and dark mode</li>
-            <li>Choose your preferred interface language</li>
-            <li>Control whether notifications are enabled</li>
+            <li>{t('profile.itemName')}</li>
+            <li>{t('profile.itemPhoto')}</li>
+            <li>{t('profile.itemTheme')}</li>
+            <li>{t('profile.itemLanguage')}</li>
+            <li>{t('profile.itemNotifications')}</li>
           </ul>
-          <p className="profile-card__note">
-            Uploaded photos are stored outside your database. Only the final public URL is saved.
-          </p>
+          <p className="profile-card__note">{t('profile.aboutNote')}</p>
         </article>
       </div>
     </section>

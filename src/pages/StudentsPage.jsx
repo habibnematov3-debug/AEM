@@ -1,9 +1,11 @@
 import { useMemo } from 'react'
 
 import EventCard from '../components/EventCard'
+import { useI18n } from '../i18n/LanguageContext'
 import '../styles/students-events.css'
 
 function StudentsPage({ currentUser, events = [], searchValue = '' }) {
+  const { t } = useI18n()
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     if (!query) {
@@ -20,10 +22,10 @@ function StudentsPage({ currentUser, events = [], searchValue = '' }) {
     <section className="students-events-page">
       <div className="students-events-page__intro">
         <p className="students-events-page__eyebrow">
-          Welcome, {currentUser?.name ?? 'Student'}
+          {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}
         </p>
-        <h1>Upcoming Events</h1>
-        <p>Discover and join exciting events happening at your university</p>
+        <h1>{t('students.title')}</h1>
+        <p>{t('students.subtitle')}</p>
       </div>
 
       {filteredEvents.length ? (
@@ -34,8 +36,8 @@ function StudentsPage({ currentUser, events = [], searchValue = '' }) {
         </div>
       ) : (
         <div className="students-events-empty">
-          <h2>No events found</h2>
-          <p>Try another keyword in the search bar.</p>
+          <h2>{t('students.emptyTitle')}</h2>
+          <p>{t('students.emptyDescription')}</p>
         </div>
       )}
     </section>

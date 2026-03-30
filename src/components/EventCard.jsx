@@ -1,8 +1,30 @@
 import { Link } from 'react-router-dom'
 
+import { useI18n } from '../i18n/LanguageContext'
+import { getLanguageLocale } from '../i18n/translations'
 import '../styles/event-card.css'
 
+function formatEventDate(eventDate, fallback, languageCode) {
+  if (!eventDate) {
+    return fallback
+  }
+
+  const parsedDate = new Date(`${eventDate}T00:00:00`)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return fallback || eventDate
+  }
+
+  return parsedDate.toLocaleDateString(getLanguageLocale(languageCode), {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = () => {} }) {
+  const { languageCode, t } = useI18n()
+  const dateText = formatEventDate(event.eventDate, event.date, languageCode)
+
   if (variant === 'student') {
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
@@ -19,7 +41,7 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
                   fill="currentColor"
                 />
               </svg>
-              <span>{event.date}</span>
+              <span>{dateText}</span>
             </div>
             <div className="event-card__detail">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -44,7 +66,7 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
         </div>
         <div className="event-card__body">
           <div className="event-card__mini-topline">
-            <span className="event-card__owner-badge">Your Event</span>
+            <span className="event-card__owner-badge">{t('eventCard.yourEvent')}</span>
           </div>
 
           <h3>{event.title}</h3>
@@ -55,7 +77,7 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
                 fill="currentColor"
               />
             </svg>
-            <span>{event.date}</span>
+            <span>{dateText}</span>
           </div>
           <div className="event-card__detail">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -73,20 +95,20 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
               className="event-card__action-button"
               onClick={() => onEdit(event)}
             >
-              Edit
+              {t('eventCard.edit')}
             </button>
             <Link
               to={`/events/${event.id}`}
               className="event-card__action-button event-card__action-button--ghost"
             >
-              View
+              {t('eventCard.view')}
             </Link>
             <button
               type="button"
               className="event-card__action-button event-card__action-button--danger"
               onClick={() => onDelete(event)}
             >
-              Delete
+              {t('eventCard.delete')}
             </button>
           </div>
         </div>

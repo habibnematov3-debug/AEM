@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 
 import CreateEventForm from '../components/CreateEventForm'
 import EventCard from '../components/EventCard'
+import { useI18n } from '../i18n/LanguageContext'
 import Modal from '../components/Modal'
 import '../styles/organizer-events.css'
 import { useState } from 'react'
@@ -14,6 +15,7 @@ function OrganizerPage({
   onUpdateEvent,
   onDeleteEvent,
 }) {
+  const { t } = useI18n()
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
   const [editingEvent, setEditingEvent] = useState(null)
   const [eventPendingDelete, setEventPendingDelete] = useState(null)
@@ -39,14 +41,14 @@ function OrganizerPage({
   async function handleCreate(formData) {
     try {
       const createdEvent = await onCreateEvent(formData)
-      setFormFeedback({ type: 'success', message: 'Event created successfully.' })
+      setFormFeedback({ type: 'success', message: t('organizerPage.createdSuccess') })
       setEditingEvent(null)
       setIsCreateFormOpen(false)
       return createdEvent
     } catch (error) {
       setFormFeedback({
         type: 'error',
-        message: error.message || 'Could not create the event.',
+        message: error.message || t('organizerPage.createError'),
       })
       throw error
     }
@@ -66,14 +68,14 @@ function OrganizerPage({
 
     try {
       const updatedEvent = await onUpdateEvent(editingEvent.id, formData)
-      setFormFeedback({ type: 'success', message: 'Event updated successfully.' })
+      setFormFeedback({ type: 'success', message: t('organizerPage.updatedSuccess') })
       setEditingEvent(null)
       setIsCreateFormOpen(false)
       return updatedEvent
     } catch (error) {
       setFormFeedback({
         type: 'error',
-        message: error.message || 'Could not update the event.',
+        message: error.message || t('organizerPage.updateError'),
       })
       throw error
     }
@@ -108,12 +110,12 @@ function OrganizerPage({
 
     try {
       await onDeleteEvent(eventPendingDelete.id)
-      setFormFeedback({ type: 'success', message: 'Event deleted successfully.' })
+      setFormFeedback({ type: 'success', message: t('organizerPage.deletedSuccess') })
       setEventPendingDelete(null)
     } catch (error) {
       setFormFeedback({
         type: 'error',
-        message: error.message || 'Could not delete the event.',
+        message: error.message || t('organizerPage.deleteError'),
       })
     } finally {
       setIsDeleting(false)
@@ -124,9 +126,9 @@ function OrganizerPage({
     <section className="organizer-events-page">
       <div className="organizer-events-page__topbar">
         <div className="organizer-events-page__intro">
-          <p className="organizer-events-page__eyebrow">Organizer workspace</p>
-          <h1>My Events</h1>
-          <p>Manage and view the events you've created</p>
+          <p className="organizer-events-page__eyebrow">{t('organizerPage.eyebrow')}</p>
+          <h1>{t('organizerPage.title')}</h1>
+          <p>{t('organizerPage.subtitle')}</p>
         </div>
 
         <button
@@ -139,7 +141,7 @@ function OrganizerPage({
             setIsCreateFormOpen(true)
           }}
         >
-          Create Event
+          {t('organizerPage.createEvent')}
         </button>
       </div>
 
@@ -192,11 +194,13 @@ function OrganizerPage({
         </div>
       ) : (
         <div className="organizer-events-empty">
-          <h2>{hasAccountEvents ? 'No events found' : 'You have no events yet'}</h2>
+          <h2>
+            {hasAccountEvents ? t('organizerPage.noResultsTitle') : t('organizerPage.noEventsTitle')}
+          </h2>
           <p>
             {hasAccountEvents
-              ? 'Try another keyword in the search bar.'
-              : 'Create your first event to start managing it here'}
+              ? t('organizerPage.noResultsDescription')
+              : t('organizerPage.noEventsDescription')}
           </p>
         </div>
       )}
@@ -205,12 +209,9 @@ function OrganizerPage({
         <Modal onClose={handleCancelDelete} labelledBy="delete-event-title">
           <div className="organizer-events-dialog">
             <div className="organizer-events-dialog__copy">
-              <p className="organizer-events-dialog__eyebrow">Delete event</p>
-              <h2 id="delete-event-title">Are you sure you want to delete this event?</h2>
-              <p>
-                <strong>{eventPendingDelete.title}</strong> will be removed from My Events, the
-                students page, and the details page.
-              </p>
+              <p className="organizer-events-dialog__eyebrow">{t('organizerPage.deleteEyebrow')}</p>
+              <h2 id="delete-event-title">{t('organizerPage.deleteTitle')}</h2>
+              <p>{t('organizerPage.deleteDescription', { title: eventPendingDelete.title })}</p>
             </div>
 
             <div className="organizer-events-dialog__actions">
@@ -220,7 +221,7 @@ function OrganizerPage({
                 onClick={handleCancelDelete}
                 disabled={isDeleting}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -228,7 +229,7 @@ function OrganizerPage({
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {isDeleting ? t('organizerPage.deleting') : t('organizerPage.delete')}
               </button>
             </div>
           </div>

@@ -121,6 +121,7 @@ function normalizeEvent(rawEvent) {
     id: String(rawEvent.id),
     title: rawEvent.title ?? '',
     description: rawEvent.description ?? '',
+    eventDate: rawEvent.event_date ?? '',
     date: formatEventDate(rawEvent.event_date),
     startTime: rawEvent.start_time ?? '',
     endTime: rawEvent.end_time ?? '',

@@ -14,6 +14,8 @@ import {
   updateEvent,
 } from './api/aemApi'
 import Header from './components/Header'
+import { LanguageProvider, useI18n } from './i18n/LanguageContext'
+import { getStoredLanguageCode } from './i18n/translations'
 import AuthPage from './pages/AuthPage'
 import EventDetailsPage from './pages/EventDetailsPage'
 import OrganizerPage from './pages/OrganizerPage'
@@ -23,12 +25,14 @@ import './styles/app.css'
 import './styles/pages.css'
 
 function RequireAuth({ currentUser, authReady, children }) {
+  const { t } = useI18n()
+
   if (!authReady) {
     return (
       <section className="page">
         <div className="route-card">
-          <h2>Loading profile...</h2>
-          <p>Checking your account session.</p>
+          <h2>{t('common.loadingProfileTitle')}</h2>
+          <p>{t('common.loadingProfileDescription')}</p>
         </div>
       </section>
     )
@@ -173,68 +177,72 @@ function App() {
     return result
   }
 
+  const activeLanguageCode = currentUser?.settings?.languageCode ?? getStoredLanguageCode()
+
   return (
-    <div className="app-shell">
-      {!isAuthPage && (
-        <Header
-          variant={isDashboardPage ? 'students' : 'default'}
-          currentUser={currentUser}
-          showSearch={!isProfilePage}
-          searchValue={studentSearch}
-          onSearchChange={setStudentSearch}
-        />
-      )}
-      <main className="page-shell">
-        <Routes>
-          <Route
-            path="/"
-            element={<AuthPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
+    <LanguageProvider languageCode={activeLanguageCode}>
+      <div className="app-shell">
+        {!isAuthPage && (
+          <Header
+            variant={isDashboardPage ? 'students' : 'default'}
+            currentUser={currentUser}
+            showSearch={!isProfilePage}
+            searchValue={studentSearch}
+            onSearchChange={setStudentSearch}
           />
-          <Route
-            path="/students"
-            element={
-              <StudentsPage
-                currentUser={currentUser}
-                events={events}
-                searchValue={studentSearch}
-              />
-            }
-          />
-          <Route
-            path="/organizer"
-            element={
-              <RequireAuth currentUser={currentUser} authReady={authReady}>
-                <OrganizerPage
+        )}
+        <main className="page-shell">
+          <Routes>
+            <Route
+              path="/"
+              element={<AuthPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
+            />
+            <Route
+              path="/students"
+              element={
+                <StudentsPage
                   currentUser={currentUser}
                   events={events}
                   searchValue={studentSearch}
-                  onCreateEvent={handleCreateEvent}
-                  onUpdateEvent={handleUpdateEvent}
-                  onDeleteEvent={handleDeleteEvent}
                 />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/events/:eventId"
-            element={<EventDetailsPage currentUser={currentUser} />}
-          />
-          <Route
-            path="/profile"
-            element={
-              <RequireAuth currentUser={currentUser} authReady={authReady}>
-                <ProfilePage
-                  currentUser={currentUser}
-                  onUpdateProfile={handleProfileUpdate}
-                  onLogout={handleLogout}
-                />
-              </RequireAuth>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </main>
-    </div>
+              }
+            />
+            <Route
+              path="/organizer"
+              element={
+                <RequireAuth currentUser={currentUser} authReady={authReady}>
+                  <OrganizerPage
+                    currentUser={currentUser}
+                    events={events}
+                    searchValue={studentSearch}
+                    onCreateEvent={handleCreateEvent}
+                    onUpdateEvent={handleUpdateEvent}
+                    onDeleteEvent={handleDeleteEvent}
+                  />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/events/:eventId"
+              element={<EventDetailsPage currentUser={currentUser} />}
+            />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth currentUser={currentUser} authReady={authReady}>
+                  <ProfilePage
+                    currentUser={currentUser}
+                    onUpdateProfile={handleProfileUpdate}
+                    onLogout={handleLogout}
+                  />
+                </RequireAuth>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+    </LanguageProvider>
   )
 }
 

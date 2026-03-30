@@ -1,31 +1,14 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
 const initialSignIn = { email: '', password: '' }
 const initialSignUp = { fullName: '', email: '', password: '' }
 
-const modeContent = {
-  signin: {
-    eyebrow: 'Welcome Back',
-    title: 'Sign in to your AEM account',
-    helper: 'Access university events, your activity, and organizer tools from one place.',
-    submitLabel: 'Sign In',
-    footerPrompt: "Don't have an account?",
-    footerAction: 'Create one',
-  },
-  signup: {
-    eyebrow: 'Create Account',
-    title: 'Join AEM and get started',
-    helper: 'Use your university email to discover events, participate, or manage your own.',
-    submitLabel: 'Create Account',
-    footerPrompt: 'Already have an account?',
-    footerAction: 'Sign in',
-  },
-}
-
 function AuthPage({ onSignIn, onSignUp }) {
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [mode, setMode] = useState('signin')
   const [signInData, setSignInData] = useState(initialSignIn)
@@ -35,7 +18,27 @@ function AuthPage({ onSignIn, onSignUp }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
 
-  const content = useMemo(() => modeContent[mode], [mode])
+  const content = useMemo(
+    () => ({
+      signin: {
+        eyebrow: t('auth.signinEyebrow'),
+        title: t('auth.signinTitle'),
+        helper: t('auth.signinHelper'),
+        submitLabel: t('auth.signinSubmit'),
+        footerPrompt: t('auth.signinFooterPrompt'),
+        footerAction: t('auth.signinFooterAction'),
+      },
+      signup: {
+        eyebrow: t('auth.signupEyebrow'),
+        title: t('auth.signupTitle'),
+        helper: t('auth.signupHelper'),
+        submitLabel: t('auth.signupSubmit'),
+        footerPrompt: t('auth.signupFooterPrompt'),
+        footerAction: t('auth.signupFooterAction'),
+      },
+    })[mode],
+    [mode, t],
+  )
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -54,7 +57,7 @@ function AuthPage({ onSignIn, onSignUp }) {
     }
 
     const displayName = result.user.full_name ?? result.user.name ?? 'there'
-    setFeedback({ type: 'success', message: `Welcome back, ${displayName}. Redirecting...` })
+    setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
     window.setTimeout(() => {
       setIsSubmitting(false)
       navigate('/students')
@@ -77,7 +80,7 @@ function AuthPage({ onSignIn, onSignUp }) {
     setSignUpData(initialSignUp)
     setFeedback({
       type: 'success',
-      message: 'Account created successfully. Sign in to continue.',
+      message: t('auth.accountCreated'),
     })
     setIsSubmitting(false)
   }
@@ -87,14 +90,11 @@ function AuthPage({ onSignIn, onSignUp }) {
       <div className="auth-layout">
         <aside className="auth-hero">
           <div className="auth-hero__brand">
-            <img className="auth-hero__logo" src="/logo.png" alt="AEM logo" />
+            <img className="auth-hero__logo" src="/logo.png" alt={`${t('common.appName')} logo`} />
             <div className="auth-hero__copy">
-              <p className="auth-hero__eyebrow">Academic Event Manager</p>
-              <h1>One place for student events, organizers, and campus activity.</h1>
-              <p>
-                AEM helps your university community discover events faster and manage them
-                with less friction.
-              </p>
+              <p className="auth-hero__eyebrow">{t('auth.heroEyebrow')}</p>
+              <h1>{t('auth.heroTitle')}</h1>
+              <p>{t('auth.heroDescription')}</p>
             </div>
           </div>
 
@@ -102,22 +102,22 @@ function AuthPage({ onSignIn, onSignUp }) {
             <article className="auth-highlight">
               <span className="auth-highlight__index">01</span>
               <div>
-                <strong>Discover</strong>
-                <p>Browse upcoming university events in a clean, centralized space.</p>
+                <strong>{t('auth.discoverTitle')}</strong>
+                <p>{t('auth.discoverDescription')}</p>
               </div>
             </article>
             <article className="auth-highlight">
               <span className="auth-highlight__index">02</span>
               <div>
-                <strong>Manage</strong>
-                <p>Create, edit, and organize events with a simple dashboard workflow.</p>
+                <strong>{t('auth.manageTitle')}</strong>
+                <p>{t('auth.manageDescription')}</p>
               </div>
             </article>
             <article className="auth-highlight">
               <span className="auth-highlight__index">03</span>
               <div>
-                <strong>Participate</strong>
-                <p>Keep sign-in and event activity tied to each user account.</p>
+                <strong>{t('auth.participateTitle')}</strong>
+                <p>{t('auth.participateDescription')}</p>
               </div>
             </article>
           </div>
@@ -131,7 +131,7 @@ function AuthPage({ onSignIn, onSignUp }) {
               <p className="auth-card__helper">{content.helper}</p>
             </div>
 
-            <div className="auth-switcher" role="tablist" aria-label="Authentication mode">
+            <div className="auth-switcher" role="tablist" aria-label={t('auth.authModeLabel')}>
               <button
                 type="button"
                 className={
@@ -141,7 +141,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                 }
                 onClick={() => switchMode('signin')}
               >
-                Sign In
+                {t('auth.signinSubmit')}
               </button>
               <button
                 type="button"
@@ -152,7 +152,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                 }
                 onClick={() => switchMode('signup')}
               >
-                Sign Up
+                {t('auth.signupSubmit')}
               </button>
             </div>
           </div>
@@ -172,7 +172,7 @@ function AuthPage({ onSignIn, onSignUp }) {
           {mode === 'signin' ? (
             <form className="auth-form" onSubmit={handleSignInSubmit}>
               <label>
-                <span>Email</span>
+                <span>{t('common.email')}</span>
                   <input
                     type="email"
                     autoComplete="email"
@@ -181,13 +181,13 @@ function AuthPage({ onSignIn, onSignUp }) {
                   onChange={(event) =>
                     setSignInData((current) => ({ ...current, email: event.target.value }))
                   }
-                  placeholder="your.name@ajou.uz"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                 />
               </label>
 
               <label>
-                <span>Password</span>
+                <span>{t('common.password')}</span>
                 <div className="auth-password-field">
                   <input
                     type={showSignInPassword ? 'text' : 'password'}
@@ -197,7 +197,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                     onChange={(event) =>
                       setSignInData((current) => ({ ...current, password: event.target.value }))
                     }
-                    placeholder="Enter your password"
+                    placeholder={t('auth.passwordPlaceholder')}
                     required
                   />
                   <button
@@ -205,21 +205,25 @@ function AuthPage({ onSignIn, onSignUp }) {
                     className="auth-password-field__toggle"
                     disabled={isSubmitting}
                     onClick={() => setShowSignInPassword((current) => !current)}
-                    aria-label={showSignInPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showSignInPassword
+                        ? `${t('common.hide')} ${t('common.password')}`
+                        : `${t('common.show')} ${t('common.password')}`
+                    }
                   >
-                    {showSignInPassword ? 'Hide' : 'Show'}
+                    {showSignInPassword ? t('common.hide') : t('common.show')}
                   </button>
                 </div>
               </label>
 
               <button type="submit" className="auth-form__submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Signing In...' : content.submitLabel}
+                {isSubmitting ? t('auth.signinSubmitting') : content.submitLabel}
               </button>
             </form>
           ) : (
             <form className="auth-form" onSubmit={handleSignUpSubmit}>
               <label>
-                <span>Full Name</span>
+                <span>{t('common.fullName')}</span>
                   <input
                     type="text"
                     autoComplete="name"
@@ -228,13 +232,13 @@ function AuthPage({ onSignIn, onSignUp }) {
                   onChange={(event) =>
                     setSignUpData((current) => ({ ...current, fullName: event.target.value }))
                   }
-                  placeholder="Your full name"
+                  placeholder={t('auth.fullNamePlaceholder')}
                   required
                 />
               </label>
 
               <label>
-                <span>Email</span>
+                <span>{t('common.email')}</span>
                   <input
                     type="email"
                     autoComplete="email"
@@ -243,13 +247,13 @@ function AuthPage({ onSignIn, onSignUp }) {
                   onChange={(event) =>
                     setSignUpData((current) => ({ ...current, email: event.target.value }))
                   }
-                  placeholder="your.name@ajou.uz"
+                  placeholder={t('auth.emailPlaceholder')}
                   required
                 />
               </label>
 
               <label>
-                <span>Password</span>
+                <span>{t('common.password')}</span>
                 <div className="auth-password-field">
                   <input
                     type={showSignUpPassword ? 'text' : 'password'}
@@ -259,7 +263,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                     onChange={(event) =>
                       setSignUpData((current) => ({ ...current, password: event.target.value }))
                     }
-                    placeholder="Create a secure password"
+                    placeholder={t('auth.passwordCreatePlaceholder')}
                     required
                   />
                   <button
@@ -267,15 +271,19 @@ function AuthPage({ onSignIn, onSignUp }) {
                     className="auth-password-field__toggle"
                     disabled={isSubmitting}
                     onClick={() => setShowSignUpPassword((current) => !current)}
-                    aria-label={showSignUpPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showSignUpPassword
+                        ? `${t('common.hide')} ${t('common.password')}`
+                        : `${t('common.show')} ${t('common.password')}`
+                    }
                   >
-                    {showSignUpPassword ? 'Hide' : 'Show'}
+                    {showSignUpPassword ? t('common.hide') : t('common.show')}
                   </button>
                 </div>
               </label>
 
               <button type="submit" className="auth-form__submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Creating Account...' : content.submitLabel}
+                {isSubmitting ? t('auth.signupSubmitting') : content.submitLabel}
               </button>
             </form>
           )}

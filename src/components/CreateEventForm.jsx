@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { isSupabaseUploadConfigured, uploadEventImageToSupabase } from '../api/aemApi'
+import { useI18n } from '../i18n/LanguageContext'
 
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 
@@ -19,26 +20,26 @@ function isDataImageUrl(value) {
   return typeof value === 'string' && value.trim().toLowerCase().startsWith('data:image/')
 }
 
-function validateEventForm(formData) {
+function validateEventForm(formData, t) {
   const nextErrors = {}
 
   if (!formData.title.trim()) {
-    nextErrors.title = 'Event title is required.'
+    nextErrors.title = t('eventForm.errors.title')
   }
   if (!formData.description.trim()) {
-    nextErrors.description = 'Description is required.'
+    nextErrors.description = t('eventForm.errors.description')
   }
   if (!formData.date) {
-    nextErrors.date = 'Date is required.'
+    nextErrors.date = t('eventForm.errors.date')
   }
   if (!formData.startTime) {
-    nextErrors.startTime = 'Start time is required.'
+    nextErrors.startTime = t('eventForm.errors.startTime')
   }
   if (!formData.endTime) {
-    nextErrors.endTime = 'End time is required.'
+    nextErrors.endTime = t('eventForm.errors.endTime')
   }
   if (!formData.location.trim()) {
-    nextErrors.location = 'Location is required.'
+    nextErrors.location = t('eventForm.errors.location')
   }
 
   if (formData.date && formData.startTime && formData.endTime) {
@@ -46,7 +47,7 @@ function validateEventForm(formData) {
     const end = new Date(`${formData.date}T${formData.endTime}`)
 
     if (end <= start) {
-      nextErrors.endTime = 'End time must be later than start time.'
+      nextErrors.endTime = t('eventForm.errors.endTimeOrder')
     }
   }
 
@@ -98,6 +99,7 @@ function CreateEventForm({
   titleId,
   currentUserId,
 }) {
+  const { t } = useI18n()
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -105,15 +107,15 @@ function CreateEventForm({
   const fileInputRef = useRef(null)
 
   const isEditMode = mode === 'edit'
-  const panelEyebrow = isEditMode ? 'Existing event' : 'New event'
-  const panelTitle = isEditMode ? 'Edit Event' : 'Create Event'
-  const submitLabel = isEditMode ? 'Save Changes' : 'Create Event'
-  const closeLabel = isEditMode ? 'Cancel edit' : 'Close'
+  const panelEyebrow = isEditMode ? t('eventForm.existingEvent') : t('eventForm.newEvent')
+  const panelTitle = isEditMode ? t('eventForm.editTitle') : t('eventForm.createTitle')
+  const submitLabel = isEditMode ? t('eventForm.editSubmit') : t('eventForm.createSubmit')
+  const closeLabel = isEditMode ? t('eventForm.cancelEdit') : t('eventForm.close')
   const existingImage = initialValues?.image ?? ''
   const imagePreview = formData.imageUrl.trim() || existingImage || DEFAULT_EVENT_IMAGE
   const imageHelperText = isSupabaseUploadConfigured()
-    ? 'Paste a direct image URL, upload from your device, or leave this empty to use the default event image.'
-    : 'Use a direct image URL, or leave this empty to use the default event image.'
+    ? t('eventForm.imageHelperConfigured')
+    : t('eventForm.imageHelperFallback')
 
   useEffect(() => {
     setFormData(buildFormState(initialValues))
@@ -148,7 +150,7 @@ function CreateEventForm({
     } catch (error) {
       setErrors((current) => ({
         ...current,
-        imageUrl: error.message || 'Could not upload the event image.',
+        imageUrl: error.message || t('eventForm.errors.uploadImage'),
       }))
     } finally {
       setIsUploadingImage(false)
@@ -162,7 +164,7 @@ function CreateEventForm({
       return
     }
 
-    const nextErrors = validateEventForm(formData)
+    const nextErrors = validateEventForm(formData, t)
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
@@ -196,23 +198,23 @@ function CreateEventForm({
 
       <form className="create-event-form" onSubmit={handleSubmit}>
         <label>
-          Event Title
+          {t('eventForm.title')}
           <input
             type="text"
             value={formData.title}
             onChange={(event) => updateField('title', event.target.value)}
-            placeholder="Enter event title"
+            placeholder={t('eventForm.enterTitle')}
             disabled={isSubmitting || isUploadingImage}
           />
           {errors.title ? <span className="create-event-form__error">{errors.title}</span> : null}
         </label>
 
         <label className="create-event-form__full">
-          Description
+          {t('eventForm.description')}
           <textarea
             value={formData.description}
             onChange={(event) => updateField('description', event.target.value)}
-            placeholder="Describe the event"
+            placeholder={t('eventForm.describeEvent')}
             rows="4"
             disabled={isSubmitting || isUploadingImage}
           />
@@ -222,7 +224,7 @@ function CreateEventForm({
         </label>
 
         <label>
-          Date
+          {t('common.date')}
           <input
             type="date"
             value={formData.date}
@@ -233,7 +235,7 @@ function CreateEventForm({
         </label>
 
         <label>
-          Start Time
+          {t('common.startTime')}
           <input
             type="time"
             value={formData.startTime}
@@ -246,7 +248,7 @@ function CreateEventForm({
         </label>
 
         <label>
-          End Time
+          {t('common.endTime')}
           <input
             type="time"
             value={formData.endTime}
@@ -259,12 +261,12 @@ function CreateEventForm({
         </label>
 
         <label>
-          Location
+          {t('common.location')}
           <input
             type="text"
             value={formData.location}
             onChange={(event) => updateField('location', event.target.value)}
-            placeholder="Enter location"
+            placeholder={t('eventForm.enterLocation')}
             disabled={isSubmitting || isUploadingImage}
           />
           {errors.location ? (
@@ -274,7 +276,7 @@ function CreateEventForm({
 
         <div className="create-event-form__full create-event-form__image-group">
           <div className="create-event-form__image-header">
-            <label htmlFor="event-image-url">Image URL</label>
+            <label htmlFor="event-image-url">{t('eventForm.imageUrl')}</label>
             <div className="create-event-form__image-buttons">
               <input
                 ref={fileInputRef}
@@ -290,7 +292,7 @@ function CreateEventForm({
                 onClick={openFilePicker}
                 disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
               >
-                {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+                {isUploadingImage ? t('eventForm.uploading') : t('eventForm.uploadImage')}
               </button>
               <button
                 type="button"
@@ -298,7 +300,7 @@ function CreateEventForm({
                 onClick={() => updateField('imageUrl', '')}
                 disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
               >
-                Remove Image
+                {t('eventForm.removeImage')}
               </button>
             </div>
           </div>
@@ -308,7 +310,7 @@ function CreateEventForm({
             type="text"
             value={formData.imageUrl}
             onChange={(event) => updateField('imageUrl', event.target.value)}
-            placeholder="Optional image URL"
+            placeholder={t('eventForm.optionalImageUrl')}
             disabled={isSubmitting || isUploadingImage}
           />
 
@@ -328,19 +330,19 @@ function CreateEventForm({
             />
             <span>
               {imagePreview === DEFAULT_EVENT_IMAGE
-                ? 'Default event image preview'
-                : 'Current event image preview'}
+                ? t('eventForm.defaultPreview')
+                : t('eventForm.currentPreview')}
             </span>
           </div>
         </div>
 
         <label>
-          Category
+          {t('common.category')}
           <input
             type="text"
             value={formData.category}
             onChange={(event) => updateField('category', event.target.value)}
-            placeholder="Optional category"
+            placeholder={t('eventForm.optionalCategory')}
             disabled={isSubmitting || isUploadingImage}
           />
         </label>
@@ -352,14 +354,14 @@ function CreateEventForm({
             onClick={onCancel}
             disabled={isSubmitting || isUploadingImage}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="submit"
             className="create-event-form__primary"
             disabled={isSubmitting || isUploadingImage}
           >
-            {isSubmitting ? 'Saving...' : submitLabel}
+            {isSubmitting ? t('common.saving') : submitLabel}
           </button>
         </div>
       </form>

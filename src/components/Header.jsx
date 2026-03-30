@@ -1,17 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom'
 
+import { useI18n } from '../i18n/LanguageContext'
 import '../styles/header.css'
-
-const defaultNavItems = [
-  { to: '/', label: 'Auth' },
-  { to: '/students', label: 'Students' },
-  { to: '/organizer', label: 'Organizer' },
-]
-
-const studentNavItems = [
-  { to: '/students', label: 'Events' },
-  { to: '/organizer', label: 'My Events' },
-]
 
 function Header({
   variant = 'default',
@@ -20,10 +10,21 @@ function Header({
   searchValue = '',
   onSearchChange = () => {},
 }) {
-  const navItems = variant === 'students' ? studentNavItems : defaultNavItems
+  const { t } = useI18n()
+  const navItems =
+    variant === 'students'
+      ? [
+          { to: '/students', label: t('common.events') },
+          { to: '/organizer', label: t('common.myEvents') },
+        ]
+      : [
+          { to: '/', label: t('common.auth') },
+          { to: '/students', label: t('common.students') },
+          { to: '/organizer', label: t('common.organizer') },
+        ]
   const location = useLocation()
   const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
-  const profileLabel = currentUser?.name ? `${currentUser.name} profile` : 'Profile'
+  const profileLabel = currentUser?.name ?? t('header.profile')
   const profileImageUrl = currentUser?.profileImageUrl ?? currentUser?.settings?.profileImageUrl ?? ''
 
   function isNavItemActive(path) {
@@ -40,20 +41,20 @@ function Header({
         <div className="site-header__brand-group">
           {variant === 'students' ? (
             <NavLink to="/students" className="site-header__brand site-header__brand--students">
-              <img src="/logo.png" alt="AEM logo" className="site-header__brand-logo" />
+              <img src="/logo.png" alt={`${t('common.appName')} logo`} className="site-header__brand-logo" />
             </NavLink>
           ) : (
             <div>
-              <p className="site-header__eyebrow">Ajou Event Manager</p>
+              <p className="site-header__eyebrow">{t('header.brandEyebrow')}</p>
               <NavLink to="/" className="site-header__brand">
-                AEM
+                {t('common.appName')}
               </NavLink>
             </div>
           )}
         </div>
 
         {variant === 'students' && showSearch ? (
-          <label className="site-header__search" aria-label="Search events">
+          <label className="site-header__search" aria-label={t('header.searchLabel')}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
@@ -64,7 +65,7 @@ function Header({
               type="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search events..."
+              placeholder={t('header.searchPlaceholder')}
             />
           </label>
         ) : variant === 'students' ? <div className="site-header__search-spacer" /> : null}
@@ -95,7 +96,7 @@ function Header({
                   : 'site-header__profile'
               }
               aria-label={profileLabel}
-              title={currentUser?.name ?? 'Profile'}
+              title={profileLabel}
             >
               {profileImageUrl ? (
                 <img src={profileImageUrl} alt={profileLabel} className="site-header__profile-image" />

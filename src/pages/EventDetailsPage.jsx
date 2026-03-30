@@ -2,9 +2,42 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
 import { fetchEventById, participateInEvent } from '../api/aemApi'
+import { getLanguageLocale } from '../i18n/translations'
+import { useI18n } from '../i18n/LanguageContext'
 import '../styles/event-details.css'
 
+function formatEventDate(eventDate, fallback, languageCode) {
+  if (!eventDate) {
+    return fallback
+  }
+
+  const parsedDate = new Date(`${eventDate}T00:00:00`)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return fallback || eventDate
+  }
+
+  return parsedDate.toLocaleDateString(getLanguageLocale(languageCode), {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+function formatModerationStatus(status, languageCode) {
+  const normalized = String(status ?? 'pending').toLowerCase()
+  if (languageCode === 'ru') {
+    return { pending: 'На проверке', approved: 'Одобрено', rejected: 'Отклонено' }[normalized] ?? normalized
+  }
+
+  if (languageCode === 'uz') {
+    return { pending: 'Tekshiruvda', approved: 'Tasdiqlangan', rejected: 'Rad etilgan' }[normalized] ?? normalized
+  }
+
+  return { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' }[normalized] ?? normalized
+}
+
 function EventDetailsPage({ currentUser }) {
+  const { languageCode, t } = useI18n()
   const navigate = useNavigate()
   const { eventId } = useParams()
   const [event, setEvent] = useState(null)
@@ -72,7 +105,7 @@ function EventDetailsPage({ currentUser }) {
     try {
       const result = await participateInEvent(event.id)
       setEvent(result.event)
-      setActionFeedback({ type: 'success', message: result.message })
+      setActionFeedback({ type: 'success', message: t('eventDetails.joined') })
     } catch (error) {
       setActionFeedback({
         type: 'error',
@@ -88,10 +121,10 @@ function EventDetailsPage({ currentUser }) {
       <section className="event-details-page">
         <div className="event-details-empty event-details-empty--info">
           <button type="button" className="event-details-back" onClick={handleBack}>
-            Back to Events
+            {t('eventDetails.backToEvents')}
           </button>
-          <h1>Loading event...</h1>
-          <p>Fetching the latest event details from the backend.</p>
+          <h1>{t('eventDetails.loadingTitle')}</h1>
+          <p>{t('eventDetails.loadingDescription')}</p>
         </div>
       </section>
     )
@@ -102,10 +135,10 @@ function EventDetailsPage({ currentUser }) {
       <section className="event-details-page">
         <div className="event-details-empty">
           <button type="button" className="event-details-back" onClick={handleBack}>
-            Back to Events
+            {t('eventDetails.backToEvents')}
           </button>
-          <h1>Event not found</h1>
-          <p>The event you are trying to open does not exist.</p>
+          <h1>{t('eventDetails.notFoundTitle')}</h1>
+          <p>{t('eventDetails.notFoundDescription')}</p>
         </div>
       </section>
     )
@@ -116,9 +149,9 @@ function EventDetailsPage({ currentUser }) {
       <section className="event-details-page">
         <div className="event-details-empty event-details-empty--error">
           <button type="button" className="event-details-back" onClick={handleBack}>
-            Back to Events
+            {t('eventDetails.backToEvents')}
           </button>
-          <h1>Could not load event</h1>
+          <h1>{t('eventDetails.errorTitle')}</h1>
           <p>{errorMessage}</p>
         </div>
       </section>
@@ -128,11 +161,15 @@ function EventDetailsPage({ currentUser }) {
   const isCreator = Boolean(currentUser?.id) && currentUser.id === event.creatorId
   const canParticipate = Boolean(currentUser?.id) && !isCreator
   const hasJoined = Boolean(event.isJoined)
+  const dateText = formatEventDate(event.eventDate, event.date, languageCode)
+  const categoryText = event.category || t('common.general')
+  const organizerText = event.creatorName || event.organizerName || t('common.unknownOrganizer')
+  const statusText = formatModerationStatus(event.moderationStatus, languageCode)
 
   return (
     <section className="event-details-page">
       <button type="button" className="event-details-back" onClick={handleBack}>
-        Back to Events
+        {t('eventDetails.backToEvents')}
       </button>
 
       <article className="event-details-card">
@@ -140,8 +177,8 @@ function EventDetailsPage({ currentUser }) {
 
         <div className="event-details-content">
           <div className="event-details-topline">
-            <span className="event-details-badge">{event.category || 'General'}</span>
-            <span className="event-details-status">{event.status}</span>
+            <span className="event-details-badge">{categoryText}</span>
+            <span className="event-details-status">{statusText}</span>
           </div>
 
           <h1>{event.title}</h1>
@@ -155,12 +192,16 @@ function EventDetailsPage({ currentUser }) {
                 onClick={handleParticipate}
                 disabled={isJoining || hasJoined}
               >
-                {hasJoined ? 'Joined' : isJoining ? 'Joining...' : 'Participate'}
+                {hasJoined
+                  ? t('eventDetails.joined')
+                  : isJoining
+                    ? t('eventDetails.joining')
+                    : t('eventDetails.participate')}
               </button>
             ) : isCreator ? (
-              <p className="event-details-inline-note">You created this event.</p>
+              <p className="event-details-inline-note">{t('eventDetails.creatorNote')}</p>
             ) : (
-              <p className="event-details-inline-note">Sign in to join this event.</p>
+              <p className="event-details-inline-note">{t('eventDetails.signInToJoin')}</p>
             )}
 
             {actionFeedback.message ? (
@@ -178,28 +219,28 @@ function EventDetailsPage({ currentUser }) {
 
           <div className="event-details-grid">
             <div className="event-details-item">
-              <span>Date</span>
-              <strong>{event.date}</strong>
+              <span>{t('common.date')}</span>
+              <strong>{dateText}</strong>
             </div>
             <div className="event-details-item">
-              <span>Start time</span>
-              <strong>{event.startTime || 'TBD'}</strong>
+              <span>{t('common.startTime')}</span>
+              <strong>{event.startTime || t('common.tbd')}</strong>
             </div>
             <div className="event-details-item">
-              <span>End time</span>
-              <strong>{event.endTime || 'TBD'}</strong>
+              <span>{t('common.endTime')}</span>
+              <strong>{event.endTime || t('common.tbd')}</strong>
             </div>
             <div className="event-details-item">
-              <span>Location</span>
+              <span>{t('common.location')}</span>
               <strong>{event.location}</strong>
             </div>
             <div className="event-details-item">
-              <span>Category</span>
-              <strong>{event.category || 'General'}</strong>
+              <span>{t('common.category')}</span>
+              <strong>{categoryText}</strong>
             </div>
             <div className="event-details-item">
-              <span>Organizer</span>
-              <strong>{event.creatorName || event.organizerName || 'Unknown organizer'}</strong>
+              <span>{t('common.organizer')}</span>
+              <strong>{organizerText}</strong>
             </div>
           </div>
         </div>

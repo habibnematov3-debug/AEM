@@ -18,3 +18,16 @@
 .modal-shell--lg {
   width: min(100%, 920px);
 }
+
+@media (max-width: 640px) {
+  .modal-backdrop {
+    padding: 10px;
+    align-items: end;
+  }
+
+  .modal-shell,
+  .modal-shell--lg {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+  }
+}

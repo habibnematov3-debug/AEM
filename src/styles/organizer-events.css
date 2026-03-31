@@ -374,6 +374,25 @@
 }
 
 @media (max-width: 780px) {
+  .organizer-events-page {
+    gap: var(--space-5);
+    padding: 18px 2px 8px;
+  }
+
+  .organizer-events-page__intro {
+    gap: 10px;
+  }
+
+  .organizer-events-page__intro h1 {
+    font-size: clamp(2.1rem, 12vw, 3rem);
+    line-height: 0.98;
+  }
+
+  .organizer-events-page__intro p {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+
   .organizer-events-page__topbar,
   .create-event-panel__header,
   .create-event-form {
@@ -391,10 +410,17 @@
 
   .organizer-events-grid {
     grid-template-columns: 1fr;
+    gap: 18px;
   }
 
   .create-event-form__actions {
     flex-direction: column-reverse;
+  }
+
+  .create-event-panel,
+  .organizer-events-dialog {
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
   }
 
   .create-event-form__secondary,
@@ -418,5 +444,17 @@
 
   .organizer-events-dialog__delete-button {
     width: 100%;
+  }
+
+  .organizer-events-empty {
+    min-height: 220px;
+    padding: 28px 18px;
+  }
+}
+
+@media (max-width: 520px) {
+  .create-event-form__preview img {
+    max-width: none;
+    height: 176px;
   }
 }

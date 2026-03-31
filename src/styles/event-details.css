@@ -192,7 +192,47 @@
 }
 
 @media (max-width: 900px) {
+  .event-details-page {
+    gap: 18px;
+    padding: 18px 2px 8px;
+  }
+
+  .event-details-card,
+  .event-details-empty {
+    gap: 18px;
+    padding: 20px 16px;
+    border-radius: var(--radius-lg);
+  }
+
+  .event-details-back,
+  .event-details-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .event-details-cover {
+    height: clamp(220px, 52vw, 320px);
+    border-radius: var(--radius-md);
+  }
+
+  .event-details-content h1,
+  .event-details-empty h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+    line-height: 1;
+  }
+
+  .event-details-description,
+  .event-details-empty p {
+    font-size: 0.98rem;
+    line-height: 1.62;
+  }
+
   .event-details-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .event-details-item {
+    padding: 16px;
   }
 }

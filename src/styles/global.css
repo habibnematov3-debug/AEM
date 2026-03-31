@@ -80,6 +80,7 @@ body {
     linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 a {
@@ -123,4 +124,15 @@ textarea {
 ::selection {
   background: rgba(29, 100, 182, 0.14);
   color: var(--text);
+}
+
+@media (max-width: 640px) {
+  :root {
+    --radius-md: 16px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
+    --space-4: 18px;
+    --space-5: 20px;
+    --space-6: 24px;
+  }
 }

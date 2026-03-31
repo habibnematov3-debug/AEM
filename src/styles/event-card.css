@@ -212,3 +212,40 @@
   color: var(--accent-dark);
   font-weight: 700;
 }
+
+@media (max-width: 640px) {
+  .event-card__media {
+    height: 188px;
+  }
+
+  .event-card__body {
+    gap: 12px;
+    padding: 18px 16px 18px;
+  }
+
+  .event-card__body h3 {
+    min-height: auto;
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+
+  .event-card__detail {
+    gap: 8px;
+    font-size: 0.94rem;
+  }
+
+  .event-card__detail svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .event-card__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .event-card__action-button {
+    width: 100%;
+    min-height: 42px;
+  }
+}

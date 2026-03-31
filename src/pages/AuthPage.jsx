@@ -5,7 +5,19 @@ import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
 const initialSignIn = { email: '', password: '' }
-const initialSignUp = { fullName: '', email: '', password: '' }
+const initialSignUp = { fullName: '', email: '', password: '', confirmPassword: '' }
+
+function estimatePasswordStrength(password) {
+  let score = 0
+
+  if (password.length >= 8) score += 1
+  if (/[A-Za-z]/.test(password) && /\d/.test(password)) score += 1
+  if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score += 1
+
+  if (score <= 1) return 'weak'
+  if (score === 2) return 'good'
+  return 'strong'
+}
 
 function AuthPage({ onSignIn, onSignUp }) {
   const { t } = useI18n()
@@ -15,6 +27,7 @@ function AuthPage({ onSignIn, onSignUp }) {
   const [signUpData, setSignUpData] = useState(initialSignUp)
   const [showSignInPassword, setShowSignInPassword] = useState(false)
   const [showSignUpPassword, setShowSignUpPassword] = useState(false)
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
 
@@ -40,16 +53,59 @@ function AuthPage({ onSignIn, onSignUp }) {
     [mode, t],
   )
 
+  const passwordStrength = useMemo(
+    () => estimatePasswordStrength(signUpData.password),
+    [signUpData.password],
+  )
+
+  const passwordRules = useMemo(
+    () => [
+      {
+        label: t('auth.passwordRuleLength'),
+        valid: signUpData.password.length >= 8,
+      },
+      {
+        label: t('auth.passwordRuleLetter'),
+        valid: /[A-Za-z]/.test(signUpData.password),
+      },
+      {
+        label: t('auth.passwordRuleNumber'),
+        valid: /\d/.test(signUpData.password),
+      },
+    ],
+    [signUpData.password, t],
+  )
+
+  const passwordsMatch =
+    signUpData.confirmPassword.length > 0 && signUpData.password === signUpData.confirmPassword
+
   function switchMode(nextMode) {
     setMode(nextMode)
     setFeedback({ type: '', message: '' })
   }
 
+  function normalizeEmail(value) {
+    return value.trim().toLowerCase()
+  }
+
+  function updateSignInField(field, value) {
+    setSignInData((current) => ({ ...current, [field]: value }))
+  }
+
+  function updateSignUpField(field, value) {
+    setSignUpData((current) => ({ ...current, [field]: value }))
+  }
+
   async function handleSignInSubmit(event) {
     event.preventDefault()
     setIsSubmitting(true)
+    setFeedback({ type: '', message: '' })
 
-    const result = await onSignIn(signInData)
+    const result = await onSignIn({
+      ...signInData,
+      email: normalizeEmail(signInData.email),
+    })
+
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
       setIsSubmitting(false)
@@ -66,9 +122,32 @@ function AuthPage({ onSignIn, onSignUp }) {
 
   async function handleSignUpSubmit(event) {
     event.preventDefault()
-    setIsSubmitting(true)
 
-    const result = await onSignUp(signUpData)
+    const normalizedData = {
+      ...signUpData,
+      fullName: signUpData.fullName.trim(),
+      email: normalizeEmail(signUpData.email),
+    }
+
+    if (!normalizedData.fullName) {
+      setFeedback({ type: 'error', message: t('auth.fullNameRequired') })
+      return
+    }
+
+    if (normalizedData.password.length < 8) {
+      setFeedback({ type: 'error', message: t('auth.passwordTooShort') })
+      return
+    }
+
+    if (normalizedData.password !== normalizedData.confirmPassword) {
+      setFeedback({ type: 'error', message: t('auth.passwordMismatch') })
+      return
+    }
+
+    setIsSubmitting(true)
+    setFeedback({ type: '', message: '' })
+
+    const result = await onSignUp(normalizedData)
     if (!result.ok) {
       setFeedback({ type: 'error', message: result.message })
       setIsSubmitting(false)
@@ -130,6 +209,12 @@ function AuthPage({ onSignIn, onSignUp }) {
             </div>
           </div>
 
+          <div className="auth-card__assist">
+            <span>{t('auth.assistSecure')}</span>
+            <span>{t('auth.assistFast')}</span>
+            <span>{t('auth.assistPersonal')}</span>
+          </div>
+
           {feedback.message ? (
             <div
               className={
@@ -137,6 +222,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                   ? 'auth-feedback auth-feedback--error'
                   : 'auth-feedback auth-feedback--success'
               }
+              aria-live="polite"
             >
               {feedback.message}
             </div>
@@ -146,14 +232,13 @@ function AuthPage({ onSignIn, onSignUp }) {
             <form className="auth-form" onSubmit={handleSignInSubmit}>
               <label>
                 <span>{t('common.email')}</span>
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    disabled={isSubmitting}
-                    value={signInData.email}
-                  onChange={(event) =>
-                    setSignInData((current) => ({ ...current, email: event.target.value }))
-                  }
+                <input
+                  type="email"
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  value={signInData.email}
+                  onChange={(event) => updateSignInField('email', event.target.value)}
+                  onBlur={(event) => updateSignInField('email', normalizeEmail(event.target.value))}
                   placeholder={t('auth.emailPlaceholder')}
                   required
                 />
@@ -167,9 +252,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                     autoComplete="current-password"
                     disabled={isSubmitting}
                     value={signInData.password}
-                    onChange={(event) =>
-                      setSignInData((current) => ({ ...current, password: event.target.value }))
-                    }
+                    onChange={(event) => updateSignInField('password', event.target.value)}
                     placeholder={t('auth.passwordPlaceholder')}
                     required
                   />
@@ -197,14 +280,12 @@ function AuthPage({ onSignIn, onSignUp }) {
             <form className="auth-form" onSubmit={handleSignUpSubmit}>
               <label>
                 <span>{t('common.fullName')}</span>
-                  <input
-                    type="text"
-                    autoComplete="name"
-                    disabled={isSubmitting}
-                    value={signUpData.fullName}
-                  onChange={(event) =>
-                    setSignUpData((current) => ({ ...current, fullName: event.target.value }))
-                  }
+                <input
+                  type="text"
+                  autoComplete="name"
+                  disabled={isSubmitting}
+                  value={signUpData.fullName}
+                  onChange={(event) => updateSignUpField('fullName', event.target.value)}
                   placeholder={t('auth.fullNamePlaceholder')}
                   required
                 />
@@ -212,14 +293,13 @@ function AuthPage({ onSignIn, onSignUp }) {
 
               <label>
                 <span>{t('common.email')}</span>
-                  <input
-                    type="email"
-                    autoComplete="email"
-                    disabled={isSubmitting}
-                    value={signUpData.email}
-                  onChange={(event) =>
-                    setSignUpData((current) => ({ ...current, email: event.target.value }))
-                  }
+                <input
+                  type="email"
+                  autoComplete="email"
+                  disabled={isSubmitting}
+                  value={signUpData.email}
+                  onChange={(event) => updateSignUpField('email', event.target.value)}
+                  onBlur={(event) => updateSignUpField('email', normalizeEmail(event.target.value))}
                   placeholder={t('auth.emailPlaceholder')}
                   required
                 />
@@ -233,9 +313,7 @@ function AuthPage({ onSignIn, onSignUp }) {
                     autoComplete="new-password"
                     disabled={isSubmitting}
                     value={signUpData.password}
-                    onChange={(event) =>
-                      setSignUpData((current) => ({ ...current, password: event.target.value }))
-                    }
+                    onChange={(event) => updateSignUpField('password', event.target.value)}
                     placeholder={t('auth.passwordCreatePlaceholder')}
                     required
                   />
@@ -253,6 +331,97 @@ function AuthPage({ onSignIn, onSignUp }) {
                     {showSignUpPassword ? t('common.hide') : t('common.show')}
                   </button>
                 </div>
+              </label>
+
+              <div className="auth-password-meta">
+                <div className="auth-strength">
+                  <div className="auth-strength__bars" aria-hidden="true">
+                    <span
+                      className={
+                        passwordStrength === 'weak' ||
+                        passwordStrength === 'good' ||
+                        passwordStrength === 'strong'
+                          ? 'auth-strength__bar auth-strength__bar--active auth-strength__bar--weak'
+                          : 'auth-strength__bar'
+                      }
+                    />
+                    <span
+                      className={
+                        passwordStrength === 'good' || passwordStrength === 'strong'
+                          ? 'auth-strength__bar auth-strength__bar--active auth-strength__bar--good'
+                          : 'auth-strength__bar'
+                      }
+                    />
+                    <span
+                      className={
+                        passwordStrength === 'strong'
+                          ? 'auth-strength__bar auth-strength__bar--active auth-strength__bar--strong'
+                          : 'auth-strength__bar'
+                      }
+                    />
+                  </div>
+                  <span className={`auth-strength__label auth-strength__label--${passwordStrength}`}>
+                    {t(`auth.passwordStrength${passwordStrength[0].toUpperCase()}${passwordStrength.slice(1)}`)}
+                  </span>
+                </div>
+
+                <ul className="auth-password-rules">
+                  {passwordRules.map((rule) => (
+                    <li
+                      key={rule.label}
+                      className={
+                        rule.valid
+                          ? 'auth-password-rules__item auth-password-rules__item--valid'
+                          : 'auth-password-rules__item'
+                      }
+                    >
+                      {rule.label}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <label>
+                <span>{t('auth.confirmPasswordLabel')}</span>
+                <div className="auth-password-field">
+                  <input
+                    type={showSignUpConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    disabled={isSubmitting}
+                    value={signUpData.confirmPassword}
+                    onChange={(event) => updateSignUpField('confirmPassword', event.target.value)}
+                    placeholder={t('auth.confirmPasswordPlaceholder')}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-password-field__toggle"
+                    disabled={isSubmitting}
+                    onClick={() => setShowSignUpConfirmPassword((current) => !current)}
+                    aria-label={
+                      showSignUpConfirmPassword
+                        ? `${t('common.hide')} ${t('auth.confirmPasswordLabel')}`
+                        : `${t('common.show')} ${t('auth.confirmPasswordLabel')}`
+                    }
+                  >
+                    {showSignUpConfirmPassword ? t('common.hide') : t('common.show')}
+                  </button>
+                </div>
+                <span
+                  className={
+                    passwordsMatch
+                      ? 'auth-inline-note auth-inline-note--success'
+                      : signUpData.confirmPassword
+                        ? 'auth-inline-note auth-inline-note--error'
+                        : 'auth-inline-note'
+                  }
+                >
+                  {passwordsMatch
+                    ? t('auth.passwordMatch')
+                    : signUpData.confirmPassword
+                      ? t('auth.passwordMismatch')
+                      : t('auth.confirmPasswordHint')}
+                </span>
               </label>
 
               <button type="submit" className="auth-form__submit" disabled={isSubmitting}>

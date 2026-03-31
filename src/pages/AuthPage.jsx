@@ -87,43 +87,16 @@ function AuthPage({ onSignIn, onSignUp }) {
 
   return (
     <section className="auth-page">
-      <div className="auth-layout">
-        <aside className="auth-hero">
-          <div className="auth-hero__brand">
-            <img className="auth-hero__logo" src="/logo.png" alt={`${t('common.appName')} logo`} />
-            <div className="auth-hero__copy">
-              <p className="auth-hero__eyebrow">{t('auth.heroEyebrow')}</p>
-              <h1>{t('auth.heroTitle')}</h1>
-              <p>{t('auth.heroDescription')}</p>
+      <div className="auth-layout auth-layout--single">
+        <div className="auth-card auth-card--standalone">
+          <div className="auth-card__brand">
+            <img className="auth-card__logo" src="/logo.png" alt={`${t('common.appName')} logo`} />
+            <div className="auth-card__brand-copy">
+              <p className="auth-card__brand-eyebrow">{t('auth.heroEyebrow')}</p>
+              <strong>{t('common.appName')}</strong>
             </div>
           </div>
 
-          <div className="auth-hero__highlights">
-            <article className="auth-highlight">
-              <span className="auth-highlight__index">01</span>
-              <div>
-                <strong>{t('auth.discoverTitle')}</strong>
-                <p>{t('auth.discoverDescription')}</p>
-              </div>
-            </article>
-            <article className="auth-highlight">
-              <span className="auth-highlight__index">02</span>
-              <div>
-                <strong>{t('auth.manageTitle')}</strong>
-                <p>{t('auth.manageDescription')}</p>
-              </div>
-            </article>
-            <article className="auth-highlight">
-              <span className="auth-highlight__index">03</span>
-              <div>
-                <strong>{t('auth.participateTitle')}</strong>
-                <p>{t('auth.participateDescription')}</p>
-              </div>
-            </article>
-          </div>
-        </aside>
-
-        <div className="auth-card">
           <div className="auth-card__header">
             <div>
               <p className="auth-card__eyebrow">{content.eyebrow}</p>

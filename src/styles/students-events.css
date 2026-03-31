@@ -73,8 +73,8 @@
 
 @media (max-width: 780px) {
   .students-events-page {
-    gap: var(--space-5);
-    padding: 18px 2px 8px;
+    gap: 18px;
+    padding: 10px 2px 8px;
   }
 
   .students-events-page__intro {
@@ -99,5 +99,29 @@
   .students-events-empty {
     min-height: 220px;
     padding: 28px 18px;
+  }
+}
+
+@media (max-width: 460px) {
+  .students-events-page {
+    gap: 14px;
+    padding-top: 4px;
+  }
+
+  .students-events-page__intro {
+    gap: 8px;
+  }
+
+  .students-events-page__eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+  }
+
+  .students-events-page__intro h1 {
+    font-size: clamp(1.8rem, 10vw, 2.4rem);
+  }
+
+  .students-events-page__intro p {
+    font-size: 0.95rem;
   }
 }

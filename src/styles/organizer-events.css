@@ -375,8 +375,8 @@
 
 @media (max-width: 780px) {
   .organizer-events-page {
-    gap: var(--space-5);
-    padding: 18px 2px 8px;
+    gap: 18px;
+    padding: 10px 2px 8px;
   }
 
   .organizer-events-page__intro {
@@ -453,6 +453,28 @@
 }
 
 @media (max-width: 520px) {
+  .organizer-events-page {
+    gap: 14px;
+    padding-top: 4px;
+  }
+
+  .organizer-events-page__intro {
+    gap: 8px;
+  }
+
+  .organizer-events-page__eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+  }
+
+  .organizer-events-page__intro h1 {
+    font-size: clamp(1.8rem, 10vw, 2.4rem);
+  }
+
+  .organizer-events-page__intro p {
+    font-size: 0.95rem;
+  }
+
   .create-event-form__preview img {
     max-width: none;
     height: 176px;

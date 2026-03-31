@@ -236,6 +236,14 @@
     padding: 12px 0;
   }
 
+  .site-header__brand-group {
+    width: 100%;
+  }
+
+  .site-header__inner--students {
+    gap: 10px;
+  }
+
   .site-header__search {
     width: 100%;
     min-height: 50px;
@@ -295,16 +303,60 @@
 }
 
 @media (max-width: 460px) {
+  .site-header__inner--students {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .site-header__brand-group {
+    width: auto;
+  }
+
+  .site-header__search {
+    grid-column: 1 / -1;
+    order: 2;
+  }
+
   .site-header__actions {
-    align-items: stretch;
-    flex-direction: column;
+    width: auto;
+    justify-content: flex-end;
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .site-header__search-spacer {
+    display: none;
   }
 
   .site-header__nav {
+    grid-column: 1 / -1;
+    grid-row: 3;
     width: 100%;
+    padding-bottom: 0;
   }
 
   .site-header__profile {
-    align-self: flex-end;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+  }
+
+  .site-header__actions {
+    gap: 0;
+  }
+
+  .site-header__link {
+    min-height: 40px;
+    padding: 0 14px;
+  }
+
+  .site-header__brand--students {
+    min-width: 64px;
+    min-height: 44px;
+    padding: 4px 8px;
+  }
+
+  .site-header__brand-logo {
+    width: 52px;
   }
 }

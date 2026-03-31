@@ -6,7 +6,9 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
 const SUPABASE_STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'profile-images'
 const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
-const API_TIMEOUT_MS = 20000
+const API_TIMEOUT_MS = 35000
+const SAFE_REQUEST_RETRIES = 1
+const SAFE_REQUEST_RETRY_DELAY_MS = 1800
 let supabaseClient = null
 
 function sanitizeImageUrl(value) {
@@ -145,66 +147,85 @@ function normalizeEvent(rawEvent) {
 }
 
 async function apiRequest(path, options = {}) {
-  const controller = new AbortController()
-  const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
-  let response
+  const method = String(options.method ?? 'GET').toUpperCase()
+  const canRetry = method === 'GET' || method === 'HEAD'
+  const maxAttempts = canRetry ? SAFE_REQUEST_RETRIES + 1 : 1
 
-  try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(options.headers ?? {}),
-      },
-      signal: controller.signal,
-      ...options,
-    })
-  } catch (error) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+    let response
+
+    try {
+      response = await fetch(`${API_BASE_URL}${path}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(options.headers ?? {}),
+        },
+        signal: controller.signal,
+        ...options,
+      })
+    } catch (error) {
+      window.clearTimeout(timeoutId)
+
+      if (canRetry && attempt < maxAttempts && (error.name === 'AbortError' || error instanceof TypeError)) {
+        await new Promise((resolve) => window.setTimeout(resolve, SAFE_REQUEST_RETRY_DELAY_MS))
+        continue
+      }
+
+      if (error.name === 'AbortError') {
+        const timeoutError = new Error(
+          'The server is taking too long to respond. The backend may be waking up on Render or temporarily unavailable.',
+        )
+        timeoutError.status = 408
+        throw timeoutError
+      }
+
+      if (error instanceof TypeError) {
+        const networkError = new Error(
+          'Could not reach the backend server. Please try again in a moment.',
+        )
+        networkError.status = 503
+        throw networkError
+      }
+
+      throw error
+    }
+
     window.clearTimeout(timeoutId)
 
-    if (error.name === 'AbortError') {
-      const timeoutError = new Error(
-        'The server is taking too long to respond. The backend may be waking up on Render or temporarily unavailable.',
-      )
-      timeoutError.status = 408
-      throw timeoutError
+    const text = await response.text()
+    let payload = {}
+
+    try {
+      payload = text ? JSON.parse(text) : {}
+    } catch {
+      payload = {}
     }
 
-    if (error instanceof TypeError) {
-      const networkError = new Error(
-        'Could not reach the backend server. Please try again in a moment.',
-      )
-      networkError.status = 503
-      throw networkError
+    if (!response.ok) {
+      const message =
+        payload.detail ??
+        payload.message ??
+        (typeof payload === 'object' && payload !== null ? Object.values(payload).flat().join(' ') : '') ??
+        'Request failed.'
+      const error = new Error(message)
+      error.status = response.status
+      error.payload = payload
+
+      if (canRetry && attempt < maxAttempts && response.status >= 500) {
+        await new Promise((resolve) => window.setTimeout(resolve, SAFE_REQUEST_RETRY_DELAY_MS))
+        continue
+      }
+
+      throw error
     }
 
-    throw error
+    return payload
   }
 
-  window.clearTimeout(timeoutId)
-
-  const text = await response.text()
-  let payload = {}
-
-  try {
-    payload = text ? JSON.parse(text) : {}
-  } catch {
-    payload = {}
-  }
-
-  if (!response.ok) {
-    const message =
-      payload.detail ??
-      payload.message ??
-      (typeof payload === 'object' && payload !== null ? Object.values(payload).flat().join(' ') : '') ??
-      'Request failed.'
-    const error = new Error(message)
-    error.status = response.status
-    error.payload = payload
-    throw error
-  }
-
-  return payload
+  throw new Error('Request failed.')
 }
 
 export function getStoredCurrentUser() {

@@ -294,6 +294,18 @@ class EventParticipateAPIView(APIView):
             id=event_id,
         )
 
+        if event.moderation_status != Event.ModerationStatuses.APPROVED:
+            return Response(
+                {'detail': 'This event is not publicly available yet.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if event.creator_id == current_user.id:
+            return Response(
+                {'detail': 'You cannot participate in your own event.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if Participation.objects.filter(user_id=current_user.id, event_id=event.id).exists():
             return Response(
                 {'detail': 'You have already joined this event.'},

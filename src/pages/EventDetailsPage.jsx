@@ -159,7 +159,8 @@ function EventDetailsPage({ currentUser }) {
   }
 
   const isCreator = Boolean(currentUser?.id) && currentUser.id === event.creatorId
-  const canParticipate = Boolean(currentUser?.id) && !isCreator
+  const isPubliclyAvailable = event.moderationStatus === 'approved'
+  const canParticipate = Boolean(currentUser?.id) && !isCreator && isPubliclyAvailable
   const hasJoined = Boolean(event.isJoined)
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
   const categoryText = event.category || t('common.general')
@@ -200,6 +201,8 @@ function EventDetailsPage({ currentUser }) {
               </button>
             ) : isCreator ? (
               <p className="event-details-inline-note">{t('eventDetails.creatorNote')}</p>
+            ) : currentUser?.id && !isPubliclyAvailable ? (
+              <p className="event-details-inline-note">{t('eventDetails.pendingJoinNote')}</p>
             ) : (
               <p className="event-details-inline-note">{t('eventDetails.signInToJoin')}</p>
             )}

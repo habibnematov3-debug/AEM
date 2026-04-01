@@ -37,6 +37,14 @@ function OrganizerPage({
   }, [currentUser, events, searchValue])
 
   const hasAccountEvents = events.some((event) => event.creatorId === currentUser?.id)
+  const statusSummary = useMemo(
+    () => ({
+      pending: userEvents.filter((event) => event.moderationStatus === 'pending').length,
+      approved: userEvents.filter((event) => event.moderationStatus === 'approved').length,
+      rejected: userEvents.filter((event) => event.moderationStatus === 'rejected').length,
+    }),
+    [userEvents],
+  )
 
   async function handleCreate(formData) {
     try {
@@ -129,6 +137,7 @@ function OrganizerPage({
           <p className="organizer-events-page__eyebrow">{t('organizerPage.eyebrow')}</p>
           <h1>{t('organizerPage.title')}</h1>
           <p>{t('organizerPage.subtitle')}</p>
+          <p className="organizer-events-page__note">{t('organizerPage.reviewSummary')}</p>
         </div>
 
         <button
@@ -156,6 +165,15 @@ function OrganizerPage({
           {formFeedback.message}
         </div>
       ) : null}
+
+      <div className="organizer-events-page__status-summary">
+        {Object.entries(statusSummary).map(([statusKey, count]) => (
+          <article key={statusKey} className="organizer-events-page__status-card">
+            <span>{t(`organizerPage.statusSummary.${statusKey}`)}</span>
+            <strong>{count}</strong>
+          </article>
+        ))}
+      </div>
 
       {isCreateFormOpen ? (
         <CreateEventForm

@@ -109,6 +109,7 @@ const translations = {
       title: 'My Events',
       subtitle: "Manage and view the events you've created",
       createEvent: 'Create Event',
+      reviewSummary: 'Track which events are still waiting for approval and which are already public.',
       createdSuccess: 'Event created successfully.',
       updatedSuccess: 'Event updated successfully.',
       deletedSuccess: 'Event deleted successfully.',
@@ -125,6 +126,21 @@ const translations = {
         '{title} will be removed from My Events, the students page, and the details page.',
       deleting: 'Deleting...',
       delete: 'Delete',
+      statusSummary: {
+        pending: 'Pending Review',
+        approved: 'Approved',
+        rejected: 'Rejected',
+      },
+      statuses: {
+        pending: 'Pending',
+        approved: 'Approved',
+        rejected: 'Rejected',
+      },
+      statusMessages: {
+        pending: 'Waiting for admin review. This event is hidden from students until approval.',
+        approved: 'Visible to students on the main events page.',
+        rejected: 'Rejected by admin. Edit the event and submit an improved version if needed.',
+      },
     },
     adminPage: {
       eyebrow: 'Platform control',
@@ -203,6 +219,7 @@ const translations = {
       joining: 'Joining...',
       joined: 'Joined',
       creatorNote: 'You created this event.',
+      pendingJoinNote: 'Participation opens after this event is approved.',
       signInToJoin: 'Sign in to join this event.',
       joinError: 'Could not join this event.',
     },

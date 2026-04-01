@@ -24,6 +24,7 @@ function formatEventDate(eventDate, fallback, languageCode) {
 function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = () => {} }) {
   const { languageCode, t } = useI18n()
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
+  const moderationStatus = event.moderationStatus ?? 'pending'
 
   if (variant === 'student') {
     return (
@@ -67,9 +68,17 @@ function EventCard({ event, variant = 'student', onEdit = () => {}, onDelete = (
         <div className="event-card__body">
           <div className="event-card__mini-topline">
             <span className="event-card__owner-badge">{t('eventCard.yourEvent')}</span>
+            <span
+              className={`event-card__moderation-badge event-card__moderation-badge--${moderationStatus}`}
+            >
+              {t(`organizerPage.statuses.${moderationStatus}`)}
+            </span>
           </div>
 
           <h3>{event.title}</h3>
+          <p className="event-card__status-copy">
+            {t(`organizerPage.statusMessages.${moderationStatus}`)}
+          </p>
           <div className="event-card__detail">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path

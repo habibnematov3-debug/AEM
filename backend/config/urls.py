@@ -4,6 +4,8 @@ from accounts.views import (
     AdminDashboardAPIView,
     AdminEventListAPIView,
     AdminEventModerationAPIView,
+    AdminUserListAPIView,
+    AdminUserUpdateAPIView,
     EventDetailAPIView,
     EventListCreateAPIView,
     EventParticipateAPIView,
@@ -20,6 +22,8 @@ urlpatterns = [
     ),
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='admin-dashboard'),
     path('api/admin/events/', AdminEventListAPIView.as_view(), name='admin-events'),
+    path('api/admin/users/', AdminUserListAPIView.as_view(), name='admin-users'),
+    path('api/admin/users/<int:user_id>/', AdminUserUpdateAPIView.as_view(), name='admin-users-update'),
     path(
         'api/admin/events/<int:event_id>/moderate/',
         AdminEventModerationAPIView.as_view(),

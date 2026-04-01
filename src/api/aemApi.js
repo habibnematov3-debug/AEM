@@ -159,6 +159,20 @@ function normalizeAdminStats(rawStats = {}) {
   }
 }
 
+function normalizeAdminUser(rawUser) {
+  return {
+    id: String(rawUser.id),
+    name: rawUser.full_name ?? '',
+    email: rawUser.email ?? '',
+    role: rawUser.role ?? 'student',
+    isActive: rawUser.is_active ?? true,
+    createdAt: rawUser.created_at ?? null,
+    createdEventsCount: rawUser.created_events_count ?? 0,
+    joinedEventsCount: rawUser.joined_events_count ?? 0,
+    profileImageUrl: sanitizeImageUrl(rawUser.profile_image_url),
+  }
+}
+
 export function getDefaultRouteForRole(role) {
   if (role === 'admin') {
     return '/admin'
@@ -483,5 +497,23 @@ export async function moderateAdminEvent(eventId, moderationStatus) {
     message: payload.message,
     event: normalizeEvent(payload.event),
     stats: normalizeAdminStats(payload.stats),
+  }
+}
+
+export async function fetchAdminUsers(roleFilter = '') {
+  const suffix = roleFilter ? `?role=${encodeURIComponent(roleFilter)}` : ''
+  const payload = await apiRequest(`/api/admin/users/${suffix}`)
+  return (payload.results ?? []).map(normalizeAdminUser)
+}
+
+export async function updateAdminUser(userId, updates) {
+  const payload = await apiRequest(`/api/admin/users/${userId}/`, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  })
+
+  return {
+    message: payload.message,
+    user: normalizeAdminUser(payload.user),
   }
 }

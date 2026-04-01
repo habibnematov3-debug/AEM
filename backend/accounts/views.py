@@ -10,6 +10,8 @@ from rest_framework.views import APIView
 
 from .models import AEMUser, Event, Participation
 from .serializers import (
+    AdminUserSerializer,
+    AdminUserUpdateSerializer,
     CurrentUserSerializer,
     EventCreateSerializer,
     EventModerationSerializer,
@@ -417,6 +419,75 @@ class AdminEventModerationAPIView(APIView):
                 'message': 'Event moderation updated successfully.',
                 'event': EventSerializer(updated_event, context={'current_user': current_user}).data,
                 'stats': get_admin_dashboard_stats(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminUserListAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        role_filter = request.query_params.get('role')
+        users = AEMUser.objects.select_related('settings')
+
+        if role_filter in {AEMUser.Roles.ADMIN, AEMUser.Roles.ORGANIZER, AEMUser.Roles.STUDENT}:
+            users = users.filter(role=role_filter)
+
+        users = users.annotate(
+            role_order=Case(
+                When(role=AEMUser.Roles.ADMIN, then=Value(0)),
+                When(role=AEMUser.Roles.ORGANIZER, then=Value(1)),
+                When(role=AEMUser.Roles.STUDENT, then=Value(2)),
+                default=Value(3),
+                output_field=IntegerField(),
+            )
+        ).order_by('role_order', 'full_name', 'id')
+
+        return Response(
+            {
+                'results': AdminUserSerializer(users, many=True).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminUserUpdateAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def patch(self, request, user_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        user = get_object_or_404(AEMUser.objects.select_related('settings'), id=user_id)
+        serializer = AdminUserUpdateSerializer(
+            instance=user,
+            data=request.data,
+            partial=True,
+            context={'current_user': current_user},
+        )
+        serializer.is_valid(raise_exception=True)
+        updated_user = serializer.save()
+
+        return Response(
+            {
+                'message': 'User updated successfully.',
+                'user': AdminUserSerializer(updated_user).data,
             },
             status=status.HTTP_200_OK,
         )

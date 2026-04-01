@@ -67,6 +67,39 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class AdminUserSerializer(serializers.ModelSerializer):
+    created_events_count = serializers.SerializerMethodField()
+    joined_events_count = serializers.SerializerMethodField()
+    profile_image_url = serializers.SerializerMethodField()
+
+    def get_created_events_count(self, obj):
+        return obj.created_events.count()
+
+    def get_joined_events_count(self, obj):
+        return obj.participations.filter(status=Participation.Statuses.JOINED).count()
+
+    def get_profile_image_url(self, obj):
+        settings = getattr(obj, 'settings', None)
+        if settings is None:
+            return None
+        return sanitize_image_url(settings.profile_image_url)
+
+    class Meta:
+        model = AEMUser
+        fields = (
+            'id',
+            'full_name',
+            'email',
+            'role',
+            'is_active',
+            'created_at',
+            'created_events_count',
+            'joined_events_count',
+            'profile_image_url',
+        )
+        read_only_fields = fields
+
+
 class SignUpSerializer(serializers.Serializer):
     full_name = serializers.CharField(max_length=150)
     email = serializers.EmailField(max_length=254)
@@ -370,4 +403,42 @@ class EventModerationSerializer(serializers.Serializer):
         instance.moderation_status = validated_data['moderation_status']
         instance.updated_at = timezone.now()
         instance.save(update_fields=['moderation_status', 'updated_at'])
+        return instance
+
+
+class AdminUserUpdateSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=AEMUser.Roles.choices, required=False)
+    is_active = serializers.BooleanField(required=False)
+
+    def validate(self, attrs):
+        if not attrs:
+            raise serializers.ValidationError('Please provide at least one field to update.')
+        return attrs
+
+    def update(self, instance, validated_data):
+        current_user = self.context.get('current_user')
+
+        if current_user and instance.id == current_user.id:
+            next_role = validated_data.get('role', instance.role)
+            next_active = validated_data.get('is_active', instance.is_active)
+
+            if next_role != AEMUser.Roles.ADMIN:
+                raise serializers.ValidationError({'role': 'You cannot remove your own admin role.'})
+
+            if not next_active:
+                raise serializers.ValidationError({'is_active': 'You cannot deactivate your own account.'})
+
+        update_fields = []
+        if 'role' in validated_data and validated_data['role'] != instance.role:
+            instance.role = validated_data['role']
+            update_fields.append('role')
+        if 'is_active' in validated_data and validated_data['is_active'] != instance.is_active:
+            instance.is_active = validated_data['is_active']
+            update_fields.append('is_active')
+
+        if update_fields:
+            instance.updated_at = timezone.now()
+            update_fields.append('updated_at')
+            instance.save(update_fields=update_fields)
+
         return instance

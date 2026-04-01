@@ -18,6 +18,7 @@ import {
   updateEvent,
 } from './api/aemApi'
 import AdminPage from './pages/AdminPage'
+import AdminUsersPage from './pages/AdminUsersPage'
 import Header from './components/Header'
 import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
@@ -270,6 +271,14 @@ function App() {
                     onModerateEvent={handleModerateEvent}
                     onLoadStats={fetchAdminDashboard}
                   />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
+                  <AdminUsersPage currentUser={currentUser} />
                 </RequireRole>
               }
             />

@@ -129,6 +129,12 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
           <h1>{t('adminPage.title')}</h1>
           <p>{t('adminPage.subtitle', { name: currentUser?.name ?? 'Admin' })}</p>
         </div>
+
+        <div className="admin-page__intro-actions">
+          <Link to="/admin/users" className="admin-page__manage-users-link">
+            {t('adminPage.manageUsers')}
+          </Link>
+        </div>
       </div>
 
       {feedback.message ? (

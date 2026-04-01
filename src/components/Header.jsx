@@ -36,7 +36,7 @@ function Header({
     }
 
     if (variant === 'students' && path === '/admin') {
-      return location.pathname === '/admin'
+      return location.pathname === '/admin' || location.pathname.startsWith('/admin/')
     }
 
     return location.pathname === path

@@ -16,6 +16,7 @@ function Header({
     variant === 'students'
       ? [
           { to: '/students', label: t('common.events') },
+          ...(currentUser?.id ? [{ to: '/joined-events', label: t('common.joinedEvents') }] : []),
           { to: '/organizer', label: t('common.myEvents') },
           ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
         ]

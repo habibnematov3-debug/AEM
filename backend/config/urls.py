@@ -6,9 +6,12 @@ from accounts.views import (
     AdminEventModerationAPIView,
     AdminUserListAPIView,
     AdminUserUpdateAPIView,
+    EventCancelParticipationAPIView,
     EventDetailAPIView,
     EventListCreateAPIView,
+    EventParticipantListAPIView,
     EventParticipateAPIView,
+    MyParticipationListAPIView,
 )
 
 urlpatterns = [
@@ -20,6 +23,17 @@ urlpatterns = [
         EventParticipateAPIView.as_view(),
         name='events-participate',
     ),
+    path(
+        'api/events/<int:event_id>/cancel-participation/',
+        EventCancelParticipationAPIView.as_view(),
+        name='events-cancel-participation',
+    ),
+    path(
+        'api/events/<int:event_id>/participants/',
+        EventParticipantListAPIView.as_view(),
+        name='events-participants',
+    ),
+    path('api/participations/me/', MyParticipationListAPIView.as_view(), name='participations-me'),
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='admin-dashboard'),
     path('api/admin/events/', AdminEventListAPIView.as_view(), name='admin-events'),
     path('api/admin/users/', AdminUserListAPIView.as_view(), name='admin-users'),

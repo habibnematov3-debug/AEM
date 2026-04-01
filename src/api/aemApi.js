@@ -185,6 +185,27 @@ function normalizeParticipationActivity(rawParticipation) {
   }
 }
 
+function normalizeJoinedParticipation(rawParticipation) {
+  return {
+    id: String(rawParticipation.id),
+    status: rawParticipation.status ?? 'joined',
+    joinedAt: rawParticipation.joined_at ?? null,
+    event: normalizeEvent(rawParticipation.event ?? {}),
+  }
+}
+
+function normalizeEventParticipant(rawParticipant) {
+  return {
+    id: String(rawParticipant.id),
+    userId: rawParticipant.user_id != null ? String(rawParticipant.user_id) : '',
+    userName: rawParticipant.user_name ?? '',
+    email: rawParticipant.email ?? '',
+    status: rawParticipant.status ?? 'joined',
+    joinedAt: rawParticipant.joined_at ?? null,
+    profileImageUrl: sanitizeImageUrl(rawParticipant.profile_image_url),
+  }
+}
+
 export function getDefaultRouteForRole(role) {
   if (role === 'admin') {
     return '/admin'
@@ -483,6 +504,33 @@ export async function participateInEvent(eventId) {
     message: payload.message,
     event: normalizeEvent(payload.event),
     participation: payload.participation ?? null,
+  }
+}
+
+export async function cancelParticipation(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/cancel-participation/`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+    participation: payload.participation ?? null,
+  }
+}
+
+export async function fetchMyParticipations() {
+  const payload = await apiRequest('/api/participations/me/')
+  return (payload.results ?? []).map(normalizeJoinedParticipation)
+}
+
+export async function fetchEventParticipants(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/participants/`)
+  return {
+    event: normalizeEvent(payload.event),
+    totalParticipants: payload.total_participants ?? 0,
+    participants: (payload.results ?? []).map(normalizeEventParticipant),
   }
 }
 

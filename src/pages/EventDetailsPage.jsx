@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { fetchEventById, participateInEvent } from '../api/aemApi'
+import {
+  cancelParticipation,
+  fetchEventById,
+  fetchEventParticipants,
+  participateInEvent,
+} from '../api/aemApi'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/event-details.css'
@@ -45,6 +50,10 @@ function EventDetailsPage({ currentUser }) {
   const [errorMessage, setErrorMessage] = useState('')
   const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' })
   const [isJoining, setIsJoining] = useState(false)
+  const [isCanceling, setIsCanceling] = useState(false)
+  const [participants, setParticipants] = useState([])
+  const [participantsStatus, setParticipantsStatus] = useState('idle')
+  const [participantsError, setParticipantsError] = useState('')
 
   useEffect(() => {
     let isMounted = true
@@ -85,6 +94,53 @@ function EventDetailsPage({ currentUser }) {
     }
   }, [eventId])
 
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadParticipants() {
+      if (!event || !currentUser?.id) {
+        setParticipants([])
+        setParticipantsStatus('idle')
+        setParticipantsError('')
+        return
+      }
+
+      const canViewParticipants = currentUser.role === 'admin' || currentUser.id === event.creatorId
+      if (!canViewParticipants) {
+        setParticipants([])
+        setParticipantsStatus('idle')
+        setParticipantsError('')
+        return
+      }
+
+      setParticipantsStatus('loading')
+      setParticipantsError('')
+
+      try {
+        const payload = await fetchEventParticipants(event.id)
+        if (!isMounted) {
+          return
+        }
+        setParticipants(payload.participants)
+        setParticipantsStatus('ready')
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+
+        setParticipants([])
+        setParticipantsStatus('error')
+        setParticipantsError(error.message || t('eventDetails.participantsLoadError'))
+      }
+    }
+
+    loadParticipants()
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, event, t])
+
   function handleBack() {
     if (window.history.length > 1) {
       navigate(-1)
@@ -113,6 +169,28 @@ function EventDetailsPage({ currentUser }) {
       })
     } finally {
       setIsJoining(false)
+    }
+  }
+
+  async function handleCancelParticipation() {
+    if (!event || !currentUser || isCanceling || !event.isJoined) {
+      return
+    }
+
+    setIsCanceling(true)
+    setActionFeedback({ type: '', message: '' })
+
+    try {
+      const result = await cancelParticipation(event.id)
+      setEvent(result.event)
+      setActionFeedback({ type: 'success', message: t('eventDetails.cancelled') })
+    } catch (error) {
+      setActionFeedback({
+        type: 'error',
+        message: error.message || t('eventDetails.cancelError'),
+      })
+    } finally {
+      setIsCanceling(false)
     }
   }
 
@@ -166,6 +244,7 @@ function EventDetailsPage({ currentUser }) {
   const categoryText = event.category || t('common.general')
   const organizerText = event.creatorName || event.organizerName || t('common.unknownOrganizer')
   const statusText = formatModerationStatus(event.moderationStatus, languageCode)
+  const canViewParticipants = Boolean(currentUser?.id) && (isCreator || currentUser.role === 'admin')
 
   return (
     <section className="event-details-page">
@@ -187,18 +266,32 @@ function EventDetailsPage({ currentUser }) {
 
           <div className="event-details-actions">
             {canParticipate ? (
-              <button
-                type="button"
-                className="event-details-primary"
-                onClick={handleParticipate}
-                disabled={isJoining || hasJoined}
-              >
-                {hasJoined
-                  ? t('eventDetails.joined')
-                  : isJoining
-                    ? t('eventDetails.joining')
-                    : t('eventDetails.participate')}
-              </button>
+              hasJoined ? (
+                <div className="event-details-action-group">
+                  <button type="button" className="event-details-primary" disabled>
+                    {t('eventDetails.joined')}
+                  </button>
+                  <button
+                    type="button"
+                    className="event-details-secondary"
+                    onClick={handleCancelParticipation}
+                    disabled={isCanceling}
+                  >
+                    {isCanceling
+                      ? t('eventDetails.cancellingParticipation')
+                      : t('eventDetails.cancelParticipation')}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="event-details-primary"
+                  onClick={handleParticipate}
+                  disabled={isJoining}
+                >
+                  {isJoining ? t('eventDetails.joining') : t('eventDetails.participate')}
+                </button>
+              )
             ) : isCreator ? (
               <p className="event-details-inline-note">{t('eventDetails.creatorNote')}</p>
             ) : currentUser?.id && !isPubliclyAvailable ? (
@@ -246,6 +339,59 @@ function EventDetailsPage({ currentUser }) {
               <strong>{organizerText}</strong>
             </div>
           </div>
+
+          {canViewParticipants ? (
+            <section className="event-details-participants">
+              <div className="event-details-participants__top">
+                <div>
+                  <h2>{t('eventDetails.participantsTitle')}</h2>
+                  <p>{t('eventDetails.participantsSubtitle')}</p>
+                </div>
+                <span className="event-details-participants__count">{participants.length}</span>
+              </div>
+
+              {participantsStatus === 'loading' ? (
+                <p className="event-details-participants__empty">
+                  {t('eventDetails.loadingParticipants')}
+                </p>
+              ) : participantsStatus === 'error' ? (
+                <p className="event-details-participants__empty event-details-feedback--error">
+                  {participantsError || t('eventDetails.participantsLoadError')}
+                </p>
+              ) : participants.length ? (
+                <div className="event-details-participants__list">
+                  {participants.map((participant) => (
+                    <article key={participant.id} className="event-details-participant">
+                      <div className="event-details-participant__identity">
+                        {participant.profileImageUrl ? (
+                          <img
+                            src={participant.profileImageUrl}
+                            alt={participant.userName}
+                            className="event-details-participant__image"
+                          />
+                        ) : (
+                          <span className="event-details-participant__avatar">
+                            {participant.userName.trim().charAt(0)?.toUpperCase() || '?'}
+                          </span>
+                        )}
+
+                        <div>
+                          <strong>{participant.userName}</strong>
+                          <span>{participant.email}</span>
+                        </div>
+                      </div>
+
+                      <span className="event-details-participant__joined">
+                        {new Date(participant.joinedAt).toLocaleDateString(getLanguageLocale(languageCode))}
+                      </span>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <p className="event-details-participants__empty">{t('eventDetails.noParticipants')}</p>
+              )}
+            </section>
+          ) : null}
         </div>
       </article>
     </section>

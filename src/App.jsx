@@ -24,6 +24,7 @@ import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
 import AuthPage from './pages/AuthPage'
 import EventDetailsPage from './pages/EventDetailsPage'
+import JoinedEventsPage from './pages/JoinedEventsPage'
 import OrganizerPage from './pages/OrganizerPage'
 import ProfilePage from './pages/ProfilePage'
 import StudentsPage from './pages/StudentsPage'
@@ -83,11 +84,13 @@ function App() {
   const isAuthPage = location.pathname === '/'
   const isProfilePage = location.pathname === '/profile'
   const isStudentsPage = location.pathname === '/students'
+  const isJoinedEventsPage = location.pathname === '/joined-events'
   const isOrganizerPage = location.pathname === '/organizer'
   const isAdminPage = location.pathname === '/admin'
   const shouldLoadEventList = isStudentsPage || isOrganizerPage
   const isDashboardPage =
     isStudentsPage ||
+    isJoinedEventsPage ||
     isOrganizerPage ||
     isAdminPage ||
     location.pathname.startsWith('/events/') ||
@@ -245,6 +248,17 @@ function App() {
                   events={events}
                   searchValue={studentSearch}
                 />
+              }
+            />
+            <Route
+              path="/joined-events"
+              element={
+                <RequireAuth currentUser={currentUser} authReady={authReady}>
+                  <JoinedEventsPage
+                    currentUser={currentUser}
+                    searchValue={studentSearch}
+                  />
+                </RequireAuth>
               }
             />
             <Route

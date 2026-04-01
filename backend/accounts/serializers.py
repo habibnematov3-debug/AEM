@@ -312,6 +312,40 @@ class ParticipationActivitySerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class JoinedParticipationSerializer(serializers.ModelSerializer):
+    event = serializers.SerializerMethodField()
+
+    def get_event(self, obj):
+        event_serializer = EventSerializer(
+            obj.event,
+            context={'current_user': self.context.get('current_user')},
+        )
+        return event_serializer.data
+
+    class Meta:
+        model = Participation
+        fields = ('id', 'status', 'joined_at', 'event')
+        read_only_fields = fields
+
+
+class EventParticipantSerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    email = serializers.CharField(source='user.email', read_only=True)
+    profile_image_url = serializers.SerializerMethodField()
+
+    def get_profile_image_url(self, obj):
+        try:
+            settings = obj.user.settings
+        except UserSettings.DoesNotExist:
+            return None
+        return sanitize_image_url(settings.profile_image_url)
+
+    class Meta:
+        model = Participation
+        fields = ('id', 'user_id', 'user_name', 'email', 'status', 'joined_at', 'profile_image_url')
+        read_only_fields = fields
+
+
 class EventCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     description = serializers.CharField()

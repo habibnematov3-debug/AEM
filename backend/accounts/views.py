@@ -13,9 +13,11 @@ from .serializers import (
     AdminUserSerializer,
     AdminUserUpdateSerializer,
     CurrentUserSerializer,
+    EventParticipantSerializer,
     EventCreateSerializer,
     EventModerationSerializer,
     EventSerializer,
+    JoinedParticipationSerializer,
     LoginSerializer,
     ParticipationActivitySerializer,
     ParticipationSerializer,
@@ -346,6 +348,109 @@ class EventParticipateAPIView(APIView):
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MyParticipationListAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        participations = (
+            Participation.objects.select_related('event', 'event__creator')
+            .filter(user_id=current_user.id, status=Participation.Statuses.JOINED)
+            .order_by('-joined_at', '-id')
+        )
+
+        return Response(
+            {
+                'results': JoinedParticipationSerializer(
+                    participations,
+                    many=True,
+                    context={'current_user': current_user},
+                ).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventCancelParticipationAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    @transaction.atomic
+    def post(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+
+        participation = Participation.objects.filter(
+            user_id=current_user.id,
+            event_id=event.id,
+            status=Participation.Statuses.JOINED,
+        ).first()
+
+        if participation is None:
+            return Response(
+                {'detail': 'You have not joined this event.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        participation.status = Participation.Statuses.CANCELLED
+        participation.save(update_fields=['status'])
+
+        return Response(
+            {
+                'message': 'Participation cancelled successfully.',
+                'participation': ParticipationSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventParticipantListAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+
+        if not is_admin(current_user) and event.creator_id != current_user.id:
+            return Response(
+                {'detail': 'You are not allowed to view the participants for this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        participations = (
+            Participation.objects.select_related('user')
+            .filter(event_id=event.id, status=Participation.Statuses.JOINED)
+            .order_by('-joined_at', '-id')
+        )
+
+        return Response(
+            {
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+                'total_participants': participations.count(),
+                'results': EventParticipantSerializer(participations, many=True).data,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

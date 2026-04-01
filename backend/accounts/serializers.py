@@ -79,8 +79,9 @@ class AdminUserSerializer(serializers.ModelSerializer):
         return obj.participations.filter(status=Participation.Statuses.JOINED).count()
 
     def get_profile_image_url(self, obj):
-        settings = getattr(obj, 'settings', None)
-        if settings is None:
+        try:
+            settings = obj.settings
+        except UserSettings.DoesNotExist:
             return None
         return sanitize_image_url(settings.profile_image_url)
 

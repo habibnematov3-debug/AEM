@@ -146,6 +146,31 @@ function normalizeEvent(rawEvent) {
   }
 }
 
+function normalizeAdminStats(rawStats = {}) {
+  return {
+    users: rawStats.users ?? 0,
+    events: rawStats.events ?? 0,
+    pending: rawStats.pending ?? 0,
+    approved: rawStats.approved ?? 0,
+    rejected: rawStats.rejected ?? 0,
+    upcoming: rawStats.upcoming ?? 0,
+    inProgress: rawStats.in_progress ?? 0,
+    finished: rawStats.finished ?? 0,
+  }
+}
+
+export function getDefaultRouteForRole(role) {
+  if (role === 'admin') {
+    return '/admin'
+  }
+
+  if (role === 'organizer') {
+    return '/organizer'
+  }
+
+  return '/students'
+}
+
 async function apiRequest(path, options = {}) {
   const method = String(options.method ?? 'GET').toUpperCase()
   const canRetry = method === 'GET' || method === 'HEAD'
@@ -364,6 +389,11 @@ export async function fetchEvents() {
   return (payload.results ?? []).map(normalizeEvent)
 }
 
+export async function fetchOrganizerEvents() {
+  const payload = await apiRequest('/api/events/?scope=organizer')
+  return (payload.results ?? []).map(normalizeEvent)
+}
+
 export async function fetchEventById(eventId) {
   const payload = await apiRequest(`/api/events/${eventId}/`)
   return normalizeEvent(payload)
@@ -427,5 +457,31 @@ export async function participateInEvent(eventId) {
     message: payload.message,
     event: normalizeEvent(payload.event),
     participation: payload.participation ?? null,
+  }
+}
+
+export async function fetchAdminDashboard() {
+  const payload = await apiRequest('/api/admin/dashboard/')
+  return normalizeAdminStats(payload.stats)
+}
+
+export async function fetchAdminEvents(statusFilter = '') {
+  const suffix = statusFilter ? `?status=${encodeURIComponent(statusFilter)}` : ''
+  const payload = await apiRequest(`/api/admin/events/${suffix}`)
+  return (payload.results ?? []).map(normalizeEvent)
+}
+
+export async function moderateAdminEvent(eventId, moderationStatus) {
+  const payload = await apiRequest(`/api/admin/events/${eventId}/moderate/`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      moderation_status: moderationStatus,
+    }),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+    stats: normalizeAdminStats(payload.stats),
   }
 }

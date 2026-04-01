@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import { getDefaultRouteForRole } from '../api/aemApi'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
@@ -116,7 +117,7 @@ function AuthPage({ onSignIn, onSignUp }) {
     setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
     window.setTimeout(() => {
       setIsSubmitting(false)
-      navigate('/students')
+      navigate(getDefaultRouteForRole(result.user.role))
     }, 500)
   }
 

@@ -11,16 +11,19 @@ function Header({
   onSearchChange = () => {},
 }) {
   const { t } = useI18n()
+  const isAdmin = currentUser?.role === 'admin'
   const navItems =
     variant === 'students'
       ? [
           { to: '/students', label: t('common.events') },
           { to: '/organizer', label: t('common.myEvents') },
+          ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
         ]
       : [
           { to: '/', label: t('common.auth') },
           { to: '/students', label: t('common.students') },
           { to: '/organizer', label: t('common.organizer') },
+          ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
         ]
   const location = useLocation()
   const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
@@ -30,6 +33,10 @@ function Header({
   function isNavItemActive(path) {
     if (variant === 'students' && path === '/students') {
       return location.pathname === '/students' || location.pathname.startsWith('/events/')
+    }
+
+    if (variant === 'students' && path === '/admin') {
+      return location.pathname === '/admin'
     }
 
     return location.pathname === path

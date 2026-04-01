@@ -4,15 +4,20 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import {
   createEvent,
   deleteEvent,
+  fetchAdminDashboard,
   fetchCurrentUser,
   fetchEvents,
+  fetchOrganizerEvents,
+  getDefaultRouteForRole,
   getStoredCurrentUser,
   logoutUser,
+  moderateAdminEvent,
   signInUser,
   signUpUser,
   updateCurrentUserProfile,
   updateEvent,
 } from './api/aemApi'
+import AdminPage from './pages/AdminPage'
 import Header from './components/Header'
 import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
@@ -45,6 +50,29 @@ function RequireAuth({ currentUser, authReady, children }) {
   return children
 }
 
+function RequireRole({ currentUser, authReady, allowedRoles, children }) {
+  if (!authReady) {
+    return (
+      <section className="page">
+        <div className="route-card">
+          <h2>Loading access...</h2>
+          <p>Checking the permissions for this page.</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/" replace />
+  }
+
+  if (!allowedRoles.includes(currentUser.role)) {
+    return <Navigate to={getDefaultRouteForRole(currentUser.role)} replace />
+  }
+
+  return children
+}
+
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
   const [currentUser, setCurrentUser] = useState(() => getStoredCurrentUser())
@@ -53,11 +81,14 @@ function App() {
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
   const isProfilePage = location.pathname === '/profile'
-  const shouldLoadEventList =
-    location.pathname === '/students' || location.pathname === '/organizer'
+  const isStudentsPage = location.pathname === '/students'
+  const isOrganizerPage = location.pathname === '/organizer'
+  const isAdminPage = location.pathname === '/admin'
+  const shouldLoadEventList = isStudentsPage || isOrganizerPage
   const isDashboardPage =
-    location.pathname === '/students' ||
-    location.pathname === '/organizer' ||
+    isStudentsPage ||
+    isOrganizerPage ||
+    isAdminPage ||
     location.pathname.startsWith('/events/') ||
     isProfilePage
 
@@ -101,7 +132,7 @@ function App() {
 
     async function loadEvents() {
       try {
-        const fetchedEvents = await fetchEvents()
+        const fetchedEvents = isOrganizerPage ? await fetchOrganizerEvents() : await fetchEvents()
         if (isMounted) {
           setEvents(fetchedEvents)
         }
@@ -116,7 +147,7 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [shouldLoadEventList])
+  }, [isOrganizerPage, shouldLoadEventList])
 
   async function handleSignIn(credentials) {
     try {
@@ -177,6 +208,14 @@ function App() {
     return result
   }
 
+  async function handleModerateEvent(eventId, moderationStatus) {
+    const result = await moderateAdminEvent(eventId, moderationStatus)
+    setEvents((currentEvents) =>
+      currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
+    )
+    return result
+  }
+
   const activeLanguageCode = currentUser?.settings?.languageCode ?? getStoredLanguageCode()
 
   return (
@@ -220,6 +259,18 @@ function App() {
                     onDeleteEvent={handleDeleteEvent}
                   />
                 </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
+                  <AdminPage
+                    currentUser={currentUser}
+                    onModerateEvent={handleModerateEvent}
+                    onLoadStats={fetchAdminDashboard}
+                  />
+                </RequireRole>
               }
             />
             <Route

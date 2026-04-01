@@ -359,3 +359,15 @@ class EventCreateSerializer(serializers.Serializer):
         instance.updated_at = timezone.now()
         instance.save()
         return instance
+
+
+class EventModerationSerializer(serializers.Serializer):
+    moderation_status = serializers.ChoiceField(
+        choices=[Event.ModerationStatuses.APPROVED, Event.ModerationStatuses.REJECTED],
+    )
+
+    def update(self, instance, validated_data):
+        instance.moderation_status = validated_data['moderation_status']
+        instance.updated_at = timezone.now()
+        instance.save(update_fields=['moderation_status', 'updated_at'])
+        return instance

@@ -23,7 +23,7 @@
   width: 280px;
   height: 280px;
   background: radial-gradient(circle, rgba(234, 195, 95, 0.22) 0%, rgba(234, 195, 95, 0) 72%);
-  animation: authFloat 14s ease-in-out infinite;
+  animation: authFloat 14s var(--ease-out) infinite;
 }
 
 .auth-page::after {
@@ -32,7 +32,7 @@
   width: 360px;
   height: 360px;
   background: radial-gradient(circle, rgba(43, 109, 197, 0.18) 0%, rgba(43, 109, 197, 0) 74%);
-  animation: authFloat 17s ease-in-out infinite reverse;
+  animation: authFloat 17s var(--ease-out) infinite reverse;
 }
 
 .auth-layout {
@@ -96,6 +96,7 @@
 
 .auth-card__brand-copy strong {
   color: var(--text);
+  font-family: var(--font-display);
   font-size: 1.24rem;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -125,6 +126,7 @@
 
 .auth-card__header h2 {
   margin: 0;
+  font-family: var(--font-display);
   font-size: clamp(2.05rem, 3.3vw, 3rem);
   line-height: 0.98;
   letter-spacing: -0.05em;
@@ -443,6 +445,13 @@
 
   50% {
     transform: translate3d(12px, -18px, 0) scale(1.04);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page::before,
+  .auth-page::after {
+    animation: none;
   }
 }
 

@@ -4,30 +4,77 @@
   z-index: 30;
   display: grid;
   place-items: center;
-  padding: 24px;
-  background: rgba(15, 23, 42, 0.28);
-  backdrop-filter: blur(8px);
+  padding: 20px;
+  background: rgba(10, 18, 32, 0.42);
+  backdrop-filter: blur(12px) saturate(1.1);
+  animation: modalBackdropIn var(--duration-med) var(--ease-out) both;
+}
+
+@keyframes modalBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-shell {
   width: min(100%, 520px);
-  max-height: calc(100vh - 48px);
+  max-height: calc(100vh - 40px);
   overflow: auto;
+  border-radius: var(--radius-xl);
+  animation: modalShellIn var(--duration-med) var(--ease-out) both;
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-shell--lg {
-  width: min(100%, 920px);
+  width: min(100%, 900px);
+}
+
+@keyframes modalShellIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal-backdrop,
+  .modal-shell {
+    animation: none;
+  }
 }
 
 @media (max-width: 640px) {
   .modal-backdrop {
-    padding: 10px;
+    padding: 8px;
     align-items: end;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
   }
 
   .modal-shell,
   .modal-shell--lg {
     width: 100%;
-    max-height: calc(100vh - 20px);
+    max-height: calc(100vh - 16px);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  }
+
+  @keyframes modalShellIn {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

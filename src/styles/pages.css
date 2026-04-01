@@ -1,10 +1,10 @@
 .page {
   display: grid;
-  gap: 24px;
+  gap: 22px;
 }
 
 .page--auth {
-  gap: 28px;
+  gap: 24px;
 }
 
 .hero-panel,
@@ -17,39 +17,71 @@
 }
 
 .hero-panel {
-  padding: 40px;
+  position: relative;
+  padding: 36px 40px;
+  overflow: hidden;
   background:
-    linear-gradient(135deg, rgba(21, 76, 141, 0.96) 0%, rgba(29, 100, 182, 0.96) 58%),
-    linear-gradient(135deg, rgba(200, 148, 47, 0.28) 0%, rgba(255, 248, 236, 0.1) 100%);
+    linear-gradient(125deg, rgba(18, 58, 112, 0.97) 0%, rgba(29, 100, 182, 0.95) 52%, rgba(20, 74, 143, 0.98) 100%),
+    linear-gradient(135deg, rgba(200, 148, 47, 0.22) 0%, transparent 55%);
   color: white;
+}
+
+.hero-panel::after {
+  content: '';
+  position: absolute;
+  inset: -40% -20% auto 40%;
+  height: 120%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 55%);
+  pointer-events: none;
+  animation: heroGlow 14s var(--ease-out) infinite alternate;
+}
+
+@keyframes heroGlow {
+  0% {
+    opacity: 0.5;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0.85;
+    transform: translate3d(-6%, 4%, 0) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-panel::after {
+    animation: none;
+  }
 }
 
 .page__eyebrow {
   margin: 0 0 8px;
-  font-size: 0.82rem;
-  letter-spacing: 0.18em;
+  font-size: 0.76rem;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: rgba(255, 220, 160, 0.95);
 }
 
 .page h1 {
   margin: 0 0 12px;
-  font-size: clamp(2.1rem, 4vw, 4rem);
-  line-height: 0.98;
+  font-size: clamp(2rem, 3.8vw, 3.5rem);
+  line-height: 1.02;
 }
 
 .page__lead {
   margin: 0;
-  max-width: 760px;
-  line-height: 1.7;
-  color: rgba(255, 255, 255, 0.88);
+  max-width: 720px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .page-intro {
   display: flex;
   justify-content: space-between;
   align-items: end;
-  gap: 24px;
+  gap: 22px;
 }
 
 .page-intro .page__lead {
@@ -60,26 +92,37 @@
 .cards-grid,
 .stats-grid {
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .route-grid {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .cards-grid {
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
 }
 
 .stats-grid {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 }
 
 .route-card,
 .stat-card,
 .summary-pill {
   padding: var(--space-5);
-  background: linear-gradient(180deg, var(--surface) 0%, white 100%);
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-strong) 100%);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.route-card:hover,
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
 }
 
 .route-card h2,
@@ -93,31 +136,33 @@
 
 .route-card {
   display: grid;
-  gap: 16px;
+  gap: 14px;
 }
 
 .route-card p {
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.58;
 }
 
 .stat-card {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .stat-card span,
 .summary-pill span {
   color: var(--muted);
+  font-size: 0.88rem;
 }
 
 .stat-card strong,
 .summary-pill strong {
-  font-size: 2rem;
+  font-size: clamp(1.75rem, 3vw, 2rem);
+  font-family: var(--font-display);
 }
 
 .summary-pill {
-  min-width: 180px;
+  min-width: 160px;
   display: grid;
   place-items: center;
   text-align: center;
@@ -128,12 +173,13 @@
   align-items: center;
   justify-content: center;
   width: fit-content;
-  min-height: 46px;
-  padding: 0 18px;
+  min-height: 44px;
+  padding: 0 20px;
   border: none;
   border-radius: var(--radius-pill);
   text-decoration: none;
   font-weight: 700;
+  font-family: var(--font-sans);
 }
 
 .button--primary {
@@ -143,8 +189,20 @@
 }
 
 .button--primary:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+.button--primary:active {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-card:hover,
+  .stat-card:hover,
+  .button--primary:hover {
+    transform: none;
+  }
 }
 
 @media (max-width: 720px) {
@@ -152,11 +210,11 @@
   .route-card,
   .stat-card,
   .summary-pill {
-    border-radius: 22px;
+    border-radius: var(--radius-lg);
   }
 
   .hero-panel {
-    padding: 28px;
+    padding: 22px 20px;
   }
 
   .page-intro {

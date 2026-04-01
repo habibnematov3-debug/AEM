@@ -1,28 +1,50 @@
 .students-events-page {
+  position: relative;
   display: grid;
-  gap: var(--space-6);
-  padding: 32px 6px 12px;
+  gap: var(--space-5);
+  padding: 24px 4px 10px;
+}
+
+.students-events-page::before {
+  content: '';
+  position: absolute;
+  top: -12px;
+  right: -8%;
+  width: min(420px, 70vw);
+  height: 180px;
+  background: radial-gradient(ellipse, var(--bg-mesh-a) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.7;
+  animation: pageAccentFloat 20s var(--ease-out) infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .students-events-page::before {
+    animation: none;
+  }
 }
 
 .students-events-page__intro {
   display: grid;
-  gap: 12px;
-  max-width: 760px;
+  gap: 10px;
+  max-width: 720px;
 }
 
 .students-events-page__eyebrow {
   margin: 0;
-  color: var(--accent);
-  font-size: 0.9rem;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .students-events-page__intro h1 {
   margin: 0;
-  font-size: clamp(2.7rem, 5vw, 4.25rem);
-  line-height: 0.96;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.5vw, 3.5rem);
+  line-height: 1.02;
   letter-spacing: -0.04em;
   color: var(--text);
 }
@@ -30,43 +52,56 @@
 .students-events-page__intro p {
   margin: 0;
   color: var(--muted);
-  font-size: 1.15rem;
-  line-height: 1.6;
+  font-size: 1.05rem;
+  line-height: 1.58;
 }
 
 .students-events-page__summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
 }
 
 .students-events-page__summary-card {
   display: grid;
-  gap: 8px;
-  padding: 18px 20px;
+  gap: 6px;
+  padding: 14px 16px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.88);
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-strong) 100%);
   box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.students-events-page__summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
 }
 
 .students-events-page__summary-card span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.78rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .students-events-page__summary-card strong {
   color: var(--text);
-  font-size: 1.9rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
   line-height: 1;
-  letter-spacing: -0.04em;
+  letter-spacing: -0.03em;
 }
 
 .students-events-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
   align-items: stretch;
   justify-content: start;
 }
@@ -74,13 +109,13 @@
 .students-events-empty {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  min-height: 260px;
-  padding: 40px 24px;
+  gap: 8px;
+  min-height: 220px;
+  padding: 32px 20px;
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--shadow);
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-muted) 100%);
+  box-shadow: var(--shadow-sm);
   text-align: center;
 }
 
@@ -90,39 +125,47 @@
 }
 
 .students-events-empty h2 {
-  font-size: 1.45rem;
+  font-family: var(--font-display);
+  font-size: 1.28rem;
   color: var(--text);
 }
 
 .students-events-empty p {
   color: var(--muted);
-  max-width: 420px;
-  line-height: 1.6;
+  max-width: 400px;
+  line-height: 1.55;
+  font-size: 0.95rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .students-events-page__summary-card:hover {
+    transform: none;
+  }
 }
 
 @media (max-width: 780px) {
   .students-events-page {
-    gap: 18px;
-    padding: 10px 2px 8px;
+    gap: 16px;
+    padding: 12px 2px 8px;
   }
 
   .students-events-page__intro {
-    gap: 10px;
+    gap: 8px;
   }
 
   .students-events-page__intro h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
-    line-height: 0.98;
+    font-size: clamp(1.85rem, 10vw, 2.6rem);
+    line-height: 1.03;
   }
 
   .students-events-page__intro p {
-    font-size: 1rem;
-    line-height: 1.55;
+    font-size: 0.94rem;
+    line-height: 1.52;
   }
 
   .students-events-grid {
     grid-template-columns: 1fr;
-    gap: 18px;
+    gap: 14px;
   }
 
   .students-events-page__summary {
@@ -130,35 +173,52 @@
   }
 
   .students-events-empty {
-    min-height: 220px;
-    padding: 28px 18px;
+    min-height: 180px;
+    padding: 22px 16px;
   }
 }
 
 @media (max-width: 460px) {
   .students-events-page {
-    gap: 14px;
-    padding-top: 4px;
+    gap: 12px;
+    padding-top: 6px;
   }
 
   .students-events-page__intro {
-    gap: 8px;
+    gap: 6px;
   }
 
   .students-events-page__eyebrow {
-    font-size: 0.78rem;
-    letter-spacing: 0.06em;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
   }
 
   .students-events-page__intro h1 {
-    font-size: clamp(1.8rem, 10vw, 2.4rem);
+    font-size: clamp(1.65rem, 9vw, 2.1rem);
   }
 
   .students-events-page__intro p {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
   }
 
   .students-events-page__summary {
     grid-template-columns: 1fr;
+  }
+
+  .students-events-page__summary-card {
+    padding: 12px 14px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    gap: 12px;
+  }
+
+  .students-events-page__summary-card span {
+    font-size: 0.72rem;
+  }
+
+  .students-events-page__summary-card strong {
+    font-size: 1.35rem;
   }
 }

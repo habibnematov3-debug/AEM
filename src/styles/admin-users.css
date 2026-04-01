@@ -1,127 +1,147 @@
 .admin-users-page {
+  position: relative;
   display: grid;
-  gap: var(--space-6);
-  padding: 32px 6px 12px;
+  gap: var(--space-5);
+  padding: 24px 4px 10px;
+}
+
+.admin-users-page::before {
+  content: '';
+  position: absolute;
+  top: 8%;
+  right: 0;
+  width: min(360px, 70vw);
+  height: 200px;
+  background: radial-gradient(ellipse, var(--bg-mesh-c) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.45;
+  animation: pageAccentFloat 21s var(--ease-out) infinite alternate-reverse;
 }
 
 .admin-users-page__intro {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  gap: var(--space-4);
+  align-items: flex-end;
+  gap: var(--space-3);
 }
 
 .admin-users-page__eyebrow {
   margin: 0;
-  color: var(--accent);
-  font-size: 0.9rem;
+  color: var(--accent-dark);
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
 .admin-users-page__intro h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(2.7rem, 5vw, 4.25rem);
-  line-height: 0.96;
+  font-family: var(--font-display);
+  font-size: clamp(2.1rem, 4.5vw, 3.5rem);
+  line-height: 1.02;
   letter-spacing: -0.04em;
 }
 
 .admin-users-page__intro p {
-  margin: 12px 0 0;
-  max-width: 760px;
+  margin: 10px 0 0;
+  max-width: 700px;
   color: var(--muted);
-  font-size: 1.12rem;
-  line-height: 1.6;
+  font-size: 1.02rem;
+  line-height: 1.55;
 }
 
 .admin-users-page__back-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
-  padding: 0 18px;
+  min-height: 42px;
+  padding: 0 16px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface);
   color: var(--muted-strong);
   font-weight: 700;
+  font-size: 0.9rem;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
 }
 
 .admin-users-page__back-link:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
 }
 
 .admin-users-page__feedback {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
-  font-size: 0.96rem;
-  line-height: 1.55;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  font-weight: 600;
 }
 
 .admin-users-page__feedback--success {
   color: #145435;
   background: rgba(29, 135, 82, 0.1);
-  border: 1px solid rgba(29, 135, 82, 0.16);
+  border: 1px solid rgba(29, 135, 82, 0.14);
 }
 
 .admin-users-page__feedback--error {
   color: #98243d;
   background: rgba(185, 58, 84, 0.08);
-  border: 1px solid rgba(185, 58, 84, 0.14);
+  border: 1px solid rgba(185, 58, 84, 0.12);
 }
 
 .admin-users-page__toolbar {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .admin-users-page__search {
-  width: min(100%, 420px);
+  width: min(100%, 400px);
 }
 
 .admin-users-page__search input {
   width: 100%;
-  min-height: 46px;
-  padding: 0 16px;
+  min-height: 44px;
+  padding: 0 14px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--surface);
   color: var(--text);
   font: inherit;
+  font-size: 0.92rem;
 }
 
 .admin-users-page__search input:focus {
   outline: none;
-  border-color: rgba(29, 100, 182, 0.24);
-  box-shadow: 0 0 0 4px rgba(29, 100, 182, 0.08);
+  border-color: rgba(29, 100, 182, 0.28);
+  box-shadow: 0 0 0 3px rgba(29, 100, 182, 0.08);
 }
 
 .admin-users-page__filter-groups {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .admin-users-page__filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .admin-users-page__filter {
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 38px;
+  padding: 0 14px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface);
   color: var(--muted-strong);
   font: inherit;
   font-weight: 700;
+  font-size: 0.84rem;
   cursor: pointer;
 }
 
@@ -133,40 +153,48 @@
 
 .admin-users-page__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 14px;
 }
 
 .admin-users-page__card,
 .admin-users-page__empty {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface) 0%, white 100%);
-  box-shadow: var(--shadow);
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-strong) 100%);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-users-page__card {
   display: grid;
-  gap: 18px;
-  padding: 22px;
+  gap: 14px;
+  padding: 18px;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.admin-users-page__card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .admin-users-page__card-top {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .admin-users-page__identity {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   min-width: 0;
 }
 
 .admin-users-page__avatar,
 .admin-users-page__avatar-image {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   flex: 0 0 auto;
 }
@@ -177,7 +205,7 @@
   justify-content: center;
   background: var(--accent-soft);
   color: var(--accent-dark);
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 800;
 }
 
@@ -196,31 +224,33 @@
 
 .admin-users-page__identity h3 {
   color: var(--text);
-  font-size: 1.22rem;
-  line-height: 1.25;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  line-height: 1.22;
 }
 
 .admin-users-page__identity p {
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--muted);
   word-break: break-word;
+  font-size: 0.88rem;
 }
 
 .admin-users-page__badges {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
 }
 
 .admin-users-page__role,
 .admin-users-page__activity {
   display: inline-flex;
   align-items: center;
-  min-height: 30px;
-  padding: 0 12px;
+  min-height: 28px;
+  padding: 0 10px;
   border-radius: var(--radius-pill);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -252,17 +282,17 @@
 .admin-users-page__meta {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .admin-users-page__meta div {
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .admin-users-page__meta dt {
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -271,26 +301,28 @@
 .admin-users-page__meta dd {
   color: var(--text);
   font-weight: 600;
+  font-size: 0.88rem;
 }
 
 .admin-users-page__actions {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .admin-users-page__role-button,
 .admin-users-page__toggle-button {
-  min-height: 42px;
-  padding: 0 16px;
+  min-height: 40px;
+  padding: 0 14px;
   border-radius: var(--radius-pill);
   font: inherit;
   font-weight: 700;
+  font-size: 0.84rem;
   cursor: pointer;
 }
 
 .admin-users-page__role-button {
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--surface);
   color: var(--muted-strong);
 }
 
@@ -315,29 +347,41 @@
 
 .admin-users-page__role-button:disabled,
 .admin-users-page__toggle-button:disabled {
-  opacity: 0.7;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 .admin-users-page__empty {
   display: grid;
   justify-items: center;
-  gap: 10px;
-  min-height: 220px;
-  padding: 28px 20px;
+  gap: 8px;
+  min-height: 200px;
+  padding: 24px 18px;
   text-align: center;
 }
 
 .admin-users-page__empty p {
-  max-width: 420px;
+  max-width: 400px;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.55;
+  font-size: 0.94rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-users-page::before {
+    animation: none;
+  }
+
+  .admin-users-page__card:hover,
+  .admin-users-page__back-link:hover {
+    transform: none;
+  }
 }
 
 @media (max-width: 900px) {
   .admin-users-page {
-    gap: 18px;
-    padding: 10px 2px 8px;
+    gap: 16px;
+    padding: 12px 2px 8px;
   }
 
   .admin-users-page__intro {
@@ -346,13 +390,13 @@
   }
 
   .admin-users-page__intro h1 {
-    font-size: clamp(2.1rem, 12vw, 3rem);
-    line-height: 0.98;
+    font-size: clamp(1.85rem, 10vw, 2.6rem);
+    line-height: 1.03;
   }
 
   .admin-users-page__intro p {
-    font-size: 1rem;
-    line-height: 1.55;
+    font-size: 0.94rem;
+    line-height: 1.52;
   }
 
   .admin-users-page__back-link {
@@ -374,6 +418,18 @@
   }
 
   .admin-users-page__meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-users-page__filter {
+    min-height: 36px;
+    padding: 0 12px;
+    font-size: 0.8rem;
+  }
+
+  .admin-users-page__grid {
     grid-template-columns: 1fr;
   }
 }

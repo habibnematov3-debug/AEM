@@ -45,6 +45,7 @@ function Header({
 
   return (
     <header className={variant === 'students' ? 'site-header site-header--students' : 'site-header'}>
+      <div className="site-header__ambient" aria-hidden="true" />
       <div className={variant === 'students' ? 'site-header__inner site-header__inner--students' : 'site-header__inner'}>
         <div className="site-header__brand-group">
           {variant === 'students' ? (

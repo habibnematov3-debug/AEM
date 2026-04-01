@@ -173,6 +173,18 @@ function normalizeAdminUser(rawUser) {
   }
 }
 
+function normalizeParticipationActivity(rawParticipation) {
+  return {
+    id: String(rawParticipation.id),
+    userId: rawParticipation.user_id != null ? String(rawParticipation.user_id) : '',
+    eventId: rawParticipation.event_id != null ? String(rawParticipation.event_id) : '',
+    userName: rawParticipation.user_name ?? '',
+    eventTitle: rawParticipation.event_title ?? '',
+    status: rawParticipation.status ?? 'joined',
+    joinedAt: rawParticipation.joined_at ?? null,
+  }
+}
+
 export function getDefaultRouteForRole(role) {
   if (role === 'admin') {
     return '/admin'
@@ -476,11 +488,23 @@ export async function participateInEvent(eventId) {
 
 export async function fetchAdminDashboard() {
   const payload = await apiRequest('/api/admin/dashboard/')
-  return normalizeAdminStats(payload.stats)
+  return {
+    stats: normalizeAdminStats(payload.stats),
+    recentEvents: (payload.recent_events ?? []).map(normalizeEvent),
+    recentUsers: (payload.recent_users ?? []).map(normalizeAdminUser),
+    recentParticipations: (payload.recent_participations ?? []).map(normalizeParticipationActivity),
+  }
 }
 
-export async function fetchAdminEvents(statusFilter = '') {
-  const suffix = statusFilter ? `?status=${encodeURIComponent(statusFilter)}` : ''
+export async function fetchAdminEvents({ status = '', query = '' } = {}) {
+  const params = new URLSearchParams()
+  if (status) {
+    params.set('status', status)
+  }
+  if (query.trim()) {
+    params.set('q', query.trim())
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : ''
   const payload = await apiRequest(`/api/admin/events/${suffix}`)
   return (payload.results ?? []).map(normalizeEvent)
 }
@@ -500,8 +524,18 @@ export async function moderateAdminEvent(eventId, moderationStatus) {
   }
 }
 
-export async function fetchAdminUsers(roleFilter = '') {
-  const suffix = roleFilter ? `?role=${encodeURIComponent(roleFilter)}` : ''
+export async function fetchAdminUsers({ role = '', query = '', isActive = '' } = {}) {
+  const params = new URLSearchParams()
+  if (role) {
+    params.set('role', role)
+  }
+  if (query.trim()) {
+    params.set('q', query.trim())
+  }
+  if (isActive !== '') {
+    params.set('is_active', String(isActive))
+  }
+  const suffix = params.toString() ? `?${params.toString()}` : ''
   const payload = await apiRequest(`/api/admin/users/${suffix}`)
   return (payload.results ?? []).map(normalizeAdminUser)
 }

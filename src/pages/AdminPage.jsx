@@ -27,7 +27,11 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const { languageCode, t } = useI18n()
   const [stats, setStats] = useState(null)
   const [events, setEvents] = useState([])
+  const [recentEvents, setRecentEvents] = useState([])
+  const [recentUsers, setRecentUsers] = useState([])
+  const [recentParticipations, setRecentParticipations] = useState([])
   const [statusFilter, setStatusFilter] = useState('pending')
+  const [searchQuery, setSearchQuery] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
   const [moderatingEventId, setModeratingEventId] = useState('')
@@ -40,16 +44,22 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       setFeedback({ type: '', message: '' })
 
       try {
-        const [dashboardStats, adminEvents] = await Promise.all([
+        const [dashboardData, adminEvents] = await Promise.all([
           onLoadStats(),
-          fetchAdminEvents(statusFilter === 'all' ? '' : statusFilter),
+          fetchAdminEvents({
+            status: statusFilter === 'all' ? '' : statusFilter,
+            query: searchQuery,
+          }),
         ])
 
         if (!isMounted) {
           return
         }
 
-        setStats(dashboardStats)
+        setStats(dashboardData.stats)
+        setRecentEvents(dashboardData.recentEvents)
+        setRecentUsers(dashboardData.recentUsers)
+        setRecentParticipations(dashboardData.recentParticipations)
         setEvents(adminEvents)
       } catch (error) {
         if (!isMounted) {
@@ -72,7 +82,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
     return () => {
       isMounted = false
     }
-  }, [onLoadStats, statusFilter, t])
+  }, [onLoadStats, searchQuery, statusFilter, t])
 
   const statCards = useMemo(
     () =>
@@ -158,6 +168,71 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         ))}
       </div>
 
+      <div className="admin-page__highlights">
+        <article className="admin-page__highlight-card">
+          <div className="admin-page__highlight-top">
+            <h2>{t('adminPage.recentEventsTitle')}</h2>
+          </div>
+          {recentEvents.length ? (
+            <ul className="admin-page__highlight-list">
+              {recentEvents.map((event) => (
+                <li key={event.id}>
+                  <div>
+                    <strong>{event.title}</strong>
+                    <span>{event.creatorName}</span>
+                  </div>
+                  <span>{formatEventDate(event.eventDate, event.date, languageCode)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="admin-page__highlight-empty">{t('adminPage.noRecentEvents')}</p>
+          )}
+        </article>
+
+        <article className="admin-page__highlight-card">
+          <div className="admin-page__highlight-top">
+            <h2>{t('adminPage.recentUsersTitle')}</h2>
+          </div>
+          {recentUsers.length ? (
+            <ul className="admin-page__highlight-list">
+              {recentUsers.map((user) => (
+                <li key={user.id}>
+                  <div>
+                    <strong>{user.name}</strong>
+                    <span>{user.email}</span>
+                  </div>
+                  <span>{t(`adminUsersPage.roles.${user.role}`)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="admin-page__highlight-empty">{t('adminPage.noRecentUsers')}</p>
+          )}
+        </article>
+
+        <article className="admin-page__highlight-card">
+          <div className="admin-page__highlight-top">
+            <h2>{t('adminPage.recentActivityTitle')}</h2>
+          </div>
+          {recentParticipations.length ? (
+            <ul className="admin-page__highlight-list">
+              {recentParticipations.map((participation) => (
+                <li key={participation.id}>
+                  <div>
+                    <strong>{participation.userName}</strong>
+                    <span>{participation.eventTitle}</span>
+                  </div>
+                  <span>{new Date(participation.joinedAt).toLocaleDateString(getLanguageLocale(languageCode))}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="admin-page__highlight-empty">{t('adminPage.noRecentActivity')}</p>
+          )}
+        </article>
+      </div>
+
       <div className="admin-page__panel">
         <div className="admin-page__panel-top">
           <div>
@@ -165,21 +240,33 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
             <h2>{t('adminPage.moderationTitle')}</h2>
           </div>
 
-          <div className="admin-page__filters">
-            {['pending', 'approved', 'rejected', 'all'].map((filterValue) => (
-              <button
-                key={filterValue}
-                type="button"
-                className={
-                  filterValue === statusFilter
-                    ? 'admin-page__filter admin-page__filter--active'
-                    : 'admin-page__filter'
-                }
-                onClick={() => setStatusFilter(filterValue)}
-              >
-                {t(`adminPage.filters.${filterValue}`)}
-              </button>
-            ))}
+          <div className="admin-page__controls">
+            <label className="admin-page__search">
+              <span className="sr-only">{t('common.search')}</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={t('adminPage.searchPlaceholder')}
+              />
+            </label>
+
+            <div className="admin-page__filters">
+              {['pending', 'approved', 'rejected', 'all'].map((filterValue) => (
+                <button
+                  key={filterValue}
+                  type="button"
+                  className={
+                    filterValue === statusFilter
+                      ? 'admin-page__filter admin-page__filter--active'
+                      : 'admin-page__filter'
+                  }
+                  onClick={() => setStatusFilter(filterValue)}
+                >
+                  {t(`adminPage.filters.${filterValue}`)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

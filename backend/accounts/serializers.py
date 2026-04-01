@@ -302,6 +302,16 @@ class ParticipationSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ParticipationActivitySerializer(serializers.ModelSerializer):
+    user_name = serializers.CharField(source='user.full_name', read_only=True)
+    event_title = serializers.CharField(source='event.title', read_only=True)
+
+    class Meta:
+        model = Participation
+        fields = ('id', 'user_id', 'event_id', 'user_name', 'event_title', 'status', 'joined_at')
+        read_only_fields = fields
+
+
 class EventCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
     description = serializers.CharField()

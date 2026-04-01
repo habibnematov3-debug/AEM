@@ -76,6 +76,37 @@
   border: 1px solid rgba(185, 58, 84, 0.14);
 }
 
+.admin-users-page__toolbar {
+  display: grid;
+  gap: 14px;
+}
+
+.admin-users-page__search {
+  width: min(100%, 420px);
+}
+
+.admin-users-page__search input {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  font: inherit;
+}
+
+.admin-users-page__search input:focus {
+  outline: none;
+  border-color: rgba(29, 100, 182, 0.24);
+  box-shadow: 0 0 0 4px rgba(29, 100, 182, 0.08);
+}
+
+.admin-users-page__filter-groups {
+  display: grid;
+  gap: 10px;
+}
+
 .admin-users-page__filters {
   display: flex;
   flex-wrap: wrap;
@@ -325,6 +356,10 @@
   }
 
   .admin-users-page__back-link {
+    width: 100%;
+  }
+
+  .admin-users-page__search {
     width: 100%;
   }
 

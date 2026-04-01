@@ -26,6 +26,8 @@ function formatMemberDate(value, languageCode) {
 function AdminUsersPage({ currentUser }) {
   const { languageCode, t } = useI18n()
   const [roleFilter, setRoleFilter] = useState('all')
+  const [activityFilter, setActivityFilter] = useState('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [users, setUsers] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
@@ -39,15 +41,22 @@ function AdminUsersPage({ currentUser }) {
       setFeedback({ type: '', message: '' })
 
       try {
-        const nextUsers = await fetchAdminUsers(roleFilter === 'all' ? '' : roleFilter)
+        const nextUsers = await fetchAdminUsers({
+          role: roleFilter === 'all' ? '' : roleFilter,
+          query: searchQuery,
+          isActive: activityFilter === 'all' ? '' : activityFilter === 'active',
+        })
+
         if (!isMounted) {
           return
         }
+
         setUsers(nextUsers)
       } catch (error) {
         if (!isMounted) {
           return
         }
+
         setFeedback({ type: 'error', message: error.message || t('adminUsersPage.loadError') })
       } finally {
         if (isMounted) {
@@ -61,12 +70,10 @@ function AdminUsersPage({ currentUser }) {
     return () => {
       isMounted = false
     }
-  }, [roleFilter, t])
+  }, [activityFilter, roleFilter, searchQuery, t])
 
-  const roleFilters = useMemo(
-    () => ['all', 'admin', 'organizer', 'student'],
-    [],
-  )
+  const roleFilters = useMemo(() => ['all', 'admin', 'organizer', 'student'], [])
+  const activityFilters = useMemo(() => ['all', 'active', 'inactive'], [])
 
   async function handleRoleChange(userId, role) {
     setUpdatingUserId(userId)
@@ -76,9 +83,15 @@ function AdminUsersPage({ currentUser }) {
       const result = await updateAdminUser(userId, { role })
       setUsers((currentUsers) => {
         const nextUsers = currentUsers.map((user) => (user.id === result.user.id ? result.user : user))
-        if (roleFilter !== 'all' && roleFilter !== result.user.role) {
+        const roleMismatch = roleFilter !== 'all' && roleFilter !== result.user.role
+        const activityMismatch =
+          activityFilter !== 'all'
+          && (activityFilter === 'active') !== result.user.isActive
+
+        if (roleMismatch || activityMismatch) {
           return nextUsers.filter((user) => user.id !== result.user.id)
         }
+
         return nextUsers
       })
       setFeedback({ type: 'success', message: t('adminUsersPage.roleUpdated') })
@@ -95,9 +108,19 @@ function AdminUsersPage({ currentUser }) {
 
     try {
       const result = await updateAdminUser(user.id, { is_active: !user.isActive })
-      setUsers((currentUsers) =>
-        currentUsers.map((current) => (current.id === result.user.id ? result.user : current)),
-      )
+      setUsers((currentUsers) => {
+        const nextUsers = currentUsers.map((current) => (current.id === result.user.id ? result.user : current))
+        const roleMismatch = roleFilter !== 'all' && roleFilter !== result.user.role
+        const activityMismatch =
+          activityFilter !== 'all'
+          && (activityFilter === 'active') !== result.user.isActive
+
+        if (roleMismatch || activityMismatch) {
+          return nextUsers.filter((current) => current.id !== result.user.id)
+        }
+
+        return nextUsers
+      })
       setFeedback({ type: 'success', message: t('adminUsersPage.statusUpdated') })
     } catch (error) {
       setFeedback({ type: 'error', message: error.message || t('adminUsersPage.updateError') })
@@ -132,21 +155,52 @@ function AdminUsersPage({ currentUser }) {
         </div>
       ) : null}
 
-      <div className="admin-users-page__filters">
-        {roleFilters.map((filterValue) => (
-          <button
-            key={filterValue}
-            type="button"
-            className={
-              filterValue === roleFilter
-                ? 'admin-users-page__filter admin-users-page__filter--active'
-                : 'admin-users-page__filter'
-            }
-            onClick={() => setRoleFilter(filterValue)}
-          >
-            {t(`adminUsersPage.roleFilters.${filterValue}`)}
-          </button>
-        ))}
+      <div className="admin-users-page__toolbar">
+        <label className="admin-users-page__search">
+          <span className="sr-only">{t('common.search')}</span>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder={t('adminUsersPage.searchPlaceholder')}
+          />
+        </label>
+
+        <div className="admin-users-page__filter-groups">
+          <div className="admin-users-page__filters">
+            {roleFilters.map((filterValue) => (
+              <button
+                key={filterValue}
+                type="button"
+                className={
+                  filterValue === roleFilter
+                    ? 'admin-users-page__filter admin-users-page__filter--active'
+                    : 'admin-users-page__filter'
+                }
+                onClick={() => setRoleFilter(filterValue)}
+              >
+                {t(`adminUsersPage.roleFilters.${filterValue}`)}
+              </button>
+            ))}
+          </div>
+
+          <div className="admin-users-page__filters">
+            {activityFilters.map((filterValue) => (
+              <button
+                key={filterValue}
+                type="button"
+                className={
+                  filterValue === activityFilter
+                    ? 'admin-users-page__filter admin-users-page__filter--active'
+                    : 'admin-users-page__filter'
+                }
+                onClick={() => setActivityFilter(filterValue)}
+              >
+                {t(`adminUsersPage.activityFilters.${filterValue}`)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {isLoading ? (

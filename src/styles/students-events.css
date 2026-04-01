@@ -34,6 +34,35 @@
   line-height: 1.6;
 }
 
+.students-events-page__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.students-events-page__summary-card {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-sm);
+}
+
+.students-events-page__summary-card span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.students-events-page__summary-card strong {
+  color: var(--text);
+  font-size: 1.9rem;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
 .students-events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 320px));
@@ -96,6 +125,10 @@
     gap: 18px;
   }
 
+  .students-events-page__summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .students-events-empty {
     min-height: 220px;
     padding: 28px 18px;
@@ -123,5 +156,9 @@
 
   .students-events-page__intro p {
     font-size: 0.95rem;
+  }
+
+  .students-events-page__summary {
+    grid-template-columns: 1fr;
   }
 }

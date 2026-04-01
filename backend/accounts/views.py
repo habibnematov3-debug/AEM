@@ -17,6 +17,7 @@ from .serializers import (
     EventModerationSerializer,
     EventSerializer,
     LoginSerializer,
+    ParticipationActivitySerializer,
     ParticipationSerializer,
     ProfileUpdateSerializer,
     SignUpSerializer,
@@ -73,6 +74,18 @@ def get_admin_dashboard_stats():
             | Q(event_date=today, end_time__lt=current_time),
         ).count(),
     }
+
+
+def parse_boolean_query(value):
+    if value is None:
+        return None
+
+    normalized = str(value).strip().lower()
+    if normalized in {'true', '1', 'yes'}:
+        return True
+    if normalized in {'false', '0', 'no'}:
+        return False
+    return None
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -349,7 +362,29 @@ class AdminDashboardAPIView(APIView):
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        return Response({'stats': get_admin_dashboard_stats()}, status=status.HTTP_200_OK)
+        recent_events = Event.objects.select_related('creator').order_by('-created_at', '-id')[:5]
+        recent_users = AEMUser.objects.select_related('settings').order_by('-created_at', '-id')[:5]
+        recent_participations = Participation.objects.select_related('user', 'event').order_by(
+            '-joined_at',
+            '-id',
+        )[:5]
+
+        return Response(
+            {
+                'stats': get_admin_dashboard_stats(),
+                'recent_events': EventSerializer(
+                    recent_events,
+                    many=True,
+                    context={'current_user': current_user},
+                ).data,
+                'recent_users': AdminUserSerializer(recent_users, many=True).data,
+                'recent_participations': ParticipationActivitySerializer(
+                    recent_participations,
+                    many=True,
+                ).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -366,6 +401,7 @@ class AdminEventListAPIView(APIView):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         status_filter = request.query_params.get('status')
+        search_query = request.query_params.get('q', '').strip()
         events = Event.objects.select_related('creator')
         if status_filter in {
             Event.ModerationStatuses.PENDING,
@@ -373,6 +409,16 @@ class AdminEventListAPIView(APIView):
             Event.ModerationStatuses.REJECTED,
         }:
             events = events.filter(moderation_status=status_filter)
+
+        if search_query:
+            events = events.filter(
+                Q(title__icontains=search_query)
+                | Q(description__icontains=search_query)
+                | Q(location__icontains=search_query)
+                | Q(category__icontains=search_query)
+                | Q(creator__full_name__icontains=search_query)
+                | Q(creator__email__icontains=search_query)
+            )
 
         events = events.annotate(
             moderation_order=Case(
@@ -438,10 +484,21 @@ class AdminUserListAPIView(APIView):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         role_filter = request.query_params.get('role')
+        search_query = request.query_params.get('q', '').strip()
+        active_filter = parse_boolean_query(request.query_params.get('is_active'))
         users = AEMUser.objects.select_related('settings')
 
         if role_filter in {AEMUser.Roles.ADMIN, AEMUser.Roles.ORGANIZER, AEMUser.Roles.STUDENT}:
             users = users.filter(role=role_filter)
+
+        if search_query:
+            users = users.filter(
+                Q(full_name__icontains=search_query)
+                | Q(email__icontains=search_query)
+            )
+
+        if active_filter is not None:
+            users = users.filter(is_active=active_filter)
 
         users = users.annotate(
             role_order=Case(

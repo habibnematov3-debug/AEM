@@ -1,11 +1,36 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import CreateEventForm from '../components/CreateEventForm'
 import EventCard from '../components/EventCard'
 import { useI18n } from '../i18n/LanguageContext'
 import Modal from '../components/Modal'
 import '../styles/organizer-events.css'
-import { useState } from 'react'
+
+function getEventLifecycle(event) {
+  if (!event?.eventDate) {
+    return null
+  }
+
+  const startTime = event.startTime || '00:00'
+  const endTime = event.endTime || startTime
+  const start = new Date(`${event.eventDate}T${startTime}`).getTime()
+  const end = new Date(`${event.eventDate}T${endTime}`).getTime()
+  const now = Date.now()
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return null
+  }
+
+  if (now < start) {
+    return 'upcoming'
+  }
+
+  if (now > end) {
+    return 'finished'
+  }
+
+  return 'inProgress'
+}
 
 function OrganizerPage({
   currentUser,
@@ -22,8 +47,12 @@ function OrganizerPage({
   const [isDeleting, setIsDeleting] = useState(false)
   const [formFeedback, setFormFeedback] = useState({ type: '', message: '' })
 
+  const ownedEvents = useMemo(
+    () => events.filter((event) => event.creatorId === currentUser?.id),
+    [currentUser, events],
+  )
+
   const userEvents = useMemo(() => {
-    const ownedEvents = events.filter((event) => event.creatorId === currentUser?.id)
     const query = searchValue.trim().toLowerCase()
 
     if (!query) {
@@ -34,17 +63,39 @@ function OrganizerPage({
       const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
       return haystack.includes(query)
     })
-  }, [currentUser, events, searchValue])
+  }, [ownedEvents, searchValue])
 
-  const hasAccountEvents = events.some((event) => event.creatorId === currentUser?.id)
-  const statusSummary = useMemo(
-    () => ({
-      pending: userEvents.filter((event) => event.moderationStatus === 'pending').length,
-      approved: userEvents.filter((event) => event.moderationStatus === 'approved').length,
-      rejected: userEvents.filter((event) => event.moderationStatus === 'rejected').length,
-    }),
-    [userEvents],
-  )
+  const hasAccountEvents = ownedEvents.length > 0
+  const summaryCards = useMemo(() => {
+    const counts = {
+      pending: ownedEvents.filter((event) => event.moderationStatus === 'pending').length,
+      approved: ownedEvents.filter((event) => event.moderationStatus === 'approved').length,
+      rejected: ownedEvents.filter((event) => event.moderationStatus === 'rejected').length,
+      upcoming: 0,
+      inProgress: 0,
+      finished: 0,
+    }
+
+    ownedEvents.forEach((event) => {
+      const lifecycle = getEventLifecycle(event)
+      if (lifecycle && lifecycle in counts) {
+        counts[lifecycle] += 1
+      }
+    })
+
+    return [
+      { key: 'pending', label: t('organizerPage.summary.pending'), value: counts.pending },
+      { key: 'approved', label: t('organizerPage.summary.approved'), value: counts.approved },
+      { key: 'rejected', label: t('organizerPage.summary.rejected'), value: counts.rejected },
+      { key: 'upcoming', label: t('organizerPage.summary.upcoming'), value: counts.upcoming },
+      {
+        key: 'inProgress',
+        label: t('organizerPage.summary.inProgress'),
+        value: counts.inProgress,
+      },
+      { key: 'finished', label: t('organizerPage.summary.finished'), value: counts.finished },
+    ]
+  }, [ownedEvents, t])
 
   async function handleCreate(formData) {
     try {
@@ -167,10 +218,10 @@ function OrganizerPage({
       ) : null}
 
       <div className="organizer-events-page__status-summary">
-        {Object.entries(statusSummary).map(([statusKey, count]) => (
-          <article key={statusKey} className="organizer-events-page__status-card">
-            <span>{t(`organizerPage.statusSummary.${statusKey}`)}</span>
-            <strong>{count}</strong>
+        {summaryCards.map((card) => (
+          <article key={card.key} className="organizer-events-page__status-card">
+            <span>{card.label}</span>
+            <strong>{card.value}</strong>
           </article>
         ))}
       </div>

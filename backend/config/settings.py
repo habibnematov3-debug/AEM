@@ -134,6 +134,26 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+EMAIL_BACKEND = get_str_env(
+    'AEM_EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend'
+    if os.getenv('AEM_EMAIL_HOST')
+    else 'django.core.mail.backends.console.EmailBackend',
+)
+EMAIL_HOST = get_str_env('AEM_EMAIL_HOST', '')
+EMAIL_PORT = int(get_str_env('AEM_EMAIL_PORT', '587'))
+EMAIL_HOST_USER = get_str_env('AEM_EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = get_str_env('AEM_EMAIL_HOST_PASSWORD', '')
+EMAIL_USE_TLS = get_bool_env('AEM_EMAIL_USE_TLS', True)
+EMAIL_USE_SSL = get_bool_env('AEM_EMAIL_USE_SSL', False)
+EMAIL_TIMEOUT = int(get_str_env('AEM_EMAIL_TIMEOUT', '10'))
+DEFAULT_FROM_EMAIL = get_str_env(
+    'AEM_DEFAULT_FROM_EMAIL',
+    EMAIL_HOST_USER or 'no-reply@aem.local',
+)
+AEM_EMAIL_ENABLED = get_bool_env('AEM_EMAIL_ENABLED', bool(EMAIL_HOST))
+
+
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',

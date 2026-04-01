@@ -9,6 +9,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import AEMUser, Event, Participation
+from .notifications import (
+    notify_event_moderation,
+    notify_participation_cancelled,
+    notify_participation_joined,
+)
 from .serializers import (
     AdminUserSerializer,
     AdminUserUpdateSerializer,
@@ -341,6 +346,8 @@ class EventParticipateAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        transaction.on_commit(lambda: notify_participation_joined(participation))
+
         return Response(
             {
                 'message': 'You joined the event successfully.',
@@ -409,6 +416,7 @@ class EventCancelParticipationAPIView(APIView):
 
         participation.status = Participation.Statuses.CANCELLED
         participation.save(update_fields=['status'])
+        transaction.on_commit(lambda: notify_participation_cancelled(participation))
 
         return Response(
             {
@@ -561,9 +569,15 @@ class AdminEventModerationAPIView(APIView):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+        previous_status = event.moderation_status
         serializer = EventModerationSerializer(instance=event, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         updated_event = serializer.save()
+
+        if updated_event.moderation_status != previous_status:
+            transaction.on_commit(
+                lambda: notify_event_moderation(updated_event, updated_event.moderation_status),
+            )
 
         return Response(
             {

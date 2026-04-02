@@ -35,10 +35,12 @@ function getEventLifecycle(event) {
 function OrganizerPage({
   currentUser,
   events = [],
+  eventsLoading = false,
   searchValue = '',
   onCreateEvent,
   onUpdateEvent,
   onDeleteEvent,
+  onClearSearch = () => {},
 }) {
   const { t } = useI18n()
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false)
@@ -66,6 +68,7 @@ function OrganizerPage({
   }, [ownedEvents, searchValue])
 
   const hasAccountEvents = ownedEvents.length > 0
+  const searchActive = searchValue.trim().length > 0
   const summaryCards = useMemo(() => {
     const counts = {
       pending: ownedEvents.filter((event) => event.moderationStatus === 'pending').length,
@@ -218,12 +221,20 @@ function OrganizerPage({
       ) : null}
 
       <div className="organizer-events-page__status-summary">
-        {summaryCards.map((card) => (
-          <article key={card.key} className="organizer-events-page__status-card">
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-          </article>
-        ))}
+        {eventsLoading && ownedEvents.length === 0
+          ? Array.from({ length: 6 }, (_, index) => (
+              <div
+                key={`osk-${index}`}
+                className="organizer-events-page__status-card organizer-events-page__status-card--skeleton"
+                aria-hidden
+              />
+            ))
+          : summaryCards.map((card) => (
+              <article key={card.key} className="organizer-events-page__status-card">
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+              </article>
+            ))}
       </div>
 
       {isCreateFormOpen ? (
@@ -249,7 +260,13 @@ function OrganizerPage({
         </Modal>
       ) : null}
 
-      {userEvents.length ? (
+      {eventsLoading ? (
+        <div className="organizer-events-grid organizer-events-grid--skeleton" aria-hidden>
+          {Array.from({ length: 4 }, (_, index) => (
+            <div key={`og-sk-${index}`} className="organizer-events-skeleton-card" />
+          ))}
+        </div>
+      ) : userEvents.length ? (
         <div className="organizer-events-grid">
           {userEvents.map((event) => (
             <EventCard
@@ -271,6 +288,11 @@ function OrganizerPage({
               ? t('organizerPage.noResultsDescription')
               : t('organizerPage.noEventsDescription')}
           </p>
+          {hasAccountEvents && searchActive ? (
+            <button type="button" className="organizer-events-empty__action" onClick={onClearSearch}>
+              {t('students.clearSearch')}
+            </button>
+          ) : null}
         </div>
       )}
 

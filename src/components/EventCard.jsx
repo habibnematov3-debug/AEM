@@ -34,6 +34,7 @@ function EventCard({
   const moderationStatus = event.moderationStatus ?? 'pending'
 
   if (variant === 'student') {
+    const categoryLabel = event.category?.trim()
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
         <article className="event-card event-card--student">
@@ -41,6 +42,16 @@ function EventCard({
             <img className="event-card__image" src={event.image} alt={event.title} />
           </div>
           <div className="event-card__body">
+            {categoryLabel || event.isJoined ? (
+              <div className="event-card__student-meta">
+                {categoryLabel ? (
+                  <span className="event-card__category-chip">{categoryLabel}</span>
+                ) : null}
+                {event.isJoined ? (
+                  <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
+                ) : null}
+              </div>
+            ) : null}
             <h3>{event.title}</h3>
             <div className="event-card__detail">
               <svg viewBox="0 0 24 24" aria-hidden="true">

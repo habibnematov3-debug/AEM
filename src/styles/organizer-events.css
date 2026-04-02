@@ -390,6 +390,84 @@
   font-size: 0.95rem;
 }
 
+.organizer-events-empty__action {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  color: var(--accent-dark);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.organizer-events-empty__action:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.organizer-events-page__status-card--skeleton {
+  min-height: 68px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  animation: organizerSkeletonPulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.organizer-events-grid--skeleton {
+  pointer-events: none;
+}
+
+.organizer-events-skeleton-card {
+  min-height: 320px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  position: relative;
+  overflow: hidden;
+}
+
+.organizer-events-skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    color-mix(in srgb, var(--surface-strong) 35%, transparent) 50%,
+    transparent 60%
+  );
+  animation: organizerSkeletonSheen 1.5s ease-in-out infinite;
+}
+
+@keyframes organizerSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes organizerSkeletonSheen {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translateX(-12%);
+  }
+
+  50% {
+    opacity: 0.55;
+    transform: translateX(12%);
+  }
+}
+
 .organizer-events-dialog {
   width: min(100%, 460px);
   display: grid;
@@ -468,6 +546,16 @@
   .organizer-events-page__create-button:hover,
   .create-event-form__primary:hover,
   .organizer-events-dialog__delete-button:hover {
+    transform: none;
+  }
+
+  .organizer-events-page__status-card--skeleton,
+  .organizer-events-skeleton-card::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .organizer-events-skeleton-card::after {
     transform: none;
   }
 }

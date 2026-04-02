@@ -137,8 +137,96 @@
   font-size: 0.95rem;
 }
 
+.students-events-empty__action {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-strong);
+  color: var(--accent-dark);
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.92rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.students-events-empty__action:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+
+.students-events-page__summary-card--skeleton {
+  min-height: 76px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  animation: studentsSkeletonPulse 1.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.students-events-grid--skeleton {
+  pointer-events: none;
+}
+
+.students-events-skeleton-card {
+  min-height: 312px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  position: relative;
+  overflow: hidden;
+}
+
+.students-events-skeleton-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    color-mix(in srgb, var(--surface-strong) 35%, transparent) 50%,
+    transparent 60%
+  );
+  animation: studentsSkeletonSheen 1.5s ease-in-out infinite;
+}
+
+@keyframes studentsSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes studentsSkeletonSheen {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translateX(-12%);
+  }
+
+  50% {
+    opacity: 0.55;
+    transform: translateX(12%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .students-events-page__summary-card:hover {
+    transform: none;
+  }
+
+  .students-events-page__summary-card--skeleton,
+  .students-events-skeleton-card::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .students-events-skeleton-card::after {
     transform: none;
   }
 }

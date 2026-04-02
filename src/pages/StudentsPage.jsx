@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import EventCard from '../components/EventCard'
 import { useI18n } from '../i18n/LanguageContext'
@@ -14,8 +14,21 @@ function getEventStartTimestamp(event) {
   return parsedDate.getTime()
 }
 
-function StudentsPage({ currentUser, events = [], searchValue = '' }) {
+function StudentsPage({
+  currentUser,
+  events = [],
+  eventsLoading = false,
+  searchValue = '',
+  onClearSearch = () => {},
+}) {
   const { t } = useI18n()
+  const searchActive = searchValue.trim().length > 0
+  const [summaryNow, setSummaryNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
+    return () => window.clearInterval(id)
+  }, [])
 
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
@@ -30,7 +43,7 @@ function StudentsPage({ currentUser, events = [], searchValue = '' }) {
   }, [events, searchValue])
 
   const summaryCards = useMemo(() => {
-    const now = Date.now()
+    const now = summaryNow
     const categories = new Set(
       events
         .map((event) => event.category)
@@ -62,10 +75,12 @@ function StudentsPage({ currentUser, events = [], searchValue = '' }) {
         value: categories.size,
       },
     ]
-  }, [events, t])
+  }, [events, summaryNow, t])
+
+  const showSummarySkeleton = eventsLoading && events.length === 0
 
   return (
-    <section className="students-events-page">
+    <section className="students-events-page" aria-busy={eventsLoading}>
       <div className="students-events-page__intro">
         <p className="students-events-page__eyebrow">
           {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}
@@ -75,24 +90,48 @@ function StudentsPage({ currentUser, events = [], searchValue = '' }) {
       </div>
 
       <div className="students-events-page__summary">
-        {summaryCards.map((card) => (
-          <article key={card.key} className="students-events-page__summary-card">
-            <span>{card.label}</span>
-            <strong>{card.value}</strong>
-          </article>
-        ))}
+        {showSummarySkeleton
+          ? Array.from({ length: 4 }, (_, index) => (
+              <div
+                key={`sk-${index}`}
+                className="students-events-page__summary-card students-events-page__summary-card--skeleton"
+                aria-hidden
+              />
+            ))
+          : summaryCards.map((card) => (
+              <article key={card.key} className="students-events-page__summary-card">
+                <span>{card.label}</span>
+                <strong>{card.value}</strong>
+              </article>
+            ))}
       </div>
 
-      {filteredEvents.length ? (
+      {eventsLoading ? (
+        <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
+          {Array.from({ length: 6 }, (_, index) => (
+            <div key={`card-sk-${index}`} className="students-events-skeleton-card" />
+          ))}
+        </div>
+      ) : filteredEvents.length ? (
         <div className="students-events-grid">
           {filteredEvents.map((event) => (
             <EventCard key={event.id} event={event} variant="student" />
           ))}
         </div>
+      ) : events.length === 0 ? (
+        <div className="students-events-empty">
+          <h2>{t('students.emptyNoEventsTitle')}</h2>
+          <p>{t('students.emptyNoEventsDescription')}</p>
+        </div>
       ) : (
         <div className="students-events-empty">
-          <h2>{t('students.emptyTitle')}</h2>
-          <p>{t('students.emptyDescription')}</p>
+          <h2>{t('students.emptyFilterTitle')}</h2>
+          <p>{t('students.emptyFilterDescription')}</p>
+          {searchActive ? (
+            <button type="button" className="students-events-empty__action" onClick={onClearSearch}>
+              {t('students.clearSearch')}
+            </button>
+          ) : null}
         </div>
       )}
     </section>

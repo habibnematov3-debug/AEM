@@ -79,6 +79,53 @@
   height: 100%;
 }
 
+.event-card__student-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+}
+
+.event-card__category-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(11, 122, 117, 0.12);
+  color: var(--accent-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.event-card__joined-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(29, 135, 82, 0.14);
+  color: var(--success);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+:root[data-theme='dark'] .event-card__category-chip {
+  background: rgba(88, 149, 224, 0.14);
+  color: var(--muted-strong);
+}
+
+:root[data-theme='dark'] .event-card__joined-chip {
+  background: rgba(45, 168, 108, 0.16);
+  color: #7dccb0;
+}
+
 .event-card__mini-topline {
   display: flex;
   justify-content: space-between;

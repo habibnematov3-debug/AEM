@@ -52,12 +52,14 @@ function RequireAuth({ currentUser, authReady, children }) {
 }
 
 function RequireRole({ currentUser, authReady, allowedRoles, children }) {
+  const { t } = useI18n()
+
   if (!authReady) {
     return (
       <section className="page">
         <div className="route-card">
-          <h2>Loading access...</h2>
-          <p>Checking the permissions for this page.</p>
+          <h2>{t('common.loadingAccessTitle')}</h2>
+          <p>{t('common.loadingAccessDescription')}</p>
         </div>
       </section>
     )
@@ -74,6 +76,26 @@ function RequireRole({ currentUser, authReady, allowedRoles, children }) {
   return children
 }
 
+function SkipToMain() {
+  const { t } = useI18n()
+
+  function handleActivate(event) {
+    event.preventDefault()
+    const main = document.getElementById('main-content')
+    main?.focus({ preventScroll: false })
+    const instant =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    main?.scrollIntoView({ behavior: instant ? 'auto' : 'smooth', block: 'start' })
+  }
+
+  return (
+    <a className="skip-link" href="#main-content" onClick={handleActivate}>
+      {t('common.skipToContent')}
+    </a>
+  )
+}
+
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
   const [currentUser, setCurrentUser] = useState(null)
@@ -87,6 +109,9 @@ function App() {
   const isOrganizerPage = location.pathname === '/organizer'
   const isAdminPage = location.pathname === '/admin'
   const shouldLoadEventList = isStudentsPage || isOrganizerPage
+  const [eventsLoading, setEventsLoading] = useState(
+    () => location.pathname === '/students' || location.pathname === '/organizer',
+  )
   const isDashboardPage =
     isStudentsPage ||
     isJoinedEventsPage ||
@@ -142,14 +167,18 @@ function App() {
 
   useEffect(() => {
     if (!shouldLoadEventList) {
+      setEventsLoading(false)
       return
     }
 
     if (isOrganizerPage && (!authReady || !currentUser)) {
+      setEventsLoading(false)
       return
     }
 
     let isMounted = true
+
+    setEventsLoading(true)
 
     async function loadEvents() {
       try {
@@ -161,6 +190,10 @@ function App() {
         if (isMounted) {
           setEvents([])
         }
+      } finally {
+        if (isMounted) {
+          setEventsLoading(false)
+        }
       }
     }
 
@@ -168,7 +201,7 @@ function App() {
     return () => {
       isMounted = false
     }
-  }, [isOrganizerPage, shouldLoadEventList])
+  }, [authReady, currentUser, isOrganizerPage, shouldLoadEventList])
 
   async function handleSignIn(credentials) {
     try {
@@ -244,6 +277,7 @@ function App() {
   return (
     <LanguageProvider languageCode={activeLanguageCode}>
       <div className="app-shell">
+        <SkipToMain />
         {!isAuthPage && (
           <Header
             variant={isDashboardPage ? 'students' : 'default'}
@@ -253,7 +287,7 @@ function App() {
             onSearchChange={setStudentSearch}
           />
         )}
-        <main className="page-shell">
+        <main id="main-content" className="page-shell" tabIndex={-1}>
           <Routes>
             <Route
               path="/"
@@ -265,7 +299,9 @@ function App() {
                 <StudentsPage
                   currentUser={currentUser}
                   events={events}
+                  eventsLoading={eventsLoading}
                   searchValue={studentSearch}
+                  onClearSearch={() => setStudentSearch('')}
                 />
               }
             />
@@ -287,10 +323,12 @@ function App() {
                   <OrganizerPage
                     currentUser={currentUser}
                     events={events}
+                    eventsLoading={eventsLoading}
                     searchValue={studentSearch}
                     onCreateEvent={handleCreateEvent}
                     onUpdateEvent={handleUpdateEvent}
                     onDeleteEvent={handleDeleteEvent}
+                    onClearSearch={() => setStudentSearch('')}
                   />
                 </RequireAuth>
               }

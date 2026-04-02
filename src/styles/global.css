@@ -27,6 +27,7 @@
   --danger: #b93a54;
   --danger-soft: rgba(185, 58, 84, 0.1);
   --success: #1d8752;
+  --placeholder: #8a98aa;
   --radius-sm: 12px;
   --radius-md: 16px;
   --radius-lg: 20px;
@@ -70,6 +71,7 @@
   --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.26);
   --shadow-lg: 0 28px 64px rgba(0, 0, 0, 0.32);
+  --placeholder: #7a8a9e;
 }
 
 * {
@@ -225,7 +227,7 @@ textarea {
 }
 
 ::placeholder {
-  color: #8a98aa;
+  color: var(--placeholder);
 }
 
 :focus-visible {

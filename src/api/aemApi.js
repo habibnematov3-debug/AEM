@@ -11,6 +11,10 @@ const SAFE_REQUEST_RETRIES = 1
 const SAFE_REQUEST_RETRY_DELAY_MS = 1800
 let supabaseClient = null
 
+function normalizeRole(value) {
+  return value === 'admin' ? 'admin' : 'student'
+}
+
 function sanitizeImageUrl(value) {
   if (!value || typeof value !== 'string') {
     return ''
@@ -99,7 +103,7 @@ function normalizeUser(rawUser) {
     id: String(rawUser.id),
     name: rawUser.full_name ?? rawUser.name ?? '',
     email: rawUser.email ?? '',
-    role: rawUser.role ?? 'student',
+    role: normalizeRole(rawUser.role),
     isActive: rawUser.is_active ?? true,
     createdAt: rawUser.created_at ?? null,
     settings: {
@@ -164,7 +168,7 @@ function normalizeAdminUser(rawUser) {
     id: String(rawUser.id),
     name: rawUser.full_name ?? '',
     email: rawUser.email ?? '',
-    role: rawUser.role ?? 'student',
+    role: normalizeRole(rawUser.role),
     isActive: rawUser.is_active ?? true,
     createdAt: rawUser.created_at ?? null,
     createdEventsCount: rawUser.created_events_count ?? 0,
@@ -209,10 +213,6 @@ function normalizeEventParticipant(rawParticipant) {
 export function getDefaultRouteForRole(role) {
   if (role === 'admin') {
     return '/admin'
-  }
-
-  if (role === 'organizer') {
-    return '/organizer'
   }
 
   return '/students'
@@ -277,14 +277,23 @@ async function apiRequest(path, options = {}) {
     }
 
     if (!response.ok) {
+      const defaultErrorMessage =
+        response.status === 401
+          ? 'Your session has expired. Please sign in again.'
+          : 'Request failed.'
       const message =
         payload.detail ??
         payload.message ??
         (typeof payload === 'object' && payload !== null ? Object.values(payload).flat().join(' ') : '') ??
-        'Request failed.'
+        defaultErrorMessage
       const error = new Error(message)
       error.status = response.status
       error.payload = payload
+
+      if (response.status === 401 && typeof window !== 'undefined') {
+        clearCurrentUser()
+        window.dispatchEvent(new CustomEvent('aem:unauthorized'))
+      }
 
       if (canRetry && attempt < maxAttempts && response.status >= 500) {
         await new Promise((resolve) => window.setTimeout(resolve, SAFE_REQUEST_RETRY_DELAY_MS))
@@ -337,7 +346,6 @@ export async function signUpUser(formData) {
       full_name: formData.fullName,
       email: formData.email,
       password: formData.password,
-      role: 'student',
     }),
   })
 

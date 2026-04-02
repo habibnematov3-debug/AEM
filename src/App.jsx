@@ -9,7 +9,6 @@ import {
   fetchEvents,
   fetchOrganizerEvents,
   getDefaultRouteForRole,
-  getStoredCurrentUser,
   logoutUser,
   moderateAdminEvent,
   signInUser,
@@ -77,7 +76,7 @@ function RequireRole({ currentUser, authReady, allowedRoles, children }) {
 
 function App() {
   const [studentSearch, setStudentSearch] = useState('')
-  const [currentUser, setCurrentUser] = useState(() => getStoredCurrentUser())
+  const [currentUser, setCurrentUser] = useState(null)
   const [events, setEvents] = useState([])
   const [authReady, setAuthReady] = useState(false)
   const location = useLocation()
@@ -124,11 +123,29 @@ function App() {
   }, [])
 
   useEffect(() => {
+    function handleUnauthorized() {
+      setCurrentUser(null)
+      setEvents([])
+      setAuthReady(true)
+    }
+
+    window.addEventListener('aem:unauthorized', handleUnauthorized)
+
+    return () => {
+      window.removeEventListener('aem:unauthorized', handleUnauthorized)
+    }
+  }, [])
+
+  useEffect(() => {
     document.documentElement.dataset.theme = currentUser?.settings?.theme ?? 'light'
   }, [currentUser])
 
   useEffect(() => {
     if (!shouldLoadEventList) {
+      return
+    }
+
+    if (isOrganizerPage && (!authReady || !currentUser)) {
       return
     }
 
@@ -170,7 +187,9 @@ function App() {
   async function handleSignUp(payload) {
     try {
       const result = await signUpUser(payload)
-      return result
+      const user = await fetchCurrentUser().catch(() => result.user)
+      setCurrentUser(user)
+      return { ...result, user }
     } catch (error) {
       return {
         ok: false,

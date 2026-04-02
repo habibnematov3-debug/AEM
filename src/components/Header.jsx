@@ -23,7 +23,7 @@ function Header({
       : [
           { to: '/', label: t('common.auth') },
           { to: '/students', label: t('common.students') },
-          { to: '/organizer', label: t('common.organizer') },
+          { to: '/organizer', label: t('common.myEvents') },
           ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
         ]
   const location = useLocation()

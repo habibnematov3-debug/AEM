@@ -155,14 +155,17 @@ function AuthPage({ onSignIn, onSignUp }) {
       return
     }
 
-    setMode('signin')
-    setSignInData({ email: result.user.email, password: signUpData.password })
-    setSignUpData(initialSignUp)
     setFeedback({
       type: 'success',
-      message: t('auth.accountCreated'),
+      message: t('auth.welcomeBack', { name: normalizedData.fullName }),
     })
-    setIsSubmitting(false)
+
+    window.setTimeout(() => {
+      setSignUpData(initialSignUp)
+      setSignInData(initialSignIn)
+      setIsSubmitting(false)
+      navigate(getDefaultRouteForRole(result.user.role))
+    }, 500)
   }
 
   return (

@@ -105,11 +105,6 @@ class SignUpSerializer(serializers.Serializer):
     full_name = serializers.CharField(max_length=150)
     email = serializers.EmailField(max_length=254)
     password = serializers.CharField(write_only=True, min_length=8, trim_whitespace=False)
-    role = serializers.ChoiceField(
-        choices=[AEMUser.Roles.STUDENT, AEMUser.Roles.ORGANIZER],
-        default=AEMUser.Roles.STUDENT,
-        required=False,
-    )
 
     def validate_full_name(self, value):
         full_name = value.strip()
@@ -133,7 +128,7 @@ class SignUpSerializer(serializers.Serializer):
         user = AEMUser(
             full_name=validated_data['full_name'],
             email=validated_data['email'],
-            role=validated_data.get('role', AEMUser.Roles.STUDENT),
+            role=AEMUser.Roles.STUDENT,
             is_active=True,
             created_at=now,
             updated_at=now,
@@ -452,7 +447,10 @@ class EventModerationSerializer(serializers.Serializer):
 
 
 class AdminUserUpdateSerializer(serializers.Serializer):
-    role = serializers.ChoiceField(choices=AEMUser.Roles.choices, required=False)
+    role = serializers.ChoiceField(
+        choices=[AEMUser.Roles.STUDENT, AEMUser.Roles.ADMIN],
+        required=False,
+    )
     is_active = serializers.BooleanField(required=False)
 
     def validate(self, attrs):

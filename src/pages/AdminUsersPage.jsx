@@ -72,8 +72,12 @@ function AdminUsersPage({ currentUser }) {
     }
   }, [activityFilter, roleFilter, searchQuery, t])
 
-  const roleFilters = useMemo(() => ['all', 'admin', 'organizer', 'student'], [])
+  const roleFilters = useMemo(() => ['all', 'admin', 'student'], [])
   const activityFilters = useMemo(() => ['all', 'active', 'inactive'], [])
+
+  function getRoleLabel(role) {
+    return role === 'admin' ? t('adminUsersPage.roles.admin') : t('adminUsersPage.roles.student')
+  }
 
   async function handleRoleChange(userId, role) {
     setUpdatingUserId(userId)
@@ -179,7 +183,9 @@ function AdminUsersPage({ currentUser }) {
                 }
                 onClick={() => setRoleFilter(filterValue)}
               >
-                {t(`adminUsersPage.roleFilters.${filterValue}`)}
+                {filterValue === 'student'
+                  ? t('adminUsersPage.roleFilters.student')
+                  : t(`adminUsersPage.roleFilters.${filterValue}`)}
               </button>
             ))}
           </div>
@@ -241,7 +247,7 @@ function AdminUsersPage({ currentUser }) {
                     <span
                       className={`admin-users-page__role admin-users-page__role--${user.role}`}
                     >
-                      {t(`adminUsersPage.roles.${user.role}`)}
+                      {getRoleLabel(user.role)}
                     </span>
                     <span
                       className={`admin-users-page__activity admin-users-page__activity--${activityKey}`}
@@ -267,25 +273,20 @@ function AdminUsersPage({ currentUser }) {
                 </dl>
 
                 <div className="admin-users-page__actions">
-                  {['student', 'organizer', 'admin'].map((role) => (
-                    <button
-                      key={role}
-                      type="button"
-                      className={
-                        role === user.role
-                          ? 'admin-users-page__role-button admin-users-page__role-button--active'
-                          : 'admin-users-page__role-button'
-                      }
-                      disabled={isUpdating || role === user.role || isCurrentAdmin}
-                      onClick={() => handleRoleChange(user.id, role)}
-                    >
-                      {role === user.role
-                        ? t(`adminUsersPage.roles.${role}`)
-                        : t('adminUsersPage.updateRole', {
-                            role: t(`adminUsersPage.roles.${role}`),
-                          })}
-                    </button>
-                  ))}
+                  <button
+                    type="button"
+                    className={
+                      user.role === 'admin'
+                        ? 'admin-users-page__role-button admin-users-page__role-button--active'
+                        : 'admin-users-page__role-button'
+                    }
+                    disabled={isUpdating || isCurrentAdmin}
+                    onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'student' : 'admin')}
+                  >
+                    {user.role === 'admin'
+                      ? t('adminUsersPage.removeAdmin')
+                      : t('adminUsersPage.promoteAdmin')}
+                  </button>
 
                   <button
                     type="button"

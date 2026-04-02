@@ -41,7 +41,7 @@ const translations = {
       notifications: 'Email Notifications',
       profileImageUrl: 'Profile Image URL',
       removePhoto: 'Remove Photo',
-      defaultStudent: 'Student',
+      defaultStudent: 'User',
       unknownOrganizer: 'Unknown organizer',
       general: 'General',
       tbd: 'TBD',
@@ -258,8 +258,7 @@ const translations = {
       roleFilters: {
         all: 'All users',
         admin: 'Admins',
-        organizer: 'Organizers',
-        student: 'Students',
+        student: 'Users',
       },
       activityFilters: {
         all: 'All access',
@@ -268,9 +267,10 @@ const translations = {
       },
       roles: {
         admin: 'Admin',
-        organizer: 'Organizer',
-        student: 'Student',
+        student: 'User',
       },
+      promoteAdmin: 'Promote to Admin',
+      removeAdmin: 'Remove Admin Access',
       activity: {
         active: 'Active',
         inactive: 'Inactive',

@@ -104,6 +104,8 @@ class SignUpAPIView(APIView):
         serializer = SignUpSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        request.session.cycle_key()
+        request.session['user_id'] = user.id
 
         return Response(
             {
@@ -607,8 +609,10 @@ class AdminUserListAPIView(APIView):
         active_filter = parse_boolean_query(request.query_params.get('is_active'))
         users = AEMUser.objects.select_related('settings')
 
-        if role_filter in {AEMUser.Roles.ADMIN, AEMUser.Roles.ORGANIZER, AEMUser.Roles.STUDENT}:
-            users = users.filter(role=role_filter)
+        if role_filter == AEMUser.Roles.ADMIN:
+            users = users.filter(role=AEMUser.Roles.ADMIN)
+        elif role_filter == AEMUser.Roles.STUDENT:
+            users = users.filter(role__in=[AEMUser.Roles.STUDENT, AEMUser.Roles.ORGANIZER])
 
         if search_query:
             users = users.filter(
@@ -623,7 +627,7 @@ class AdminUserListAPIView(APIView):
             role_order=Case(
                 When(role=AEMUser.Roles.ADMIN, then=Value(0)),
                 When(role=AEMUser.Roles.ORGANIZER, then=Value(1)),
-                When(role=AEMUser.Roles.STUDENT, then=Value(2)),
+                When(role=AEMUser.Roles.STUDENT, then=Value(1)),
                 default=Value(3),
                 output_field=IntegerField(),
             )

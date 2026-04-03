@@ -65,6 +65,22 @@
   background: linear-gradient(165deg, var(--surface) 0%, var(--surface-strong) 100%);
   box-shadow: var(--shadow-md);
   animation: panelRise var(--duration-med) var(--ease-out) both;
+  position: relative;
+  overflow: hidden;
+}
+
+.event-details-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 100% 0%, rgba(29, 100, 182, 0.04) 0%, transparent 65%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.event-details-card:hover::before {
+  opacity: 1;
 }
 
 .event-details-cover {
@@ -76,6 +92,11 @@
   background: var(--surface-muted);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  transition: transform 420ms var(--ease-out);
+}
+
+.event-details-card:hover .event-details-cover {
+  transform: scale(1.02);
 }
 
 .event-details-content {

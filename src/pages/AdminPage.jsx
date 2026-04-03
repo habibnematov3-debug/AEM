@@ -35,6 +35,8 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
   const [moderatingEventId, setModeratingEventId] = useState('')
+  const pendingCount = stats?.pending ?? 0
+  const pendingBadgeLabel = pendingCount > 99 ? '99+' : String(pendingCount)
 
   useEffect(() => {
     let isMounted = true
@@ -237,7 +239,14 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         <div className="admin-page__panel-top">
           <div>
             <p className="admin-page__panel-eyebrow">{t('adminPage.moderationEyebrow')}</p>
-            <h2>{t('adminPage.moderationTitle')}</h2>
+            <div className="admin-page__panel-heading">
+              <h2>{t('adminPage.moderationTitle')}</h2>
+              {pendingCount > 0 ? (
+                <span className="admin-page__pending-pill">
+                  {t('adminPage.pendingAlert', { count: pendingBadgeLabel })}
+                </span>
+              ) : null}
+            </div>
           </div>
 
           <div className="admin-page__controls">
@@ -263,7 +272,10 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
                   }
                   onClick={() => setStatusFilter(filterValue)}
                 >
-                  {t(`adminPage.filters.${filterValue}`)}
+                  <span>{t(`adminPage.filters.${filterValue}`)}</span>
+                  {filterValue === 'pending' && pendingCount > 0 ? (
+                    <span className="admin-page__filter-badge">{pendingBadgeLabel}</span>
+                  ) : null}
                 </button>
               ))}
             </div>

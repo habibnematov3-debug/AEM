@@ -169,6 +169,11 @@ REST_FRAMEWORK = {
 }
 
 AEM_AUTH_TOKEN_MAX_AGE_SECONDS = int(get_str_env('AEM_AUTH_TOKEN_MAX_AGE_SECONDS', '1209600'))
+AEM_OWNER_EMAILS = tuple(
+    email.strip().lower()
+    for email in get_list_env('AEM_OWNER_EMAILS', [])
+    if email.strip()
+)
 
 CORS_ALLOWED_ORIGINS = get_list_env(
     'AEM_CORS_ALLOWED_ORIGINS',

@@ -129,6 +129,7 @@ function normalizeUser(rawUser) {
     name: rawUser.full_name ?? rawUser.name ?? '',
     email: rawUser.email ?? '',
     role: normalizeRole(rawUser.role),
+    isOwner: rawUser.is_owner ?? false,
     isActive: rawUser.is_active ?? true,
     createdAt: rawUser.created_at ?? null,
     settings: {
@@ -196,6 +197,7 @@ function normalizeAdminUser(rawUser) {
     name: rawUser.full_name ?? '',
     email: rawUser.email ?? '',
     role: normalizeRole(rawUser.role),
+    isOwner: rawUser.is_owner ?? false,
     isActive: rawUser.is_active ?? true,
     isOnline: rawUser.is_online ?? false,
     lastSeenAt: rawUser.last_seen_at ?? null,

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.db import models
 from django.utils import timezone
@@ -25,6 +26,11 @@ class AEMUser(models.Model):
 
     def __str__(self):
         return f'{self.full_name} <{self.email}>'
+
+    @property
+    def is_owner(self):
+        normalized_email = (self.email or '').strip().lower()
+        return bool(normalized_email and normalized_email in getattr(settings, 'AEM_OWNER_EMAILS', ()))
 
     def set_password(self, raw_password):
         self.password_hash = make_password(raw_password)

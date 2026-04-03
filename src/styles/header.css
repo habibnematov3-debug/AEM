@@ -199,6 +199,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   min-height: 40px;
   padding: 0 12px;
   border-radius: var(--radius-pill);
@@ -245,6 +246,22 @@
 .site-header--students .site-header__link--active {
   background: var(--accent-soft);
   color: var(--accent-dark);
+}
+
+.site-header__badge {
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #de4d5d 0%, #c33444 100%);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 10px 18px rgba(195, 52, 68, 0.22);
 }
 
 .site-header__profile {

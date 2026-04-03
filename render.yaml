@@ -20,6 +20,8 @@ services:
         sync: false
       - key: AEM_CSRF_TRUSTED_ORIGINS
         sync: false
+      - key: AEM_OWNER_EMAILS
+        sync: false
       - key: AEM_SESSION_COOKIE_SECURE
         value: "True"
       - key: AEM_CSRF_COOKIE_SECURE

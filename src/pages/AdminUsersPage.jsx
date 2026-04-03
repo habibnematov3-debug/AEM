@@ -44,6 +44,7 @@ function formatLastActive(value, languageCode, fallback) {
 
 function AdminUsersPage({ currentUser }) {
   const { languageCode, t } = useI18n()
+  const currentUserIsOwner = Boolean(currentUser?.isOwner)
   const [roleFilter, setRoleFilter] = useState('all')
   const [activityFilter, setActivityFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -159,6 +160,11 @@ function AdminUsersPage({ currentUser }) {
           <p className="admin-users-page__eyebrow">{t('adminUsersPage.eyebrow')}</p>
           <h1>{t('adminUsersPage.title')}</h1>
           <p>{t('adminUsersPage.subtitle')}</p>
+          <p className="admin-users-page__owner-note">
+            {currentUserIsOwner
+              ? t('adminUsersPage.ownerMode')
+              : t('adminUsersPage.ownerOnlyHint')}
+          </p>
         </div>
 
         <Link to="/admin" className="admin-users-page__back-link">
@@ -240,6 +246,15 @@ function AdminUsersPage({ currentUser }) {
             const activityKey = user.isActive ? 'active' : 'inactive'
             const presenceKey = user.isOnline ? 'online' : 'offline'
             const isCurrentAdmin = user.id === currentUser?.id
+            const isOwnerUser = Boolean(user.isOwner)
+            const canManageAdminRole = currentUserIsOwner && !isOwnerUser && !isCurrentAdmin
+            const canToggleActive =
+              !isCurrentAdmin && !isOwnerUser && (currentUserIsOwner || user.role !== 'admin')
+            const roleButtonLabel = isOwnerUser
+              ? t('adminUsersPage.ownerAccount')
+              : user.role === 'admin'
+                ? t('adminUsersPage.removeAdmin')
+                : t('adminUsersPage.promoteAdmin')
 
             return (
               <article key={user.id} className="admin-users-page__card">
@@ -264,6 +279,9 @@ function AdminUsersPage({ currentUser }) {
                   </div>
 
                   <div className="admin-users-page__badges">
+                    {isOwnerUser ? (
+                      <span className="admin-users-page__owner">{t('adminUsersPage.owner')}</span>
+                    ) : null}
                     <span
                       className={`admin-users-page__role admin-users-page__role--${user.role}`}
                     >
@@ -305,16 +323,14 @@ function AdminUsersPage({ currentUser }) {
                   <button
                     type="button"
                     className={
-                      user.role === 'admin'
+                      user.role === 'admin' || isOwnerUser
                         ? 'admin-users-page__role-button admin-users-page__role-button--active'
                         : 'admin-users-page__role-button'
                     }
-                    disabled={isUpdating || isCurrentAdmin}
+                    disabled={isUpdating || !canManageAdminRole}
                     onClick={() => handleRoleChange(user.id, user.role === 'admin' ? 'student' : 'admin')}
                   >
-                    {user.role === 'admin'
-                      ? t('adminUsersPage.removeAdmin')
-                      : t('adminUsersPage.promoteAdmin')}
+                    {roleButtonLabel}
                   </button>
 
                   <button
@@ -324,7 +340,7 @@ function AdminUsersPage({ currentUser }) {
                         ? 'admin-users-page__toggle-button admin-users-page__toggle-button--danger'
                         : 'admin-users-page__toggle-button admin-users-page__toggle-button--success'
                     }
-                    disabled={isUpdating || isCurrentAdmin}
+                    disabled={isUpdating || !canToggleActive}
                     onClick={() => handleToggleActive(user)}
                   >
                     {isUpdating

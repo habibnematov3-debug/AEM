@@ -240,6 +240,27 @@
   font-size: 1.45rem;
 }
 
+.admin-page__panel-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-page__pending-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, #de4d5d 0%, #c33444 100%);
+  color: white;
+  font-size: 0.78rem;
+  font-weight: 800;
+  box-shadow: 0 12px 22px rgba(195, 52, 68, 0.18);
+}
+
 .admin-page__filters {
   display: flex;
   flex-wrap: wrap;
@@ -287,6 +308,9 @@
 }
 
 .admin-page__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted-strong);
@@ -297,6 +321,21 @@
   background: var(--accent-soft);
   border-color: rgba(29, 100, 182, 0.12);
   color: var(--accent-dark);
+}
+
+.admin-page__filter-badge {
+  min-width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #de4d5d 0%, #c33444 100%);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .admin-page__events {

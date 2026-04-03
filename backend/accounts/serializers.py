@@ -26,9 +26,14 @@ def sanitize_image_url(value):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    is_owner = serializers.SerializerMethodField()
+
+    def get_is_owner(self, obj):
+        return obj.is_owner
+
     class Meta:
         model = AEMUser
-        fields = ('id', 'full_name', 'email', 'role', 'is_active', 'created_at')
+        fields = ('id', 'full_name', 'email', 'role', 'is_owner', 'is_active', 'created_at')
         read_only_fields = fields
 
 
@@ -48,12 +53,16 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     settings = UserSettingsSerializer(read_only=True)
     created_events_count = serializers.SerializerMethodField()
     joined_events_count = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
 
     def get_created_events_count(self, obj):
         return obj.created_events.count()
 
     def get_joined_events_count(self, obj):
         return obj.participations.filter(status=Participation.Statuses.JOINED).count()
+
+    def get_is_owner(self, obj):
+        return obj.is_owner
 
     class Meta:
         model = AEMUser
@@ -62,6 +71,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'full_name',
             'email',
             'role',
+            'is_owner',
             'is_active',
             'created_at',
             'settings',
@@ -76,6 +86,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
     joined_events_count = serializers.SerializerMethodField()
     profile_image_url = serializers.SerializerMethodField()
     is_online = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
 
     def get_created_events_count(self, obj):
         return obj.created_events.count()
@@ -96,6 +107,9 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
         return obj.last_seen_at >= timezone.now() - ONLINE_WINDOW
 
+    def get_is_owner(self, obj):
+        return obj.is_owner
+
     class Meta:
         model = AEMUser
         fields = (
@@ -103,6 +117,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
             'full_name',
             'email',
             'role',
+            'is_owner',
             'is_active',
             'is_online',
             'last_seen_at',
@@ -488,6 +503,44 @@ class AdminUserUpdateSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         current_user = self.context.get('current_user')
+        current_user_is_owner = bool(current_user and current_user.is_owner)
+        target_user_is_owner = instance.is_owner
+
+        if target_user_is_owner and current_user and instance.id != current_user.id:
+            if 'role' in validated_data:
+                raise serializers.ValidationError(
+                    {'role': 'The owner account always keeps admin access.'},
+                )
+
+            if 'is_active' in validated_data:
+                raise serializers.ValidationError(
+                    {'is_active': 'The owner account cannot be deactivated.'},
+                )
+
+        if 'role' in validated_data:
+            next_role = validated_data['role']
+            touches_admin_access = (
+                instance.role == AEMUser.Roles.ADMIN
+                or next_role == AEMUser.Roles.ADMIN
+            )
+            if (
+                touches_admin_access
+                and not current_user_is_owner
+                and (current_user is None or instance.id != current_user.id)
+            ):
+                raise serializers.ValidationError(
+                    {'role': 'Only the owner account can grant or remove admin access.'},
+                )
+
+        if (
+            'is_active' in validated_data
+            and instance.role == AEMUser.Roles.ADMIN
+            and not current_user_is_owner
+            and (current_user is None or instance.id != current_user.id)
+        ):
+            raise serializers.ValidationError(
+                {'is_active': 'Only the owner account can change another admin account.'},
+            )
 
         if current_user and instance.id == current_user.id:
             next_role = validated_data.get('role', instance.role)

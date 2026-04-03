@@ -6,25 +6,43 @@ import '../styles/header.css'
 function Header({
   variant = 'default',
   currentUser,
+  adminPendingCount = 0,
   showSearch = true,
   searchValue = '',
   onSearchChange = () => {},
 }) {
   const { t } = useI18n()
   const isAdmin = currentUser?.role === 'admin'
+  const adminBadgeLabel = adminPendingCount > 99 ? '99+' : String(adminPendingCount)
   const navItems =
     variant === 'students'
       ? [
           { to: '/students', label: t('common.events') },
           ...(currentUser?.id ? [{ to: '/joined-events', label: t('common.joinedEvents') }] : []),
           { to: '/organizer', label: t('common.myEvents') },
-          ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
+          ...(isAdmin
+            ? [
+                {
+                  to: '/admin',
+                  label: t('common.adminPanel'),
+                  badge: adminPendingCount > 0 ? adminBadgeLabel : '',
+                },
+              ]
+            : []),
         ]
       : [
           { to: '/', label: t('common.auth') },
           { to: '/students', label: t('common.students') },
           { to: '/organizer', label: t('common.myEvents') },
-          ...(isAdmin ? [{ to: '/admin', label: t('common.adminPanel') }] : []),
+          ...(isAdmin
+            ? [
+                {
+                  to: '/admin',
+                  label: t('common.adminPanel'),
+                  badge: adminPendingCount > 0 ? adminBadgeLabel : '',
+                },
+              ]
+            : []),
         ]
   const location = useLocation()
   const profileInitial = currentUser?.name?.trim()?.charAt(0)?.toUpperCase() ?? '?'
@@ -91,7 +109,15 @@ function Header({
                     : 'site-header__link'
                 }
               >
-                {item.label}
+                <span>{item.label}</span>
+                {item.badge ? (
+                  <span
+                    className="site-header__badge"
+                    aria-label={t('header.pendingAdminBadge', { count: adminPendingCount })}
+                  >
+                    {item.badge}
+                  </span>
+                ) : null}
               </NavLink>
             ))}
           </nav>

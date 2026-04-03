@@ -376,10 +376,33 @@ class EventParticipateAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if Participation.objects.filter(user_id=current_user.id, event_id=event.id).exists():
+        existing_participation = (
+            Participation.objects.select_for_update()
+            .filter(user_id=current_user.id, event_id=event.id)
+            .first()
+        )
+
+        if existing_participation is not None:
+            if existing_participation.status == Participation.Statuses.JOINED:
+                return Response(
+                    {'detail': 'You have already joined this event.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            existing_participation.status = Participation.Statuses.JOINED
+            existing_participation.joined_at = timezone.now()
+            existing_participation.save(update_fields=['status', 'joined_at'])
+            participation = existing_participation
+
+            transaction.on_commit(lambda: notify_participation_joined(participation))
+
             return Response(
-                {'detail': 'You have already joined this event.'},
-                status=status.HTTP_400_BAD_REQUEST,
+                {
+                    'message': 'You joined the event successfully.',
+                    'participation': ParticipationSerializer(participation).data,
+                    'event': EventSerializer(event, context={'current_user': current_user}).data,
+                },
+                status=status.HTTP_200_OK,
             )
 
         try:

@@ -52,6 +52,7 @@ const translations = {
       brandEyebrow: 'Ajou Event Manager',
       searchLabel: 'Search events',
       searchPlaceholder: 'Search events...',
+      pendingAdminBadge: '{count} pending events',
       profile: 'Profile',
     },
     auth: {
@@ -205,6 +206,7 @@ const translations = {
       moderationError: 'Could not update the moderation status.',
       moderationEyebrow: 'Moderation queue',
       moderationTitle: 'Review submitted events',
+      pendingAlert: '{count} pending now',
       searchPlaceholder: 'Search events, organizer, or location...',
       recentEventsTitle: 'Latest created events',
       recentUsersTitle: 'Newest users',
@@ -244,6 +246,8 @@ const translations = {
       eyebrow: 'User management',
       title: 'Admin Users',
       subtitle: 'Review accounts, assign roles, and control platform access.',
+      ownerMode: 'You are signed in as the owner account. Only you can grant or remove admin access.',
+      ownerOnlyHint: 'Only the owner account can grant or remove admin access.',
       backToDashboard: 'Back to Dashboard',
       searchPlaceholder: 'Search by name or email...',
       loadError: 'Could not load the users list.',
@@ -279,6 +283,8 @@ const translations = {
         admin: 'Admin',
         student: 'User',
       },
+      owner: 'Owner',
+      ownerAccount: 'Owner Account',
       promoteAdmin: 'Promote to Admin',
       removeAdmin: 'Remove Admin Access',
       activity: {

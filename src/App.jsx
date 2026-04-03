@@ -106,6 +106,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [events, setEvents] = useState([])
   const [authReady, setAuthReady] = useState(false)
+  const [adminPendingCount, setAdminPendingCount] = useState(0)
   const location = useLocation()
   const isAuthPage = location.pathname === '/'
   const isProfilePage = location.pathname === '/profile'
@@ -156,6 +157,7 @@ function App() {
     function handleUnauthorized() {
       setCurrentUser(null)
       setEvents([])
+      setAdminPendingCount(0)
       setAuthReady(true)
     }
 
@@ -169,6 +171,37 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = currentUser?.settings?.theme ?? 'light'
   }, [currentUser])
+
+  useEffect(() => {
+    let isMounted = true
+    let refreshIntervalId = 0
+
+    if (!authReady || currentUser?.role !== 'admin') {
+      setAdminPendingCount(0)
+      return undefined
+    }
+
+    async function refreshAdminPendingCount() {
+      try {
+        const dashboard = await fetchAdminDashboard()
+        if (isMounted) {
+          setAdminPendingCount(dashboard.stats.pending)
+        }
+      } catch {
+        if (isMounted) {
+          setAdminPendingCount(0)
+        }
+      }
+    }
+
+    refreshAdminPendingCount()
+    refreshIntervalId = window.setInterval(refreshAdminPendingCount, 60000)
+
+    return () => {
+      isMounted = false
+      window.clearInterval(refreshIntervalId)
+    }
+  }, [authReady, currentUser?.role])
 
   async function fetchVerifiedCurrentUser() {
     try {
@@ -259,6 +292,7 @@ function App() {
   async function handleLogout() {
     await logoutUser()
     setCurrentUser(null)
+    setAdminPendingCount(0)
   }
 
   async function handleCreateEvent(eventData) {
@@ -295,6 +329,7 @@ function App() {
     setEvents((currentEvents) =>
       currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
     )
+    setAdminPendingCount(result.stats.pending)
     return result
   }
 
@@ -314,6 +349,7 @@ function App() {
           <Header
             variant={isDashboardPage ? 'students' : 'default'}
             currentUser={currentUser}
+            adminPendingCount={adminPendingCount}
             showSearch={!isProfilePage}
             searchValue={studentSearch}
             onSearchChange={setStudentSearch}

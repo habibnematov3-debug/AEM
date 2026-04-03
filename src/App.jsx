@@ -334,6 +334,7 @@ function App() {
                   eventsLoading={eventsLoading}
                   searchValue={studentSearch}
                   onClearSearch={() => setStudentSearch('')}
+                  onToggleEventLike={handleToggleEventLike}
                 />
               }
             />

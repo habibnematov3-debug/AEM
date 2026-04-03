@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useI18n } from '../i18n/LanguageContext'
@@ -24,38 +25,94 @@ function formatEventDate(eventDate, fallback, languageCode) {
 function EventCard({
   event,
   variant = 'student',
+  currentUser = null,
   onEdit = () => {},
   onDelete = () => {},
   onCancel = () => {},
+  onToggleLike = null,
   isCanceling = false,
 }) {
   const { languageCode, t } = useI18n()
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
   const moderationStatus = event.moderationStatus ?? 'pending'
+  const [isLikePending, setIsLikePending] = useState(false)
+
+  async function handleLikeToggle(clickEvent) {
+    clickEvent.preventDefault()
+    clickEvent.stopPropagation()
+
+    if (!currentUser?.id || typeof onToggleLike !== 'function' || isLikePending) {
+      return
+    }
+
+    setIsLikePending(true)
+
+    try {
+      await onToggleLike(event)
+    } catch (error) {
+      console.error('Could not update event like', error)
+    } finally {
+      setIsLikePending(false)
+    }
+  }
 
   if (variant === 'student') {
     const categoryLabel = event.category?.trim()
     const hasLikesCount = typeof event.likesCount === 'number'
+    const canToggleLike = Boolean(currentUser?.id) && typeof onToggleLike === 'function'
+
     return (
-      <Link to={`/events/${event.id}`} className="event-card__link">
-        <article className="event-card event-card--student">
+      <article className="event-card event-card--student event-card--interactive">
+        <Link
+          to={`/events/${event.id}`}
+          className="event-card__media-link"
+          aria-label={`${t('eventCard.view')}: ${event.title}`}
+        >
           <div className="event-card__media">
             <img className="event-card__image" src={event.image} alt={event.title} />
           </div>
-          <div className="event-card__body">
-            {categoryLabel || event.isJoined || hasLikesCount ? (
-              <div className="event-card__student-meta">
-                <div className="event-card__student-meta-group">
-                  {categoryLabel ? (
-                    <span className="event-card__category-chip">{categoryLabel}</span>
-                  ) : null}
-                  {event.isJoined ? (
-                    <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
-                  ) : null}
-                </div>
-                {hasLikesCount ? (
+        </Link>
+
+        <div className="event-card__body">
+          {categoryLabel || event.isJoined || hasLikesCount ? (
+            <div className="event-card__student-meta">
+              <div className="event-card__student-meta-group">
+                {categoryLabel ? (
+                  <span className="event-card__category-chip">{categoryLabel}</span>
+                ) : null}
+                {event.isJoined ? (
+                  <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
+                ) : null}
+              </div>
+              {hasLikesCount ? (
+                canToggleLike ? (
+                  <button
+                    type="button"
+                    className={
+                      event.isLiked
+                        ? 'event-card__like-button event-card__likes-chip event-card__likes-chip--liked'
+                        : 'event-card__like-button event-card__likes-chip'
+                    }
+                    onClick={handleLikeToggle}
+                    disabled={isLikePending}
+                    aria-pressed={event.isLiked}
+                    aria-label={`${event.isLiked ? t('eventDetails.likedAction') : t('eventDetails.likeAction')}: ${event.title}`}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    <span>{t('eventCard.likesCount', { count: event.likesCount })}</span>
+                  </button>
+                ) : (
                   <span
-                    className={event.isLiked ? 'event-card__likes-chip event-card__likes-chip--liked' : 'event-card__likes-chip'}
+                    className={
+                      event.isLiked
+                        ? 'event-card__likes-chip event-card__likes-chip--liked'
+                        : 'event-card__likes-chip'
+                    }
                   >
                     <svg viewBox="0 0 24 24" aria-hidden="true">
                       <path
@@ -65,9 +122,16 @@ function EventCard({
                     </svg>
                     <span>{t('eventCard.likesCount', { count: event.likesCount })}</span>
                   </span>
-                ) : null}
-              </div>
-            ) : null}
+                )
+              ) : null}
+            </div>
+          ) : null}
+
+          <Link
+            to={`/events/${event.id}`}
+            className="event-card__content-link"
+            aria-label={`${t('eventCard.view')}: ${event.title}`}
+          >
             <h3>{event.title}</h3>
             <div className="event-card__detail">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -87,9 +151,9 @@ function EventCard({
               </svg>
               <span>{event.location}</span>
             </div>
-          </div>
-        </article>
-      </Link>
+          </Link>
+        </div>
+      </article>
     )
   }
 

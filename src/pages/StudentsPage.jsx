@@ -20,6 +20,7 @@ function StudentsPage({
   eventsLoading = false,
   searchValue = '',
   onClearSearch = () => {},
+  onToggleEventLike = null,
 }) {
   const { t } = useI18n()
   const searchActive = searchValue.trim().length > 0
@@ -115,7 +116,13 @@ function StudentsPage({
       ) : filteredEvents.length ? (
         <div className="students-events-grid">
           {filteredEvents.map((event) => (
-            <EventCard key={event.id} event={event} variant="student" />
+            <EventCard
+              key={event.id}
+              event={event}
+              variant="student"
+              currentUser={currentUser}
+              onToggleLike={onToggleEventLike}
+            />
           ))}
         </div>
       ) : events.length === 0 ? (

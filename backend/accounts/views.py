@@ -619,7 +619,13 @@ class MyParticipationListAPIView(APIView):
 
         participations = (
             Participation.objects.select_related('event', 'event__creator')
-            .filter(user_id=current_user.id, status=Participation.Statuses.JOINED)
+            .filter(
+                user_id=current_user.id,
+                status__in=(
+                    Participation.Statuses.JOINED,
+                    Participation.Statuses.WAITLISTED,
+                ),
+            )
             .order_by('-joined_at', '-id')
         )
 
@@ -654,12 +660,15 @@ class EventCancelParticipationAPIView(APIView):
         participation = Participation.objects.filter(
             user_id=current_user.id,
             event_id=event.id,
-            status=Participation.Statuses.JOINED,
+            status__in=(
+                Participation.Statuses.JOINED,
+                Participation.Statuses.WAITLISTED,
+            ),
         ).first()
 
         if participation is None:
             return Response(
-                {'detail': 'You have not joined this event.'},
+                {'detail': 'You do not have an active participation for this event.'},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
@@ -669,14 +678,17 @@ class EventCancelParticipationAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        was_joined = participation.status == Participation.Statuses.JOINED
         participation.status = Participation.Statuses.CANCELLED
         participation.save(update_fields=['status'])
         transaction.on_commit(lambda: notify_participation_cancelled(participation))
 
-        promoted = promote_next_waitlisted(event.id)
-        if promoted is not None:
-            transaction.on_commit(lambda p=promoted: notify_waitlist_promoted(p))
-            transaction.on_commit(lambda p=promoted: notify_participation_joined(p))
+        promoted = None
+        if was_joined:
+            promoted = promote_next_waitlisted(event.id)
+            if promoted is not None:
+                transaction.on_commit(lambda p=promoted: notify_waitlist_promoted(p))
+                transaction.on_commit(lambda p=promoted: notify_participation_joined(p))
 
         # Re-load event values to reflect joined/waitlist counts and checked-in counts.
         response_event = EventSerializer(event, context={'current_user': current_user}).data
@@ -712,8 +724,22 @@ class EventParticipantListAPIView(APIView):
 
         participations = (
             Participation.objects.select_related('user')
-            .filter(event_id=event.id, status=Participation.Statuses.JOINED)
-            .order_by('-joined_at', '-id')
+            .filter(
+                event_id=event.id,
+                status__in=(
+                    Participation.Statuses.JOINED,
+                    Participation.Statuses.WAITLISTED,
+                ),
+            )
+            .annotate(
+                status_order=Case(
+                    When(status=Participation.Statuses.JOINED, then=Value(0)),
+                    When(status=Participation.Statuses.WAITLISTED, then=Value(1)),
+                    default=Value(2),
+                    output_field=IntegerField(),
+                ),
+            )
+            .order_by('status_order', 'joined_at', 'id')
         )
 
         return Response(

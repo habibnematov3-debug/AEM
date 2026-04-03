@@ -319,18 +319,31 @@
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 0.9rem;
+  animation: feedbackSlideIn 300ms var(--ease-out) both;
+  border: 1px solid;
 }
 
 .profile-card__feedback--success {
   color: var(--success);
   background: rgba(29, 135, 82, 0.08);
-  border: 1px solid rgba(29, 135, 82, 0.12);
+  border-color: rgba(29, 135, 82, 0.12);
 }
 
 .profile-card__feedback--error {
   color: var(--danger);
   background: var(--danger-soft);
-  border: 1px solid rgba(185, 58, 84, 0.12);
+  border-color: rgba(185, 58, 84, 0.12);
+}
+
+@keyframes feedbackSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .profile-card--info {

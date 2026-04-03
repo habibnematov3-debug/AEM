@@ -31,15 +31,31 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
   const { languageCode, t } = useI18n()
   const navigate = useNavigate()
   const [formData, setFormData] = useState(() => buildFormData(currentUser))
+  const [originalFormData, setOriginalFormData] = useState(() => buildFormData(currentUser))
   const [isSaving, setIsSaving] = useState(false)
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const [feedbackVisible, setFeedbackVisible] = useState(false)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
-    setFormData(buildFormData(currentUser))
+    const newFormData = buildFormData(currentUser)
+    setFormData(newFormData)
+    setOriginalFormData(newFormData)
   }, [currentUser])
+
+  useEffect(() => {
+    if (feedback.message && feedbackVisible) {
+      const timer = setTimeout(() => setFeedbackVisible(false), 4000)
+      return () => clearTimeout(timer)
+    }
+  }, [feedback, feedbackVisible])
+
+  const hasChanges = useMemo(
+    () => JSON.stringify(formData) !== JSON.stringify(originalFormData),
+    [formData, originalFormData],
+  )
 
   const profileInitials = useMemo(() => {
     const source = currentUser?.name?.trim() ?? ''
@@ -106,11 +122,13 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
         type: 'success',
         message: t('profile.photoUploaded'),
       })
+      setFeedbackVisible(true)
     } catch (error) {
       setFeedback({
         type: 'error',
         message: error.message || t('profile.uploadPhotoError'),
       })
+      setFeedbackVisible(true)
     } finally {
       setIsUploadingPhoto(false)
       event.target.value = ''
@@ -119,22 +137,27 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    if (isUploadingPhoto) {
+    if (isUploadingPhoto || !hasChanges) {
       return
     }
 
     setIsSaving(true)
     setFeedback({ type: '', message: '' })
+    setFeedbackVisible(false)
 
     try {
       const result = await onUpdateProfile(formData)
-      setFormData(buildFormData(result.user))
+      const newFormData = buildFormData(result.user)
+      setFormData(newFormData)
+      setOriginalFormData(newFormData)
       setFeedback({ type: 'success', message: t('profile.profileUpdated') })
+      setFeedbackVisible(true)
     } catch (error) {
       setFeedback({
         type: 'error',
         message: error.message || t('profile.updateProfileError'),
       })
+      setFeedbackVisible(true)
     } finally {
       setIsSaving(false)
     }
@@ -157,7 +180,11 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
         <div className="profile-page__identity">
           <div className="profile-page__avatar">
             {previewImageUrl ? (
-              <img src={previewImageUrl} alt={`${currentUser?.name ?? 'User'} ${t('header.profile')}`} />
+              <img
+                src={previewImageUrl}
+                alt={`${currentUser?.name ?? 'User'} ${t('header.profile')}`}
+                loading="lazy"
+              />
             ) : (
               profileInitials
             )}
@@ -206,7 +233,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
             </button>
           </div>
 
-          {feedback.message ? (
+          {feedbackVisible && feedback.message ? (
             <div
               className={
                 feedback.type === 'error'
@@ -317,7 +344,8 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               <button
                 type="submit"
                 className="profile-form__primary"
-                disabled={isSaving || isUploadingPhoto}
+                disabled={isSaving || isUploadingPhoto || !hasChanges}
+                title={!hasChanges ? t('profile.noChanges') : ''}
               >
                 {isSaving ? t('common.saving') : t('common.saveChanges')}
               </button>

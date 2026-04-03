@@ -97,6 +97,8 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
             { key: 'rejected', label: t('adminPage.stats.rejected'), value: stats.rejected },
             { key: 'inProgress', label: t('adminPage.stats.inProgress'), value: stats.inProgress },
             { key: 'finished', label: t('adminPage.stats.finished'), value: stats.finished },
+            { key: 'waitlisted', label: t('adminPage.stats.waitlisted'), value: stats.waitlisted },
+            { key: 'attended', label: t('adminPage.stats.attended'), value: stats.attended },
           ]
         : [],
     [stats, t],

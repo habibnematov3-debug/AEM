@@ -14,6 +14,7 @@ const initialFormState = {
   location: '',
   imageUrl: '',
   category: '',
+  capacity: '',
 }
 
 function isDataImageUrl(value) {
@@ -48,6 +49,13 @@ function validateEventForm(formData, t) {
 
     if (end <= start) {
       nextErrors.endTime = t('eventForm.errors.endTimeOrder')
+    }
+  }
+
+  if (formData.capacity) {
+    const value = Number(formData.capacity)
+    if (!Number.isInteger(value) || value < 1) {
+      nextErrors.capacity = t('eventForm.errors.capacity')
     }
   }
 
@@ -88,6 +96,7 @@ function buildFormState(initialValues) {
     location: initialValues.location ?? initialValues.venue ?? '',
     imageUrl: isDataImageUrl(initialValues.customImageUrl) ? '' : initialValues.customImageUrl ?? '',
     category: initialValues.category ?? '',
+    capacity: initialValues.capacity != null ? String(initialValues.capacity) : '',
   }
 }
 
@@ -173,10 +182,16 @@ function CreateEventForm({
     setIsSubmitting(true)
 
     try {
-      await onSubmit({
+      const payload = {
         ...formData,
         existingImage,
-      })
+        capacity:
+          formData.capacity === '' || formData.capacity == null
+            ? null
+            : Number(formData.capacity),
+      }
+
+      await onSubmit(payload)
       setFormData(initialFormState)
       setErrors({})
     } finally {
@@ -271,6 +286,21 @@ function CreateEventForm({
           />
           {errors.location ? (
             <span className="create-event-form__error">{errors.location}</span>
+          ) : null}
+        </label>
+
+        <label>
+          {t('eventForm.capacity')}
+          <input
+            type="number"
+            min="1"
+            value={formData.capacity}
+            onChange={(event) => updateField('capacity', event.target.value)}
+            placeholder={t('eventForm.capacityPlaceholder')}
+            disabled={isSubmitting || isUploadingImage}
+          />
+          {errors.capacity ? (
+            <span className="create-event-form__error">{errors.capacity}</span>
           ) : null}
         </label>
 

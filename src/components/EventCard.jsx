@@ -307,7 +307,9 @@ function EventCard({
         <div>
           <strong>{event.priceLabel}</strong>
           <p>
-            {event.registeredCount}/{event.capacity} joined
+            {event.joinedCount} joined
+            {event.capacity ? ` / ${event.capacity}` : ''}
+            {event.waitlistCount ? ` · ${event.waitlistCount} waitlisted` : ''}
           </p>
         </div>
 

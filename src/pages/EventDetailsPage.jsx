@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import {
   cancelParticipation,
+  checkInParticipant,
   fetchEventById,
   fetchEventParticipants,
   participateInEvent,
@@ -52,6 +53,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   const [isJoining, setIsJoining] = useState(false)
   const [isCanceling, setIsCanceling] = useState(false)
   const [isTogglingLike, setIsTogglingLike] = useState(false)
+  const [checkInLoading, setCheckInLoading] = useState({})
   const [participants, setParticipants] = useState([])
   const [participantsStatus, setParticipantsStatus] = useState('idle')
   const [participantsError, setParticipantsError] = useState('')
@@ -195,6 +197,37 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
     }
   }
 
+  async function handleCheckIn(participantId) {
+    if (!event || !currentUser || !participantId || checkInLoading[participantId]) {
+      return
+    }
+
+    setCheckInLoading((current) => ({ ...current, [participantId]: true }))
+    setActionFeedback({ type: '', message: '' })
+
+    try {
+      const result = await checkInParticipant(event.id, participantId)
+      if (result.event) {
+        setEvent(result.event)
+      }
+      setParticipants((current) =>
+        current.map((participant) =>
+          participant.id === String(participantId)
+            ? { ...participant, checkedInAt: result.participation?.checked_in_at ?? participant.checkedInAt }
+            : participant,
+        ),
+      )
+      setActionFeedback({ type: 'success', message: t('eventDetails.checkInSuccess') })
+    } catch (error) {
+      setActionFeedback({
+        type: 'error',
+        message: error.message || t('eventDetails.checkInError'),
+      })
+    } finally {
+      setCheckInLoading((current) => ({ ...current, [participantId]: false }))
+    }
+  }
+
   async function handleToggleLike() {
     if (!event || !currentUser || !onToggleEventLike || isTogglingLike) {
       return
@@ -312,6 +345,22 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
           </div>
 
           <h1>{event.title}</h1>
+
+          <div className="event-details-stats">
+            <span>
+              {t('eventDetails.joinedInfo', { count: event.joinedCount ?? 0 })}
+            </span>
+            {event.capacity ? (
+              <span>{t('eventDetails.capacityInfo', { count: event.capacity })}</span>
+            ) : null}
+            {event.waitlistCount ? (
+              <span>{t('eventDetails.waitlistInfo', { count: event.waitlistCount })}</span>
+            ) : null}
+            {event.checkedInCount ? (
+              <span>{t('eventDetails.checkedInInfo', { count: event.checkedInCount })}</span>
+            ) : null}
+          </div>
+
           <p className="event-details-description">{event.description}</p>
 
           <div className="event-details-actions">
@@ -434,6 +483,29 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
                       <span className="event-details-participant__joined">
                         {new Date(participant.joinedAt).toLocaleDateString(getLanguageLocale(languageCode))}
                       </span>
+
+                      <div className="event-details-participant__status-actions">
+                        {participant.status === 'joined' && !participant.checkedInAt ? (
+                          <button
+                            type="button"
+                            className="event-details-participant__checkin"
+                            onClick={() => handleCheckIn(participant.id)}
+                            disabled={Boolean(checkInLoading[participant.id])}
+                          >
+                            {checkInLoading[participant.id]
+                              ? t('eventDetails.checkingIn')
+                              : t('eventDetails.checkIn')}
+                          </button>
+                        ) : participant.status === 'joined' && participant.checkedInAt ? (
+                          <span className="event-details-participant__checked-in">
+                            {t('eventDetails.checkedIn')}
+                          </span>
+                        ) : participant.status === 'waitlisted' ? (
+                          <span className="event-details-participant__waitlist">
+                            {t('eventDetails.waitlisted')}
+                          </span>
+                        ) : null}
+                      </div>
                     </article>
                   ))}
                 </div>

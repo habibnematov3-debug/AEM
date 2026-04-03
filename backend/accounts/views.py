@@ -166,6 +166,11 @@ def get_admin_dashboard_stats():
             Q(event_date__lt=today)
             | Q(event_date=today, end_time__lt=current_time),
         ).count(),
+        'waitlisted': Participation.objects.filter(status=Participation.Statuses.WAITLISTED).count(),
+        'attended': Participation.objects.filter(
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=False,
+        ).count(),
     }
 
 
@@ -659,11 +664,20 @@ class EventCancelParticipationAPIView(APIView):
         participation.save(update_fields=['status'])
         transaction.on_commit(lambda: notify_participation_cancelled(participation))
 
+        promoted = promote_next_waitlisted(event.id)
+        if promoted is not None:
+            transaction.on_commit(lambda p=promoted: notify_waitlist_promoted(p))
+            transaction.on_commit(lambda p=promoted: notify_participation_joined(p))
+
+        # Re-load event values to reflect joined/waitlist counts and checked-in counts.
+        response_event = EventSerializer(event, context={'current_user': current_user}).data
+
         return Response(
             {
                 'message': 'Participation cancelled successfully.',
                 'participation': ParticipationSerializer(participation).data,
-                'event': EventSerializer(event, context={'current_user': current_user}).data,
+                'promoted_participation': ParticipationSerializer(promoted).data if promoted else None,
+                'event': response_event,
             },
             status=status.HTTP_200_OK,
         )
@@ -698,6 +712,61 @@ class EventParticipantListAPIView(APIView):
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
                 'total_participants': participations.count(),
                 'results': EventParticipantSerializer(participations, many=True).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventParticipantCheckInAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, event_id, participation_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+
+        if not (is_admin(current_user) or event.creator_id == current_user.id):
+            return Response(
+                {'detail': 'You are not allowed to check in participants for this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        participation = get_object_or_404(
+            Participation.objects.select_related('user'),
+            id=participation_id,
+            event_id=event.id,
+        )
+
+        if participation.status != Participation.Statuses.JOINED:
+            return Response(
+                {'detail': 'Only joined participants can be checked in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if participation.checked_in_at is not None:
+            return Response(
+                {'detail': 'Participant is already checked in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation.checked_in_at = timezone.now()
+        participation.save(update_fields=['checked_in_at'])
+
+        return Response(
+            {
+                'message': 'Participant checked in successfully.',
+                'participation': EventParticipantSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_200_OK,
         )

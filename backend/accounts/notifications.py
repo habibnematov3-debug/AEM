@@ -125,3 +125,23 @@ def notify_participation_cancelled(participation):
         ),
         recipient=attendee.email,
     )
+
+
+def notify_waitlist_promoted(participation):
+    attendee = participation.user
+    event = participation.event
+
+    if not user_wants_notifications(attendee):
+        return False
+
+    return send_notification_email(
+        subject=f'You are confirmed for: {event.title}',
+        message=(
+            f'Hello {attendee.full_name},\n\n'
+            f'Great news! Your waitlist spot for "{event.title}" has been promoted to confirmed attendance.\n\n'
+            f'Location: {event.location}\n'
+            f'Schedule: {format_event_schedule(event)}\n\n'
+            'We look forward to seeing you there.'
+        ),
+        recipient=attendee.email,
+    )

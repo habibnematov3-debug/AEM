@@ -166,7 +166,14 @@ function normalizeEvent(rawEvent) {
     category: rawEvent.category ?? 'general',
     status: formatStatusLabel(rawEvent.moderation_status),
     moderationStatus: rawEvent.moderation_status ?? 'pending',
+    capacity: rawEvent.capacity ?? null,
+    joinedCount: Number(rawEvent.joined_count ?? 0),
+    waitlistCount: Number(rawEvent.waitlist_count ?? 0),
+    checkedInCount: Number(rawEvent.checked_in_count ?? 0),
+    spotsRemaining: rawEvent.spots_remaining ?? null,
     isJoined: rawEvent.is_joined ?? false,
+    isWaitlisted: rawEvent.is_waitlisted ?? false,
+    waitlistPosition: rawEvent.waitlist_position ?? null,
     isLiked: rawEvent.is_liked ?? false,
     likesCount: rawEvent.likes_count ?? 0,
     creatorId,
@@ -507,6 +514,7 @@ export async function createEvent(formData) {
       location: formData.location,
       image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
+      capacity: formData.capacity != null ? formData.capacity : null,
     }),
   })
 
@@ -525,6 +533,7 @@ export async function updateEvent(eventId, formData) {
       location: formData.location,
       image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
+      capacity: formData.capacity != null ? formData.capacity : null,
     }),
   })
 
@@ -585,6 +594,22 @@ export async function cancelParticipation(eventId) {
     method: 'POST',
     body: JSON.stringify({}),
   })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+    participation: payload.participation ?? null,
+  }
+}
+
+export async function checkInParticipant(eventId, participationId) {
+  const payload = await apiRequest(
+    `/api/events/${eventId}/participants/${participationId}/checkin/`,
+    {
+      method: 'POST',
+      body: JSON.stringify({}),
+    },
+  )
 
   return {
     message: payload.message,

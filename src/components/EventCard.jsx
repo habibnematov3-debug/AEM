@@ -91,7 +91,7 @@ function EventCard({
         </Link>
 
         <div className="event-card__body">
-          {categoryLabel || event.isJoined || hasLikesCount ? (
+          {categoryLabel || event.isJoined || event.isWaitlisted || hasLikesCount ? (
             <div className="event-card__student-meta">
               <div className="event-card__student-meta-group">
                 {categoryLabel ? (
@@ -345,13 +345,14 @@ function EventCard({
 
       <div className="event-card__footer">
         <div>
-          <strong>{event.priceLabel}</strong>
+          <strong>{event.priceLabel || t('common.tbd')}</strong>
           <p>
             {event.joinedCount} joined
             {event.capacity ? ` / ${event.capacity}` : ''}
             {event.waitlistCount ? ` · ${event.waitlistCount} waitlisted` : ''}
             {event.noShowCount ? ` · ${event.noShowCount} no-show` : ''}
-        )}
+          </p>
+        </div>
       </div>
     </article>
   )

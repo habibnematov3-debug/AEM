@@ -165,6 +165,11 @@
   font-weight: 700;
 }
 
+.event-card__joined-chip--waitlisted {
+  background: rgba(188, 121, 24, 0.14);
+  color: #9a6400;
+}
+
 :root[data-theme='dark'] .event-card__category-chip {
   background: rgba(88, 149, 224, 0.14);
   color: var(--muted-strong);
@@ -173,6 +178,11 @@
 :root[data-theme='dark'] .event-card__joined-chip {
   background: rgba(45, 168, 108, 0.16);
   color: #7dccb0;
+}
+
+:root[data-theme='dark'] .event-card__joined-chip--waitlisted {
+  background: rgba(220, 165, 49, 0.18);
+  color: #ffd27a;
 }
 
 .event-card__likes-chip {
@@ -248,6 +258,11 @@
   color: var(--accent-dark);
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+.event-card__owner-badge--waitlisted {
+  background: rgba(188, 121, 24, 0.14);
+  color: #9a6400;
 }
 
 .event-card__moderation-badge {

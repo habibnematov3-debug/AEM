@@ -3,6 +3,7 @@
   display: grid;
   gap: var(--space-5);
   padding: 22px 4px 10px;
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .profile-page::before {
@@ -17,6 +18,20 @@
   z-index: -1;
   opacity: 0.5;
   animation: pageAccentFloat 23s var(--ease-out) infinite alternate;
+}
+
+.profile-page::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  left: -8%;
+  width: min(420px, 70vw);
+  height: 180px;
+  background: radial-gradient(ellipse, var(--bg-mesh-c) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
+  animation: pageAccentFloat 25s var(--ease-out) infinite alternate reverse;
 }
 
 .profile-page__hero,
@@ -336,6 +351,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .profile-page::before,
+  .profile-page::after,
   .profile-page__hero::after {
     animation: none;
   }

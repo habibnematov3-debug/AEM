@@ -10,7 +10,25 @@
   transition:
     transform var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out),
-    border-color var(--duration-fast) var(--ease-out);
+    border-color var(--duration-fast) var(--ease-out),
+    background-color 280ms ease;
+  position: relative;
+}
+
+.event-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  background: radial-gradient(circle at 100% 0%, rgba(29, 100, 182, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out);
+}
+
+.event-card:hover::before,
+.event-card:focus-within::before {
+  opacity: 1;
 }
 
 .event-card__link {
@@ -89,9 +107,10 @@
 }
 
 .event-card:not(.event-card--student):hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
+  background: linear-gradient(165deg, var(--surface-strong) 0%, var(--surface) 100%);
 }
 
 .event-card__image {

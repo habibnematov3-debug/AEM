@@ -3,6 +3,7 @@
   display: grid;
   gap: var(--space-4);
   padding: 22px 4px 10px;
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .event-details-page::before {
@@ -17,6 +18,20 @@
   z-index: -1;
   opacity: 0.5;
   animation: pageAccentFloat 19s var(--ease-out) infinite alternate;
+}
+
+.event-details-page::after {
+  content: '';
+  position: absolute;
+  bottom: -10%;
+  right: -5%;
+  width: min(360px, 70vw);
+  height: 140px;
+  background: radial-gradient(ellipse, var(--bg-mesh-b) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.45;
+  animation: pageAccentFloat 21s var(--ease-out) infinite alternate reverse;
 }
 
 .event-details-back {

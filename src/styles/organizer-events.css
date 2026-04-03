@@ -3,6 +3,7 @@
   display: grid;
   gap: var(--space-5);
   padding: 24px 4px 10px;
+  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 100%);
 }
 
 .organizer-events-page::before {
@@ -19,6 +20,20 @@
   animation: pageAccentFloat 24s var(--ease-out) infinite alternate;
 }
 
+.organizer-events-page::after {
+  content: '';
+  position: absolute;
+  top: -15%;
+  left: -8%;
+  width: min(380px, 70vw);
+  height: 180px;
+  background: radial-gradient(ellipse, var(--bg-mesh-a) 0%, transparent 68%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.6;
+  animation: pageAccentFloat 22s var(--ease-out) infinite alternate reverse;
+}
+
 .organizer-events-page__topbar {
   display: flex;
   justify-content: space-between;
@@ -30,6 +45,7 @@
   display: grid;
   gap: 10px;
   max-width: 720px;
+  animation: fadeInUp 600ms var(--ease-out) backwards;
 }
 
 .organizer-events-page__eyebrow {
@@ -68,6 +84,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
   gap: 10px;
+  animation: fadeInUp 600ms var(--ease-out) 100ms both;
 }
 
 .organizer-events-page__status-card {
@@ -78,6 +95,19 @@
   border: 1px solid var(--border);
   background: linear-gradient(165deg, var(--surface) 0%, var(--surface-strong) 100%);
   box-shadow: var(--shadow-sm);
+  animation: cardPop 500ms var(--ease-out) backwards;
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
+}
+
+.organizer-events-page__status-card:nth-child(1) { animation-delay: 150ms; }
+.organizer-events-page__status-card:nth-child(2) { animation-delay: 250ms; }
+.organizer-events-page__status-card:nth-child(3) { animation-delay: 350ms; }
+.organizer-events-page__status-card:nth-child(n+4) { animation-delay: 450ms; }
+
+.organizer-events-page__status-card:hover {
+  transform: translateY(-3px) scale(1.02);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
   transition:
     transform var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
@@ -533,13 +563,38 @@
   box-shadow: var(--shadow-md);
 }
 
+@keyframes cardPop {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .organizer-events-page::before {
+  .organizer-events-page::before,
+  .organizer-events-page::after {
     animation: none;
   }
 
-  .create-event-panel {
-    animation: none;
+  .organizer-events-page__intro,
+  .organizer-events-page__status-summary,
+  .organizer-events-page__status-card {
+    animation: none !important;
   }
 
   .organizer-events-page__status-card:hover,

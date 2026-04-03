@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .models import AEMUser, Event, EventLike, Participation
 from .notifications import (
     notify_event_moderation,
@@ -54,12 +55,32 @@ def touch_user_presence(user, now=None, force=False):
 
 
 def get_session_user(request):
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header:
+        scheme, _, token = auth_header.partition(' ')
+        if scheme.lower() == 'bearer' and token.strip():
+            try:
+                user_id = read_auth_token(token.strip())
+            except AuthTokenError as exc:
+                request._aem_auth_error = str(exc)
+                return None
+
+            user = AEMUser.objects.filter(id=user_id, is_active=True).first()
+            return touch_user_presence(user)
+
     user_id = request.session.get('user_id')
     if not user_id:
         return None
 
     user = AEMUser.objects.filter(id=user_id, is_active=True).first()
     return touch_user_presence(user)
+
+
+def auth_required_response(request):
+    return Response(
+        {'detail': getattr(request, '_aem_auth_error', 'Authentication required.')},
+        status=status.HTTP_401_UNAUTHORIZED,
+    )
 
 
 def is_admin(user):
@@ -132,6 +153,7 @@ class SignUpAPIView(APIView):
         return Response(
             {
                 'message': 'Signup successful.',
+                'auth_token': issue_auth_token(user),
                 'user': UserSerializer(user).data,
             },
             status=status.HTTP_201_CREATED,
@@ -155,6 +177,7 @@ class LoginAPIView(APIView):
         return Response(
             {
                 'message': 'Login successful.',
+                'auth_token': issue_auth_token(user),
                 'user': UserSerializer(user).data,
             },
             status=status.HTTP_200_OK,
@@ -179,7 +202,7 @@ class CurrentUserAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         return Response(
             {'user': CurrentUserSerializer(current_user).data},
@@ -189,7 +212,7 @@ class CurrentUserAPIView(APIView):
     def patch(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         serializer = ProfileUpdateSerializer(instance=current_user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
@@ -216,7 +239,7 @@ class EventListCreateAPIView(APIView):
 
         if scope == 'organizer':
             if current_user is None:
-                return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+                return auth_required_response(request)
             events = events.filter(creator_id=current_user.id)
         else:
             events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
@@ -236,7 +259,7 @@ class EventListCreateAPIView(APIView):
     def post(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         serializer = EventCreateSerializer(data=request.data, context={'creator': current_user})
         serializer.is_valid(raise_exception=True)
@@ -277,7 +300,7 @@ class EventDetailAPIView(APIView):
         current_user = get_session_user(request)
 
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if event.creator_id != current_user.id:
             return Response(
@@ -305,7 +328,7 @@ class EventDetailAPIView(APIView):
         current_user = get_session_user(request)
 
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if event.creator_id != current_user.id:
             return Response(
@@ -334,7 +357,7 @@ class EventParticipateAPIView(APIView):
     def post(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         event = get_object_or_404(
             Event.objects.select_related('creator'),
@@ -391,7 +414,7 @@ class EventLikeAPIView(APIView):
     def post(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         event = get_object_or_404(
             Event.objects.select_related('creator'),
@@ -422,7 +445,7 @@ class EventLikeAPIView(APIView):
     def delete(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         event = get_object_or_404(
             Event.objects.select_related('creator'),
@@ -453,7 +476,7 @@ class MyParticipationListAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         participations = (
             Participation.objects.select_related('event', 'event__creator')
@@ -482,7 +505,7 @@ class EventCancelParticipationAPIView(APIView):
     def post(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         event = get_object_or_404(
             Event.objects.select_related('creator'),
@@ -523,7 +546,7 @@ class EventParticipantListAPIView(APIView):
     def get(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
 
@@ -557,7 +580,7 @@ class AdminDashboardAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
@@ -595,7 +618,7 @@ class AdminEventListAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
@@ -650,7 +673,7 @@ class AdminEventModerationAPIView(APIView):
     def patch(self, request, event_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
@@ -684,7 +707,7 @@ class AdminUserListAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
@@ -734,7 +757,7 @@ class AdminUserUpdateAPIView(APIView):
     def patch(self, request, user_id):
         current_user = get_session_user(request)
         if current_user is None:
-            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+            return auth_required_response(request)
 
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)

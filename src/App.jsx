@@ -32,8 +32,8 @@ import StudentsPage from './pages/StudentsPage'
 import './styles/app.css'
 import './styles/pages.css'
 
-const SESSION_COOKIE_ERROR_MESSAGE =
-  'Authentication session was not established. In local development, make sure the frontend and backend use the same hostname, such as localhost on both sides.'
+const AUTH_ESTABLISH_ERROR_MESSAGE =
+  'Authentication could not be completed. Please sign in again.'
 
 function RequireAuth({ currentUser, authReady, children }) {
   const { t } = useI18n()
@@ -175,9 +175,9 @@ function App() {
       return await fetchCurrentUser()
     } catch (error) {
       if (error.status === 401) {
-        const sessionError = new Error(SESSION_COOKIE_ERROR_MESSAGE)
-        sessionError.status = 401
-        throw sessionError
+        const authError = new Error(AUTH_ESTABLISH_ERROR_MESSAGE)
+        authError.status = 401
+        throw authError
       }
 
       throw error

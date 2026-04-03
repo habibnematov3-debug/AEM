@@ -168,6 +168,8 @@ REST_FRAMEWORK = {
     'UNAUTHENTICATED_TOKEN': None,
 }
 
+AEM_AUTH_TOKEN_MAX_AGE_SECONDS = int(get_str_env('AEM_AUTH_TOKEN_MAX_AGE_SECONDS', '1209600'))
+
 CORS_ALLOWED_ORIGINS = get_list_env(
     'AEM_CORS_ALLOWED_ORIGINS',
     ['http://localhost:5173', 'http://127.0.0.1:5173'],

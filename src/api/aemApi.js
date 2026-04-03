@@ -5,6 +5,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
 const SUPABASE_STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'profile-images'
 const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
+const AUTH_TOKEN_STORAGE_KEY = 'aem-auth-token'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 const API_TIMEOUT_MS = 35000
 const SAFE_REQUEST_RETRIES = 1
@@ -92,6 +93,30 @@ function clearCurrentUser() {
   }
 
   window.localStorage.removeItem(CURRENT_USER_STORAGE_KEY)
+}
+
+function getStoredAuthToken() {
+  if (!canUseStorage()) {
+    return ''
+  }
+
+  return window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) ?? ''
+}
+
+function storeAuthToken(token) {
+  if (!canUseStorage() || !token) {
+    return
+  }
+
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token)
+}
+
+function clearAuthToken() {
+  if (!canUseStorage()) {
+    return
+  }
+
+  window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY)
 }
 
 function normalizeUser(rawUser) {
@@ -226,6 +251,12 @@ async function apiRequest(path, options = {}) {
   const method = String(options.method ?? 'GET').toUpperCase()
   const canRetry = method === 'GET' || method === 'HEAD'
   const maxAttempts = canRetry ? SAFE_REQUEST_RETRIES + 1 : 1
+  const authToken = getStoredAuthToken()
+  const requestHeaders = {
+    'Content-Type': 'application/json',
+    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+    ...(options.headers ?? {}),
+  }
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const controller = new AbortController()
@@ -234,13 +265,10 @@ async function apiRequest(path, options = {}) {
 
     try {
       response = await fetch(`${API_BASE_URL}${path}`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(options.headers ?? {}),
-        },
-        signal: controller.signal,
         ...options,
+        credentials: 'include',
+        headers: requestHeaders,
+        signal: controller.signal,
       })
     } catch (error) {
       window.clearTimeout(timeoutId)
@@ -283,7 +311,7 @@ async function apiRequest(path, options = {}) {
     if (!response.ok) {
       const defaultErrorMessage =
         response.status === 401
-          ? 'Your session has expired. Please sign in again.'
+          ? 'Your sign-in has expired. Please sign in again.'
           : 'Request failed.'
       const message =
         payload.detail ??
@@ -295,6 +323,7 @@ async function apiRequest(path, options = {}) {
       error.payload = payload
 
       if (response.status === 401 && typeof window !== 'undefined') {
+        clearAuthToken()
         clearCurrentUser()
         window.dispatchEvent(new CustomEvent('aem:unauthorized'))
       }
@@ -331,6 +360,7 @@ export async function signInUser(credentials) {
     }),
   })
 
+  storeAuthToken(payload.auth_token)
   const user = normalizeUser(payload.user)
   storeCurrentUser(user)
   return { ok: true, user, message: payload.message }
@@ -353,6 +383,7 @@ export async function signUpUser(formData) {
     }),
   })
 
+  storeAuthToken(payload.auth_token)
   return {
     ok: true,
     user: normalizeUser(payload.user),
@@ -361,8 +392,12 @@ export async function signUpUser(formData) {
 }
 
 export async function logoutUser() {
-  await apiRequest('/api/auth/logout/', { method: 'POST', body: JSON.stringify({}) })
-  clearCurrentUser()
+  try {
+    await apiRequest('/api/auth/logout/', { method: 'POST', body: JSON.stringify({}) })
+  } finally {
+    clearAuthToken()
+    clearCurrentUser()
+  }
 }
 
 export async function updateCurrentUserProfile(profileData) {

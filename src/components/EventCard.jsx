@@ -349,8 +349,8 @@ function EventCard({
           <p>
             {event.joinedCount} joined
             {event.capacity ? ` / ${event.capacity}` : ''}
-            {event.waitlistCount ? ` · ${event.waitlistCount} waitlisted` : ''}
-            {event.noShowCount ? ` · ${event.noShowCount} no-show` : ''}
+            {event.waitlistCount ? ` | ${event.waitlistCount} waitlisted` : ''}
+            {event.noShowCount ? ` | ${event.noShowCount} no-show` : ''}
           </p>
         </div>
       </div>

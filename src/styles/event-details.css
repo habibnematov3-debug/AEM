@@ -246,6 +246,48 @@
   color: #b83a3a;
 }
 
+.event-details-participant__status-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.event-details-participant__checkin,
+.event-details-participant__checked-in,
+.event-details-participant__waitlist {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.event-details-participant__checkin {
+  border: none;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: #fff;
+  cursor: pointer;
+}
+
+.event-details-participant__checkin:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.event-details-participant__checked-in {
+  background: rgba(29, 135, 82, 0.14);
+  color: var(--success);
+}
+
+.event-details-participant__waitlist {
+  background: rgba(188, 121, 24, 0.14);
+  color: #9a6400;
+}
+
 .event-details-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

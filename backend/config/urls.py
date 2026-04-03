@@ -11,6 +11,7 @@ from accounts.views import (
     EventLikeAPIView,
     EventListCreateAPIView,
     EventParticipantListAPIView,
+    EventParticipantCheckInAPIView,
     EventParticipateAPIView,
     MyParticipationListAPIView,
 )
@@ -34,6 +35,11 @@ urlpatterns = [
         'api/events/<int:event_id>/participants/',
         EventParticipantListAPIView.as_view(),
         name='events-participants',
+    ),
+    path(
+        'api/events/<int:event_id>/participants/<int:participation_id>/check-in/',
+        EventParticipantCheckInAPIView.as_view(),
+        name='events-participants-checkin',
     ),
     path('api/participations/me/', MyParticipationListAPIView.as_view(), name='participations-me'),
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='admin-dashboard'),

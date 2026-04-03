@@ -368,6 +368,34 @@
   font-size: 0.88rem;
 }
 
+.event-details-participant__joined {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+}
+
+.event-details-participant__checked-in {
+  color: #207d43;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.event-details-participant__checkin-button {
+  border: 1px solid rgba(32, 125, 67, 0.3);
+  background: rgba(32, 125, 67, 0.08);
+  color: #1f6b3c;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.event-details-participant__checkin-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
 .event-details-item {
   display: grid;
   gap: 6px;

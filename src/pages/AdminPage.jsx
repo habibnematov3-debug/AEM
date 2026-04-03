@@ -92,6 +92,22 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         ? [
             { key: 'users', label: t('adminPage.stats.users'), value: stats.users },
             { key: 'events', label: t('adminPage.stats.events'), value: stats.events },
+            {
+              key: 'participationsJoined',
+              label: t('adminPage.stats.participationsJoined'),
+              value: stats.participationsJoined,
+            },
+            {
+              key: 'participationsWaitlisted',
+              label: t('adminPage.stats.participationsWaitlisted'),
+              value: stats.participationsWaitlisted,
+            },
+            {
+              key: 'participationsCancelled',
+              label: t('adminPage.stats.participationsCancelled'),
+              value: stats.participationsCancelled,
+            },
+            { key: 'checkIns', label: t('adminPage.stats.checkIns'), value: stats.checkIns },
             { key: 'pending', label: t('adminPage.stats.pending'), value: stats.pending },
             { key: 'approved', label: t('adminPage.stats.approved'), value: stats.approved },
             { key: 'rejected', label: t('adminPage.stats.rejected'), value: stats.rejected },

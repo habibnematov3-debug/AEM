@@ -14,6 +14,7 @@ const initialFormState = {
   location: '',
   imageUrl: '',
   category: '',
+  capacity: '',
 }
 
 function isDataImageUrl(value) {
@@ -88,6 +89,10 @@ function buildFormState(initialValues) {
     location: initialValues.location ?? initialValues.venue ?? '',
     imageUrl: isDataImageUrl(initialValues.customImageUrl) ? '' : initialValues.customImageUrl ?? '',
     category: initialValues.category ?? '',
+    capacity:
+      initialValues.capacity == null || Number.isNaN(Number(initialValues.capacity))
+        ? ''
+        : String(initialValues.capacity),
   }
 }
 
@@ -272,6 +277,19 @@ function CreateEventForm({
           {errors.location ? (
             <span className="create-event-form__error">{errors.location}</span>
           ) : null}
+        </label>
+
+        <label>
+          {t('eventForm.capacity')}
+          <input
+            type="number"
+            min="1"
+            step="1"
+            value={formData.capacity}
+            onChange={(event) => updateField('capacity', event.target.value)}
+            placeholder={t('eventForm.optionalCapacity')}
+            disabled={isSubmitting || isUploadingImage}
+          />
         </label>
 
         <div className="create-event-form__full create-event-form__image-group">

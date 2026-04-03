@@ -166,7 +166,14 @@ function normalizeEvent(rawEvent) {
     category: rawEvent.category ?? 'general',
     status: formatStatusLabel(rawEvent.moderation_status),
     moderationStatus: rawEvent.moderation_status ?? 'pending',
+    capacity: rawEvent.capacity ?? null,
+    registeredCount: rawEvent.joined_count ?? 0,
+    waitlistCount: rawEvent.waitlist_count ?? 0,
+    checkedInCount: rawEvent.checked_in_count ?? 0,
+    spotsRemaining: rawEvent.spots_remaining ?? null,
     isJoined: rawEvent.is_joined ?? false,
+    isWaitlisted: rawEvent.is_waitlisted ?? false,
+    waitlistPosition: rawEvent.waitlist_position ?? null,
     isLiked: rawEvent.is_liked ?? false,
     likesCount: rawEvent.likes_count ?? 0,
     creatorId,
@@ -182,6 +189,10 @@ function normalizeAdminStats(rawStats = {}) {
   return {
     users: rawStats.users ?? 0,
     events: rawStats.events ?? 0,
+    participationsJoined: rawStats.participations_joined ?? 0,
+    participationsWaitlisted: rawStats.participations_waitlisted ?? 0,
+    participationsCancelled: rawStats.participations_cancelled ?? 0,
+    checkIns: rawStats.check_ins ?? 0,
     pending: rawStats.pending ?? 0,
     approved: rawStats.approved ?? 0,
     rejected: rawStats.rejected ?? 0,
@@ -237,6 +248,8 @@ function normalizeEventParticipant(rawParticipant) {
     email: rawParticipant.email ?? '',
     status: rawParticipant.status ?? 'joined',
     joinedAt: rawParticipant.joined_at ?? null,
+    checkedInAt: rawParticipant.checked_in_at ?? null,
+    isCheckedIn: Boolean(rawParticipant.checked_in_at),
     profileImageUrl: sanitizeImageUrl(rawParticipant.profile_image_url),
   }
 }
@@ -507,6 +520,7 @@ export async function createEvent(formData) {
       location: formData.location,
       image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
+      capacity: formData.capacity ? Number(formData.capacity) : null,
     }),
   })
 
@@ -525,6 +539,7 @@ export async function updateEvent(eventId, formData) {
       location: formData.location,
       image_url: sanitizeImageUrl(formData.imageUrl),
       category: formData.category || 'general',
+      capacity: formData.capacity ? Number(formData.capacity) : null,
     }),
   })
 
@@ -604,6 +619,22 @@ export async function fetchEventParticipants(eventId) {
     event: normalizeEvent(payload.event),
     totalParticipants: payload.total_participants ?? 0,
     participants: (payload.results ?? []).map(normalizeEventParticipant),
+  }
+}
+
+export async function checkInEventParticipant(eventId, participationId) {
+  const payload = await apiRequest(
+    `/api/events/${eventId}/participants/${participationId}/check-in/`,
+    {
+      method: 'POST',
+      body: JSON.stringify({}),
+    },
+  )
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+    participation: normalizeEventParticipant(payload.participation ?? {}),
   }
 }
 

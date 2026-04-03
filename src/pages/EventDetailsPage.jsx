@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 
 import {
   cancelParticipation,
+  checkInEventParticipant,
   fetchEventById,
   fetchEventParticipants,
   participateInEvent,
@@ -55,6 +56,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   const [participants, setParticipants] = useState([])
   const [participantsStatus, setParticipantsStatus] = useState('idle')
   const [participantsError, setParticipantsError] = useState('')
+  const [checkingInById, setCheckingInById] = useState({})
 
   useEffect(() => {
     let isMounted = true
@@ -213,6 +215,37 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
       })
     } finally {
       setIsTogglingLike(false)
+    }
+  }
+
+  async function handleCheckInParticipant(participantId) {
+    if (!event || !participantId || checkingInById[participantId]) {
+      return
+    }
+
+    setCheckingInById((current) => ({ ...current, [participantId]: true }))
+    setActionFeedback({ type: '', message: '' })
+
+    try {
+      const result = await checkInEventParticipant(event.id, participantId)
+      setEvent(result.event)
+      setParticipants((current) =>
+        current.map((participant) =>
+          participant.id === String(participantId) ? result.participation : participant,
+        ),
+      )
+      setActionFeedback({ type: 'success', message: t('eventDetails.checkInSuccess') })
+    } catch (error) {
+      setActionFeedback({
+        type: 'error',
+        message: error.message || t('eventDetails.checkInError'),
+      })
+    } finally {
+      setCheckingInById((current) => {
+        const next = { ...current }
+        delete next[participantId]
+        return next
+      })
     }
   }
 
@@ -431,9 +464,29 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
                         </div>
                       </div>
 
-                      <span className="event-details-participant__joined">
-                        {new Date(participant.joinedAt).toLocaleDateString(getLanguageLocale(languageCode))}
-                      </span>
+                      <div className="event-details-participant__joined">
+                        <span>
+                          {new Date(participant.joinedAt).toLocaleDateString(
+                            getLanguageLocale(languageCode),
+                          )}
+                        </span>
+                        {participant.isCheckedIn ? (
+                          <span className="event-details-participant__checked-in">
+                            {t('eventDetails.checkedIn')}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="event-details-participant__checkin-button"
+                            onClick={() => handleCheckInParticipant(participant.id)}
+                            disabled={Boolean(checkingInById[participant.id])}
+                          >
+                            {checkingInById[participant.id]
+                              ? t('eventDetails.checkingIn')
+                              : t('eventDetails.checkIn')}
+                          </button>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>

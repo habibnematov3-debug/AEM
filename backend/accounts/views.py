@@ -1,6 +1,5 @@
 from datetime import timedelta
 
-from django.core import signing
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.utils.decorators import method_decorator
@@ -12,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
-from .checkin_tokens import make_checkin_token, parse_checkin_token
 from .models import AEMUser, Event, EventLike, Participation
 from .notifications import (
     notify_event_moderation,
@@ -150,6 +148,17 @@ def get_admin_dashboard_stats():
     return {
         'users': AEMUser.objects.count(),
         'events': event_queryset.count(),
+        'participations_joined': Participation.objects.filter(status=Participation.Statuses.JOINED).count(),
+        'participations_waitlisted': Participation.objects.filter(
+            status=Participation.Statuses.WAITLISTED,
+        ).count(),
+        'participations_cancelled': Participation.objects.filter(
+            status=Participation.Statuses.CANCELLED,
+        ).count(),
+        'check_ins': Participation.objects.filter(
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=False,
+        ).count(),
         'pending': event_queryset.filter(moderation_status=Event.ModerationStatuses.PENDING).count(),
         'approved': event_queryset.filter(moderation_status=Event.ModerationStatuses.APPROVED).count(),
         'rejected': event_queryset.filter(moderation_status=Event.ModerationStatuses.REJECTED).count(),
@@ -656,14 +665,22 @@ class EventCancelParticipationAPIView(APIView):
             )
 
         participation.status = Participation.Statuses.CANCELLED
-        participation.save(update_fields=['status'])
+        participation.checked_in_at = None
+        participation.save(update_fields=['status', 'checked_in_at'])
         transaction.on_commit(lambda: notify_participation_cancelled(participation))
+
+        promoted = promote_next_waitlisted(event.id)
+        if promoted is not None:
+            transaction.on_commit(lambda p=promoted: notify_waitlist_promoted(p))
 
         return Response(
             {
                 'message': 'Participation cancelled successfully.',
                 'participation': ParticipationSerializer(participation).data,
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
+                'promoted_participation': (
+                    ParticipationSerializer(promoted).data if promoted is not None else None
+                ),
             },
             status=status.HTTP_200_OK,
         )
@@ -698,6 +715,50 @@ class EventParticipantListAPIView(APIView):
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
                 'total_participants': participations.count(),
                 'results': EventParticipantSerializer(participations, many=True).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventParticipantCheckInAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    @transaction.atomic
+    def post(self, request, event_id, participation_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+        if not is_admin(current_user) and event.creator_id != current_user.id:
+            return Response(
+                {'detail': 'You are not allowed to check in participants for this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        participation = get_object_or_404(
+            Participation.objects.select_for_update().select_related('user'),
+            id=participation_id,
+            event_id=event.id,
+            status=Participation.Statuses.JOINED,
+        )
+
+        if participation.checked_in_at is not None:
+            return Response(
+                {'detail': 'This participant is already checked in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation.checked_in_at = timezone.now()
+        participation.save(update_fields=['checked_in_at'])
+
+        return Response(
+            {
+                'message': 'Participant checked in successfully.',
+                'participation': EventParticipantSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_200_OK,
         )

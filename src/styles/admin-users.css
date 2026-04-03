@@ -244,7 +244,8 @@
 }
 
 .admin-users-page__role,
-.admin-users-page__activity {
+.admin-users-page__activity,
+.admin-users-page__presence {
   display: inline-flex;
   align-items: center;
   min-height: 28px;
@@ -279,9 +280,19 @@
   color: #98243d;
 }
 
+.admin-users-page__presence--online {
+  background: rgba(29, 135, 82, 0.16);
+  color: #146841;
+}
+
+.admin-users-page__presence--offline {
+  background: rgba(29, 100, 182, 0.08);
+  color: var(--accent-dark);
+}
+
 .admin-users-page__meta {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
 }
 

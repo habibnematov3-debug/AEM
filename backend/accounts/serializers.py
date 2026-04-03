@@ -1,9 +1,13 @@
 from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
+from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
+
+
+ONLINE_WINDOW = timedelta(minutes=5)
 
 
 def is_data_image_url(value):
@@ -71,6 +75,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
     created_events_count = serializers.SerializerMethodField()
     joined_events_count = serializers.SerializerMethodField()
     profile_image_url = serializers.SerializerMethodField()
+    is_online = serializers.SerializerMethodField()
 
     def get_created_events_count(self, obj):
         return obj.created_events.count()
@@ -85,6 +90,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
             return None
         return sanitize_image_url(settings.profile_image_url)
 
+    def get_is_online(self, obj):
+        if not obj.is_active or obj.last_seen_at is None:
+            return False
+
+        return obj.last_seen_at >= timezone.now() - ONLINE_WINDOW
+
     class Meta:
         model = AEMUser
         fields = (
@@ -93,6 +104,8 @@ class AdminUserSerializer(serializers.ModelSerializer):
             'email',
             'role',
             'is_active',
+            'is_online',
+            'last_seen_at',
             'created_at',
             'created_events_count',
             'joined_events_count',
@@ -130,6 +143,7 @@ class SignUpSerializer(serializers.Serializer):
             email=validated_data['email'],
             role=AEMUser.Roles.STUDENT,
             is_active=True,
+            last_seen_at=now,
             created_at=now,
             updated_at=now,
         )

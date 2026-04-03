@@ -1,4 +1,4 @@
--- AEM MVP PostgreSQL schema v1.3
+-- AEM MVP PostgreSQL schema v1.4
 -- For pgAdmin 4
 -- Create a database first, for example: aem_db
 -- Then connect to that database and run this script.
@@ -12,6 +12,7 @@ CREATE TABLE users (
     password_hash TEXT NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'student',
     is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_seen_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT chk_users_role

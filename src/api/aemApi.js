@@ -172,6 +172,8 @@ function normalizeAdminUser(rawUser) {
     email: rawUser.email ?? '',
     role: normalizeRole(rawUser.role),
     isActive: rawUser.is_active ?? true,
+    isOnline: rawUser.is_online ?? false,
+    lastSeenAt: rawUser.last_seen_at ?? null,
     createdAt: rawUser.created_at ?? null,
     createdEventsCount: rawUser.created_events_count ?? 0,
     joinedEventsCount: rawUser.joined_events_count ?? 0,

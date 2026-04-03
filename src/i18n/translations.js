@@ -257,6 +257,8 @@ const translations = {
       roleLabel: 'Role',
       activityLabel: 'Access',
       memberSince: 'Member Since',
+      lastActive: 'Last Active',
+      neverSeen: 'Never seen',
       createdEvents: 'Created Events',
       joinedEvents: 'Joined Events',
       updateRole: 'Set as {role}',
@@ -282,6 +284,10 @@ const translations = {
       activity: {
         active: 'Active',
         inactive: 'Inactive',
+      },
+      presence: {
+        online: 'Online now',
+        offline: 'Offline',
       },
     },
     profile: {

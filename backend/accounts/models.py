@@ -15,6 +15,7 @@ class AEMUser(models.Model):
     password_hash = models.CharField(max_length=128)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.STUDENT)
     is_active = models.BooleanField(default=True)
+    last_seen_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 

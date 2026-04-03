@@ -23,6 +23,25 @@ function formatMemberDate(value, languageCode) {
   })
 }
 
+function formatLastActive(value, languageCode, fallback) {
+  if (!value) {
+    return fallback
+  }
+
+  const parsedDate = new Date(value)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return value
+  }
+
+  return parsedDate.toLocaleString(getLanguageLocale(languageCode), {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+}
+
 function AdminUsersPage({ currentUser }) {
   const { languageCode, t } = useI18n()
   const [roleFilter, setRoleFilter] = useState('all')
@@ -219,6 +238,7 @@ function AdminUsersPage({ currentUser }) {
           {users.map((user) => {
             const isUpdating = updatingUserId === user.id
             const activityKey = user.isActive ? 'active' : 'inactive'
+            const presenceKey = user.isOnline ? 'online' : 'offline'
             const isCurrentAdmin = user.id === currentUser?.id
 
             return (
@@ -254,6 +274,11 @@ function AdminUsersPage({ currentUser }) {
                     >
                       {t(`adminUsersPage.activity.${activityKey}`)}
                     </span>
+                    <span
+                      className={`admin-users-page__presence admin-users-page__presence--${presenceKey}`}
+                    >
+                      {t(`adminUsersPage.presence.${presenceKey}`)}
+                    </span>
                   </div>
                 </div>
 
@@ -269,6 +294,10 @@ function AdminUsersPage({ currentUser }) {
                   <div>
                     <dt>{t('adminUsersPage.joinedEvents')}</dt>
                     <dd>{user.joinedEventsCount}</dd>
+                  </div>
+                  <div>
+                    <dt>{t('adminUsersPage.lastActive')}</dt>
+                    <dd>{formatLastActive(user.lastSeenAt, languageCode, t('adminUsersPage.neverSeen'))}</dd>
                   </div>
                 </dl>
 

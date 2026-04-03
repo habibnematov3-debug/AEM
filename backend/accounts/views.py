@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.db import IntegrityError, transaction
 from django.db.models import Case, IntegerField, Q, Value, When
 from django.utils.decorators import method_decorator
@@ -32,12 +34,32 @@ from .serializers import (
 )
 
 
+PRESENCE_HEARTBEAT = timedelta(minutes=1)
+
+
+def touch_user_presence(user, now=None, force=False):
+    if user is None:
+        return None
+
+    current_time = now or timezone.now()
+    if (
+        force
+        or user.last_seen_at is None
+        or current_time - user.last_seen_at >= PRESENCE_HEARTBEAT
+    ):
+        user.last_seen_at = current_time
+        user.save(update_fields=['last_seen_at'])
+
+    return user
+
+
 def get_session_user(request):
     user_id = request.session.get('user_id')
     if not user_id:
         return None
 
-    return AEMUser.objects.filter(id=user_id, is_active=True).first()
+    user = AEMUser.objects.filter(id=user_id, is_active=True).first()
+    return touch_user_presence(user)
 
 
 def is_admin(user):
@@ -125,6 +147,7 @@ class LoginAPIView(APIView):
         serializer = LoginSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
+        touch_user_presence(user, force=True)
 
         request.session.cycle_key()
         request.session['user_id'] = user.id

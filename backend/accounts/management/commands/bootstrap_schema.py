@@ -11,12 +11,6 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         existing_tables = set(connection.introspection.table_names())
         core_tables = {'users', 'settings', 'events', 'participations'}
-        feature_tables = {'event_likes'}
-        required_tables = core_tables | feature_tables
-
-        if required_tables.issubset(existing_tables):
-            self.stdout.write(self.style.SUCCESS('AEM schema already exists.'))
-            return
 
         with transaction.atomic():
             with connection.cursor() as cursor:
@@ -27,32 +21,33 @@ class Command(BaseCommand):
 
                     for statement in statements:
                         cursor.execute(statement)
-                elif 'event_likes' not in existing_tables:
-                    cursor.execute(
-                        """
-                        CREATE TABLE IF NOT EXISTS event_likes (
-                            id BIGSERIAL PRIMARY KEY,
-                            user_id BIGINT NOT NULL,
-                            event_id BIGINT NOT NULL,
-                            created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                            CONSTRAINT fk_event_likes_user
-                                FOREIGN KEY (user_id)
-                                REFERENCES users (id)
-                                ON DELETE CASCADE,
-                            CONSTRAINT fk_event_likes_event
-                                FOREIGN KEY (event_id)
-                                REFERENCES events (id)
-                                ON DELETE CASCADE,
-                            CONSTRAINT uq_event_likes_user_event
-                                UNIQUE (user_id, event_id)
-                        )
-                        """
+
+                cursor.execute('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ')
+                cursor.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS event_likes (
+                        id BIGSERIAL PRIMARY KEY,
+                        user_id BIGINT NOT NULL,
+                        event_id BIGINT NOT NULL,
+                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                        CONSTRAINT fk_event_likes_user
+                            FOREIGN KEY (user_id)
+                            REFERENCES users (id)
+                            ON DELETE CASCADE,
+                        CONSTRAINT fk_event_likes_event
+                            FOREIGN KEY (event_id)
+                            REFERENCES events (id)
+                            ON DELETE CASCADE,
+                        CONSTRAINT uq_event_likes_user_event
+                            UNIQUE (user_id, event_id)
                     )
-                    cursor.execute(
-                        'CREATE INDEX IF NOT EXISTS idx_event_likes_event_id ON event_likes (event_id)'
-                    )
-                    cursor.execute(
-                        'CREATE INDEX IF NOT EXISTS idx_event_likes_user_id ON event_likes (user_id)'
-                    )
+                    """
+                )
+                cursor.execute(
+                    'CREATE INDEX IF NOT EXISTS idx_event_likes_event_id ON event_likes (event_id)'
+                )
+                cursor.execute(
+                    'CREATE INDEX IF NOT EXISTS idx_event_likes_user_id ON event_likes (user_id)'
+                )
 
         self.stdout.write(self.style.SUCCESS('AEM schema synchronized successfully.'))

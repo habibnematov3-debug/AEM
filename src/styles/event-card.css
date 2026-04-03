@@ -265,6 +265,11 @@
   color: #9a6400;
 }
 
+:root[data-theme='dark'] .event-card__owner-badge--waitlisted {
+  background: rgba(220, 165, 49, 0.18);
+  color: #ffd27a;
+}
+
 .event-card__moderation-badge {
   display: inline-flex;
   align-items: center;

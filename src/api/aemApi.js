@@ -196,6 +196,9 @@ function normalizeAdminStats(rawStats = {}) {
     upcoming: rawStats.upcoming ?? 0,
     inProgress: rawStats.in_progress ?? 0,
     finished: rawStats.finished ?? 0,
+    waitlisted: rawStats.waitlisted ?? 0,
+    attended: rawStats.attended ?? 0,
+    noShows: rawStats.no_shows ?? 0,
   }
 }
 
@@ -233,6 +236,7 @@ function normalizeJoinedParticipation(rawParticipation) {
     id: String(rawParticipation.id),
     status: rawParticipation.status ?? 'joined',
     joinedAt: rawParticipation.joined_at ?? null,
+    checkedInAt: rawParticipation.checked_in_at ?? null,
     event: normalizeEvent(rawParticipation.event ?? {}),
   }
 }
@@ -245,6 +249,7 @@ function normalizeEventParticipant(rawParticipant) {
     email: rawParticipant.email ?? '',
     status: rawParticipant.status ?? 'joined',
     joinedAt: rawParticipant.joined_at ?? null,
+    checkedInAt: rawParticipant.checked_in_at ?? null,
     profileImageUrl: sanitizeImageUrl(rawParticipant.profile_image_url),
   }
 }

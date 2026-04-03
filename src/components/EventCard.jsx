@@ -22,6 +22,23 @@ function formatEventDate(eventDate, fallback, languageCode) {
   })
 }
 
+function formatTimestampDate(timestamp, fallback, languageCode) {
+  if (!timestamp) {
+    return fallback
+  }
+
+  const parsedDate = new Date(timestamp)
+  if (Number.isNaN(parsedDate.getTime())) {
+    return fallback
+  }
+
+  return parsedDate.toLocaleDateString(getLanguageLocale(languageCode), {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
 function EventCard({
   event,
   variant = 'student',
@@ -80,7 +97,11 @@ function EventCard({
                 {categoryLabel ? (
                   <span className="event-card__category-chip">{categoryLabel}</span>
                 ) : null}
-                {event.isJoined ? (
+                {event.isWaitlisted ? (
+                  <span className="event-card__joined-chip event-card__joined-chip--waitlisted">
+                    {t('eventDetails.waitlisted')}
+                  </span>
+                ) : event.isJoined ? (
                   <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
                 ) : null}
               </div>
@@ -224,6 +245,11 @@ function EventCard({
   }
 
   if (variant === 'joined') {
+    const participationStatus =
+      event.participationStatus ?? (event.isWaitlisted ? 'waitlisted' : 'joined')
+    const isWaitlisted = participationStatus === 'waitlisted'
+    const participationDateText = formatTimestampDate(event.joinedAt, dateText, languageCode)
+
     return (
       <article className="event-card event-card--student">
         <div className="event-card__media">
@@ -231,9 +257,19 @@ function EventCard({
         </div>
         <div className="event-card__body">
           <div className="event-card__mini-topline">
-            <span className="event-card__owner-badge">{t('eventDetails.joined')}</span>
+            <span
+              className={
+                isWaitlisted
+                  ? 'event-card__owner-badge event-card__owner-badge--waitlisted'
+                  : 'event-card__owner-badge'
+              }
+            >
+              {isWaitlisted ? t('eventDetails.waitlisted') : t('eventDetails.joined')}
+            </span>
             <span className="event-card__joined-meta">
-              {t('joinedEventsPage.joinedOn', { date: dateText })}
+              {isWaitlisted
+                ? t('joinedEventsPage.waitlistedOn', { date: participationDateText })
+                : t('joinedEventsPage.joinedOn', { date: participationDateText })}
             </span>
           </div>
 
@@ -270,7 +306,11 @@ function EventCard({
               onClick={() => onCancel(event)}
               disabled={isCanceling}
             >
-              {isCanceling ? t('joinedEventsPage.cancelling') : t('joinedEventsPage.cancelParticipation')}
+              {isCanceling
+                ? t('joinedEventsPage.cancelling')
+                : isWaitlisted
+                  ? t('joinedEventsPage.leaveWaitlist')
+                  : t('joinedEventsPage.cancelParticipation')}
             </button>
           </div>
         </div>

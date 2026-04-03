@@ -47,11 +47,11 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
       setFeedback({ type: '', message: '' })
 
       try {
-        const joinedParticipations = await fetchMyParticipations()
+        const activeParticipations = await fetchMyParticipations()
         if (!isMounted) {
           return
         }
-        setParticipations(joinedParticipations)
+        setParticipations(activeParticipations)
       } catch (error) {
         if (!isMounted) {
           return
@@ -127,11 +127,14 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
     setFeedback({ type: '', message: '' })
 
     try {
-      await cancelParticipation(event.id)
+      const result = await cancelParticipation(event.id)
       setParticipations((currentParticipations) =>
         currentParticipations.filter((participation) => participation.event.id !== event.id),
       )
-      setFeedback({ type: 'success', message: t('joinedEventsPage.cancelSuccess') })
+      setFeedback({
+        type: 'success',
+        message: result.message || t('joinedEventsPage.cancelSuccess'),
+      })
     } catch (error) {
       setFeedback({
         type: 'error',
@@ -202,7 +205,9 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
               key={participation.id}
               event={{
                 ...participation.event,
+                participationStatus: participation.status,
                 joinedAt: participation.joinedAt,
+                checkedInAt: participation.checkedInAt,
               }}
               variant="joined"
               onCancel={handleCancelParticipation}

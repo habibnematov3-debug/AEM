@@ -154,7 +154,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   }
 
   async function handleParticipate() {
-    if (!event || !currentUser || isJoining || event.isJoined) {
+    if (!event || !currentUser || isJoining || event.isJoined || event.isWaitlisted) {
       return
     }
 
@@ -164,7 +164,10 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
     try {
       const result = await participateInEvent(event.id)
       setEvent(result.event)
-      setActionFeedback({ type: 'success', message: t('eventDetails.joined') })
+      setActionFeedback({
+        type: 'success',
+        message: result.message || t('eventDetails.joined'),
+      })
     } catch (error) {
       setActionFeedback({
         type: 'error',
@@ -176,7 +179,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   }
 
   async function handleCancelParticipation() {
-    if (!event || !currentUser || isCanceling || !event.isJoined) {
+    if (!event || !currentUser || isCanceling || (!event.isJoined && !event.isWaitlisted)) {
       return
     }
 
@@ -186,7 +189,10 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
     try {
       const result = await cancelParticipation(event.id)
       setEvent(result.event)
-      setActionFeedback({ type: 'success', message: t('eventDetails.cancelled') })
+      setActionFeedback({
+        type: 'success',
+        message: result.message || t('eventDetails.cancelled'),
+      })
     } catch (error) {
       setActionFeedback({
         type: 'error',
@@ -296,6 +302,8 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   const canParticipate = Boolean(currentUser?.id) && !isCreator && isPubliclyAvailable
   const canLike = Boolean(currentUser?.id) && isPubliclyAvailable && onToggleEventLike
   const hasJoined = Boolean(event.isJoined)
+  const isWaitlisted = Boolean(event.isWaitlisted)
+  const hasActiveParticipation = hasJoined || isWaitlisted
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
   const categoryText = event.category || t('common.general')
   const organizerText = event.creatorName || event.organizerName || t('common.unknownOrganizer')
@@ -368,10 +376,10 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
 
           <div className="event-details-actions">
             {canParticipate ? (
-              hasJoined ? (
+              hasActiveParticipation ? (
                 <div className="event-details-action-group">
                   <button type="button" className="event-details-primary" disabled>
-                    {t('eventDetails.joined')}
+                    {hasJoined ? t('eventDetails.joined') : t('eventDetails.waitlisted')}
                   </button>
                   <button
                     type="button"
@@ -401,6 +409,14 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
             ) : (
               <p className="event-details-inline-note">{t('eventDetails.signInToJoin')}</p>
             )}
+
+            {canParticipate && isWaitlisted ? (
+              <p className="event-details-inline-note">
+                {event.waitlistPosition
+                  ? t('eventDetails.waitlistPositionInfo', { count: event.waitlistPosition })
+                  : t('eventDetails.waitlistedNote')}
+              </p>
+            ) : null}
 
             {actionFeedback.message ? (
               <p

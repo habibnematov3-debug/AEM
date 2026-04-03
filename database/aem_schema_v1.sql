@@ -1,4 +1,4 @@
--- AEM MVP PostgreSQL schema v1.4
+-- AEM MVP PostgreSQL schema v1.5 (capacity, waitlist, check-in)
 -- For pgAdmin 4
 -- Create a database first, for example: aem_db
 -- Then connect to that database and run this script.
@@ -52,8 +52,11 @@ CREATE TABLE events (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     moderation_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    capacity INTEGER NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_events_capacity_positive
+        CHECK (capacity IS NULL OR capacity >= 1),
     CONSTRAINT fk_events_creator
         FOREIGN KEY (creator_id)
         REFERENCES users (id)
@@ -80,6 +83,7 @@ CREATE TABLE participations (
     event_id BIGINT NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'joined',
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    checked_in_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_participations_user
         FOREIGN KEY (user_id)
         REFERENCES users (id)
@@ -89,7 +93,7 @@ CREATE TABLE participations (
         REFERENCES events (id)
         ON DELETE CASCADE,
     CONSTRAINT chk_participations_status
-        CHECK (status IN ('joined', 'cancelled')),
+        CHECK (status IN ('joined', 'cancelled', 'waitlisted')),
     CONSTRAINT uq_participations_user_event
         UNIQUE (user_id, event_id)
 );
@@ -119,6 +123,9 @@ CREATE INDEX idx_events_moderation_status_event_date
 
 CREATE INDEX idx_participations_event_id
     ON participations (event_id);
+
+CREATE INDEX idx_participations_event_status_joined_at
+    ON participations (event_id, status, joined_at);
 
 CREATE INDEX idx_participations_user_id
     ON participations (user_id);

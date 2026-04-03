@@ -89,6 +89,7 @@ class Event(models.Model):
         choices=ModerationStatuses.choices,
         default=ModerationStatuses.PENDING,
     )
+    capacity = models.PositiveIntegerField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)
 
@@ -100,6 +101,7 @@ class Event(models.Model):
 class Participation(models.Model):
     class Statuses(models.TextChoices):
         JOINED = 'joined', 'Joined'
+        WAITLISTED = 'waitlisted', 'Waitlisted'
         CANCELLED = 'cancelled', 'Cancelled'
 
     id = models.BigAutoField(primary_key=True)
@@ -117,6 +119,7 @@ class Participation(models.Model):
     )
     status = models.CharField(max_length=20, choices=Statuses.choices, default=Statuses.JOINED)
     joined_at = models.DateTimeField(default=timezone.now)
+    checked_in_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = 'participations'

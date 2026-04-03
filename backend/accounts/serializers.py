@@ -5,6 +5,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
+from .participation_ops import count_joined_for_event
 
 
 ONLINE_WINDOW = timedelta(minutes=5)
@@ -53,6 +54,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
     settings = UserSettingsSerializer(read_only=True)
     created_events_count = serializers.SerializerMethodField()
     joined_events_count = serializers.SerializerMethodField()
+    waitlisted_events_count = serializers.SerializerMethodField()
     is_owner = serializers.SerializerMethodField()
 
     def get_created_events_count(self, obj):
@@ -60,6 +62,9 @@ class CurrentUserSerializer(serializers.ModelSerializer):
 
     def get_joined_events_count(self, obj):
         return obj.participations.filter(status=Participation.Statuses.JOINED).count()
+
+    def get_waitlisted_events_count(self, obj):
+        return obj.participations.filter(status=Participation.Statuses.WAITLISTED).count()
 
     def get_is_owner(self, obj):
         return obj.is_owner
@@ -77,6 +82,7 @@ class CurrentUserSerializer(serializers.ModelSerializer):
             'settings',
             'created_events_count',
             'joined_events_count',
+            'waitlisted_events_count',
         )
         read_only_fields = fields
 
@@ -279,11 +285,51 @@ class EventSerializer(serializers.ModelSerializer):
     creator_name = serializers.CharField(source='creator.full_name', read_only=True)
     image_url = serializers.SerializerMethodField()
     is_joined = serializers.SerializerMethodField()
+    is_waitlisted = serializers.SerializerMethodField()
+    waitlist_position = serializers.SerializerMethodField()
+    joined_count = serializers.SerializerMethodField()
+    waitlist_count = serializers.SerializerMethodField()
+    checked_in_count = serializers.SerializerMethodField()
+    spots_remaining = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
 
     def get_image_url(self, obj):
         return sanitize_image_url(obj.image_url)
+
+    def _joined_count_value(self, obj):
+        if hasattr(obj, 'joined_count'):
+            return obj.joined_count
+        return Participation.objects.filter(
+            event_id=obj.id,
+            status=Participation.Statuses.JOINED,
+        ).count()
+
+    def _waitlist_count_value(self, obj):
+        if hasattr(obj, 'waitlist_count'):
+            return obj.waitlist_count
+        return Participation.objects.filter(
+            event_id=obj.id,
+            status=Participation.Statuses.WAITLISTED,
+        ).count()
+
+    def get_joined_count(self, obj):
+        return self._joined_count_value(obj)
+
+    def get_waitlist_count(self, obj):
+        return self._waitlist_count_value(obj)
+
+    def get_checked_in_count(self, obj):
+        return Participation.objects.filter(
+            event_id=obj.id,
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=False,
+        ).count()
+
+    def get_spots_remaining(self, obj):
+        if obj.capacity is None:
+            return None
+        return max(0, obj.capacity - self._joined_count_value(obj))
 
     def get_is_joined(self, obj):
         current_user = self.context.get('current_user')
@@ -295,6 +341,43 @@ class EventSerializer(serializers.ModelSerializer):
             event_id=obj.id,
             status=Participation.Statuses.JOINED,
         ).exists()
+
+    def get_is_waitlisted(self, obj):
+        current_user = self.context.get('current_user')
+        if current_user is None:
+            return False
+
+        return Participation.objects.filter(
+            user_id=current_user.id,
+            event_id=obj.id,
+            status=Participation.Statuses.WAITLISTED,
+        ).exists()
+
+    def get_waitlist_position(self, obj):
+        current_user = self.context.get('current_user')
+        if current_user is None:
+            return None
+
+        participation = Participation.objects.filter(
+            user_id=current_user.id,
+            event_id=obj.id,
+            status=Participation.Statuses.WAITLISTED,
+        ).first()
+        if participation is None:
+            return None
+
+        ahead = Participation.objects.filter(
+            event_id=obj.id,
+            status=Participation.Statuses.WAITLISTED,
+            joined_at__lt=participation.joined_at,
+        ).count()
+        same_time = Participation.objects.filter(
+            event_id=obj.id,
+            status=Participation.Statuses.WAITLISTED,
+            joined_at=participation.joined_at,
+            id__lt=participation.id,
+        ).count()
+        return ahead + same_time + 1
 
     def get_is_liked(self, obj):
         current_user = self.context.get('current_user')
@@ -321,7 +404,14 @@ class EventSerializer(serializers.ModelSerializer):
             'start_time',
             'end_time',
             'moderation_status',
+            'capacity',
+            'joined_count',
+            'waitlist_count',
+            'checked_in_count',
+            'spots_remaining',
             'is_joined',
+            'is_waitlisted',
+            'waitlist_position',
             'is_liked',
             'likes_count',
             'created_at',
@@ -336,7 +426,7 @@ class ParticipationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Participation
-        fields = ('id', 'user_id', 'event_id', 'status', 'joined_at')
+        fields = ('id', 'user_id', 'event_id', 'status', 'joined_at', 'checked_in_at')
         read_only_fields = fields
 
 
@@ -362,7 +452,7 @@ class JoinedParticipationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Participation
-        fields = ('id', 'status', 'joined_at', 'event')
+        fields = ('id', 'status', 'joined_at', 'checked_in_at', 'event')
         read_only_fields = fields
 
 
@@ -380,7 +470,16 @@ class EventParticipantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Participation
-        fields = ('id', 'user_id', 'user_name', 'email', 'status', 'joined_at', 'profile_image_url')
+        fields = (
+            'id',
+            'user_id',
+            'user_name',
+            'email',
+            'status',
+            'joined_at',
+            'checked_in_at',
+            'profile_image_url',
+        )
         read_only_fields = fields
 
 
@@ -393,6 +492,7 @@ class EventCreateSerializer(serializers.Serializer):
     event_date = serializers.DateField()
     start_time = serializers.TimeField()
     end_time = serializers.TimeField()
+    capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
 
     def validate_title(self, value):
         title = value.strip()
@@ -436,6 +536,11 @@ class EventCreateSerializer(serializers.Serializer):
             )
         return attrs
 
+    def validate_capacity(self, value):
+        if value is not None and value < 1:
+            raise serializers.ValidationError('Capacity must be at least 1.')
+        return value
+
     @transaction.atomic
     def create(self, validated_data):
         creator = self.context['creator']
@@ -451,6 +556,7 @@ class EventCreateSerializer(serializers.Serializer):
             event_date=validated_data['event_date'],
             start_time=validated_data['start_time'],
             end_time=validated_data['end_time'],
+            capacity=validated_data.get('capacity'),
             moderation_status=Event.ModerationStatuses.PENDING,
             created_at=now,
             updated_at=now,
@@ -460,6 +566,19 @@ class EventCreateSerializer(serializers.Serializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
+        if 'capacity' in validated_data:
+            new_cap = validated_data['capacity']
+            if new_cap is not None:
+                joined = count_joined_for_event(instance.id)
+                if new_cap < joined:
+                    raise serializers.ValidationError(
+                        {
+                            'capacity': (
+                                f'Capacity cannot be lower than the number of registered attendees ({joined}).'
+                            ),
+                        },
+                    )
+
         instance.title = validated_data.get('title', instance.title)
         instance.description = validated_data.get('description', instance.description)
         instance.category = (
@@ -472,6 +591,8 @@ class EventCreateSerializer(serializers.Serializer):
         instance.event_date = validated_data.get('event_date', instance.event_date)
         instance.start_time = validated_data.get('start_time', instance.start_time)
         instance.end_time = validated_data.get('end_time', instance.end_time)
+        if 'capacity' in validated_data:
+            instance.capacity = validated_data['capacity']
         instance.updated_at = timezone.now()
         instance.save()
         return instance

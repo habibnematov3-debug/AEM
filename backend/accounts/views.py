@@ -1,7 +1,8 @@
 from datetime import timedelta
 
+from django.core import signing
 from django.db import IntegrityError, transaction
-from django.db.models import Case, IntegerField, Q, Value, When
+from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -11,12 +12,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
+from .checkin_tokens import make_checkin_token, parse_checkin_token
 from .models import AEMUser, Event, EventLike, Participation
 from .notifications import (
     notify_event_moderation,
     notify_participation_cancelled,
     notify_participation_joined,
+    notify_waitlist_promoted,
 )
+from .participation_ops import event_has_open_seat, promote_next_waitlisted
 from .serializers import (
     AdminUserSerializer,
     AdminUserUpdateSerializer,
@@ -132,7 +136,7 @@ def student_may_access_public_event(user, event):
     return Participation.objects.filter(
         user_id=user.id,
         event_id=event.id,
-        status=Participation.Statuses.JOINED,
+        status__in=(Participation.Statuses.JOINED, Participation.Statuses.WAITLISTED),
     ).exists()
 
 
@@ -284,7 +288,16 @@ class EventListCreateAPIView(APIView):
             events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
             events = exclude_ended_events(events)
 
-        events = events.order_by('-created_at', '-id')
+        events = events.annotate(
+            joined_count=Count(
+                'participations',
+                filter=Q(participations__status=Participation.Statuses.JOINED),
+            ),
+            waitlist_count=Count(
+                'participations',
+                filter=Q(participations__status=Participation.Statuses.WAITLISTED),
+            ),
+        ).order_by('-created_at', '-id')
         return Response(
             {
                 'results': EventSerializer(
@@ -402,7 +415,7 @@ class EventParticipateAPIView(APIView):
             return auth_required_response(request)
 
         event = get_object_or_404(
-            Event.objects.select_related('creator'),
+            Event.objects.select_for_update().select_related('creator'),
             id=event_id,
         )
 
@@ -430,6 +443,8 @@ class EventParticipateAPIView(APIView):
             .first()
         )
 
+        now = timezone.now()
+
         if existing_participation is not None:
             if existing_participation.status == Participation.Statuses.JOINED:
                 return Response(
@@ -437,43 +452,76 @@ class EventParticipateAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            existing_participation.status = Participation.Statuses.JOINED
-            existing_participation.joined_at = timezone.now()
-            existing_participation.save(update_fields=['status', 'joined_at'])
-            participation = existing_participation
+            if existing_participation.status == Participation.Statuses.WAITLISTED:
+                return Response(
+                    {'detail': 'You are already on the waitlist for this event.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-            transaction.on_commit(lambda: notify_participation_joined(participation))
+            if event_has_open_seat(event):
+                existing_participation.status = Participation.Statuses.JOINED
+                existing_participation.joined_at = now
+                existing_participation.checked_in_at = None
+                existing_participation.save(update_fields=['status', 'joined_at', 'checked_in_at'])
+                participation = existing_participation
+                transaction.on_commit(lambda p=participation: notify_participation_joined(p))
+                message = 'You joined the event successfully.'
+            else:
+                existing_participation.status = Participation.Statuses.WAITLISTED
+                existing_participation.joined_at = now
+                existing_participation.checked_in_at = None
+                existing_participation.save(update_fields=['status', 'joined_at', 'checked_in_at'])
+                participation = existing_participation
+                message = 'The event is full. You have been added to the waitlist.'
 
             return Response(
                 {
-                    'message': 'You joined the event successfully.',
+                    'message': message,
                     'participation': ParticipationSerializer(participation).data,
                     'event': EventSerializer(event, context={'current_user': current_user}).data,
                 },
                 status=status.HTTP_200_OK,
             )
 
-        try:
-            participation = Participation.objects.create(
-                user=current_user,
-                event=event,
-                status=Participation.Statuses.JOINED,
-            )
-        except IntegrityError:
-            return Response(
-                {'detail': 'You have already joined this event.'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if event_has_open_seat(event):
+            try:
+                participation = Participation.objects.create(
+                    user=current_user,
+                    event=event,
+                    status=Participation.Statuses.JOINED,
+                )
+            except IntegrityError:
+                return Response(
+                    {'detail': 'You have already joined this event.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        transaction.on_commit(lambda: notify_participation_joined(participation))
+            transaction.on_commit(lambda p=participation: notify_participation_joined(p))
+            message = 'You joined the event successfully.'
+            http_status = status.HTTP_201_CREATED
+        else:
+            try:
+                participation = Participation.objects.create(
+                    user=current_user,
+                    event=event,
+                    status=Participation.Statuses.WAITLISTED,
+                )
+            except IntegrityError:
+                return Response(
+                    {'detail': 'You have already joined this event.'},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            message = 'The event is full. You have been added to the waitlist.'
+            http_status = status.HTTP_201_CREATED
 
         return Response(
             {
-                'message': 'You joined the event successfully.',
+                'message': message,
                 'participation': ParticipationSerializer(participation).data,
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
-            status=status.HTTP_201_CREATED,
+            status=http_status,
         )
 
 

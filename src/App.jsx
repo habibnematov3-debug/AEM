@@ -9,10 +9,12 @@ import {
   fetchEvents,
   fetchOrganizerEvents,
   getDefaultRouteForRole,
+  likeEvent,
   logoutUser,
   moderateAdminEvent,
   signInUser,
   signUpUser,
+  unlikeEvent,
   updateCurrentUserProfile,
   updateEvent,
 } from './api/aemApi'
@@ -29,6 +31,9 @@ import ProfilePage from './pages/ProfilePage'
 import StudentsPage from './pages/StudentsPage'
 import './styles/app.css'
 import './styles/pages.css'
+
+const SESSION_COOKIE_ERROR_MESSAGE =
+  'Authentication session was not established. In local development, make sure the frontend and backend use the same hostname, such as localhost on both sides.'
 
 function RequireAuth({ currentUser, authReady, children }) {
   const { t } = useI18n()
@@ -165,6 +170,20 @@ function App() {
     document.documentElement.dataset.theme = currentUser?.settings?.theme ?? 'light'
   }, [currentUser])
 
+  async function fetchVerifiedCurrentUser() {
+    try {
+      return await fetchCurrentUser()
+    } catch (error) {
+      if (error.status === 401) {
+        const sessionError = new Error(SESSION_COOKIE_ERROR_MESSAGE)
+        sessionError.status = 401
+        throw sessionError
+      }
+
+      throw error
+    }
+  }
+
   useEffect(() => {
     if (!shouldLoadEventList) {
       setEventsLoading(false)
@@ -206,7 +225,7 @@ function App() {
   async function handleSignIn(credentials) {
     try {
       const result = await signInUser(credentials)
-      const user = await fetchCurrentUser().catch(() => result.user)
+      const user = await fetchVerifiedCurrentUser()
       setCurrentUser(user)
       return { ...result, user }
     } catch (error) {
@@ -220,7 +239,7 @@ function App() {
   async function handleSignUp(payload) {
     try {
       const result = await signUpUser(payload)
-      const user = await fetchCurrentUser().catch(() => result.user)
+      const user = await fetchVerifiedCurrentUser()
       setCurrentUser(user)
       return { ...result, user }
     } catch (error) {
@@ -248,6 +267,13 @@ function App() {
     return createdEvent
   }
 
+  function applyEventUpdate(updatedEvent) {
+    setEvents((currentEvents) =>
+      currentEvents.map((event) => (event.id === updatedEvent.id ? updatedEvent : event)),
+    )
+    return updatedEvent
+  }
+
   async function handleUpdateEvent(eventId, eventData) {
     const updatedEvent = await updateEvent(eventId, eventData)
     setEvents((currentEvents) =>
@@ -269,6 +295,12 @@ function App() {
     setEvents((currentEvents) =>
       currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
     )
+    return result
+  }
+
+  async function handleToggleEventLike(event) {
+    const result = event.isLiked ? await unlikeEvent(event.id) : await likeEvent(event.id)
+    applyEventUpdate(result.event)
     return result
   }
 
@@ -355,7 +387,12 @@ function App() {
             />
             <Route
               path="/events/:eventId"
-              element={<EventDetailsPage currentUser={currentUser} />}
+              element={
+                <EventDetailsPage
+                  currentUser={currentUser}
+                  onToggleEventLike={handleToggleEventLike}
+                />
+              }
             />
             <Route
               path="/profile"

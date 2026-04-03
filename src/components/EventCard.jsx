@@ -35,6 +35,7 @@ function EventCard({
 
   if (variant === 'student') {
     const categoryLabel = event.category?.trim()
+    const hasLikesCount = typeof event.likesCount === 'number'
     return (
       <Link to={`/events/${event.id}`} className="event-card__link">
         <article className="event-card event-card--student">
@@ -42,13 +43,28 @@ function EventCard({
             <img className="event-card__image" src={event.image} alt={event.title} />
           </div>
           <div className="event-card__body">
-            {categoryLabel || event.isJoined ? (
+            {categoryLabel || event.isJoined || hasLikesCount ? (
               <div className="event-card__student-meta">
-                {categoryLabel ? (
-                  <span className="event-card__category-chip">{categoryLabel}</span>
-                ) : null}
-                {event.isJoined ? (
-                  <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
+                <div className="event-card__student-meta-group">
+                  {categoryLabel ? (
+                    <span className="event-card__category-chip">{categoryLabel}</span>
+                  ) : null}
+                  {event.isJoined ? (
+                    <span className="event-card__joined-chip">{t('eventCard.joined')}</span>
+                  ) : null}
+                </div>
+                {hasLikesCount ? (
+                  <span
+                    className={event.isLiked ? 'event-card__likes-chip event-card__likes-chip--liked' : 'event-card__likes-chip'}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                    <span>{t('eventCard.likesCount', { count: event.likesCount })}</span>
+                  </span>
                 ) : null}
               </div>
             ) : null}

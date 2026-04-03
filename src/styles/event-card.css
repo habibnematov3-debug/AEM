@@ -83,8 +83,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   min-height: 0;
+}
+
+.event-card__student-meta-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .event-card__category-chip {
@@ -124,6 +133,41 @@
 :root[data-theme='dark'] .event-card__joined-chip {
   background: rgba(45, 168, 108, 0.16);
   color: #7dccb0;
+}
+
+.event-card__likes-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(185, 58, 84, 0.08);
+  color: var(--muted-strong);
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.event-card__likes-chip svg {
+  width: 14px;
+  height: 14px;
+  color: var(--danger);
+}
+
+.event-card__likes-chip--liked {
+  background: rgba(185, 58, 84, 0.14);
+  color: var(--danger);
+}
+
+:root[data-theme='dark'] .event-card__likes-chip {
+  background: rgba(185, 58, 84, 0.14);
+  color: #f2c0ca;
+}
+
+:root[data-theme='dark'] .event-card__likes-chip--liked {
+  background: rgba(185, 58, 84, 0.2);
+  color: #ffd6de;
 }
 
 .event-card__mini-topline {

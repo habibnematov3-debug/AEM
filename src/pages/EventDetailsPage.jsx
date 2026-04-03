@@ -41,7 +41,7 @@ function formatModerationStatus(status, languageCode) {
   return { pending: 'Pending', approved: 'Approved', rejected: 'Rejected' }[normalized] ?? normalized
 }
 
-function EventDetailsPage({ currentUser }) {
+function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   const { languageCode, t } = useI18n()
   const navigate = useNavigate()
   const { eventId } = useParams()
@@ -51,6 +51,7 @@ function EventDetailsPage({ currentUser }) {
   const [actionFeedback, setActionFeedback] = useState({ type: '', message: '' })
   const [isJoining, setIsJoining] = useState(false)
   const [isCanceling, setIsCanceling] = useState(false)
+  const [isTogglingLike, setIsTogglingLike] = useState(false)
   const [participants, setParticipants] = useState([])
   const [participantsStatus, setParticipantsStatus] = useState('idle')
   const [participantsError, setParticipantsError] = useState('')
@@ -194,6 +195,27 @@ function EventDetailsPage({ currentUser }) {
     }
   }
 
+  async function handleToggleLike() {
+    if (!event || !currentUser || !onToggleEventLike || isTogglingLike) {
+      return
+    }
+
+    setIsTogglingLike(true)
+    setActionFeedback({ type: '', message: '' })
+
+    try {
+      const result = await onToggleEventLike(event)
+      setEvent(result.event)
+    } catch (error) {
+      setActionFeedback({
+        type: 'error',
+        message: error.message || t('eventDetails.likeError'),
+      })
+    } finally {
+      setIsTogglingLike(false)
+    }
+  }
+
   if (status === 'loading') {
     return (
       <section className="event-details-page">
@@ -239,6 +261,7 @@ function EventDetailsPage({ currentUser }) {
   const isCreator = Boolean(currentUser?.id) && currentUser.id === event.creatorId
   const isPubliclyAvailable = event.moderationStatus === 'approved'
   const canParticipate = Boolean(currentUser?.id) && !isCreator && isPubliclyAvailable
+  const canLike = Boolean(currentUser?.id) && isPubliclyAvailable && onToggleEventLike
   const hasJoined = Boolean(event.isJoined)
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
   const categoryText = event.category || t('common.general')
@@ -259,6 +282,33 @@ function EventDetailsPage({ currentUser }) {
           <div className="event-details-topline">
             <span className="event-details-badge">{categoryText}</span>
             <span className="event-details-status">{statusText}</span>
+          </div>
+
+          <div className="event-details-social">
+            <span className={event.isLiked ? 'event-details-likes event-details-likes--liked' : 'event-details-likes'}>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                  fill="currentColor"
+                />
+              </svg>
+              <span>{t('eventDetails.likesCount', { count: event.likesCount })}</span>
+            </span>
+
+            {canLike ? (
+              <button
+                type="button"
+                className={event.isLiked ? 'event-details-like-button event-details-like-button--active' : 'event-details-like-button'}
+                onClick={handleToggleLike}
+                disabled={isTogglingLike}
+              >
+                {isTogglingLike
+                  ? t('eventDetails.updatingLike')
+                  : event.isLiked
+                    ? t('eventDetails.likedAction')
+                    : t('eventDetails.likeAction')}
+              </button>
+            ) : null}
           </div>
 
           <h1>{event.title}</h1>

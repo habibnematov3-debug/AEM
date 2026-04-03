@@ -808,6 +808,116 @@ class EventParticipantCheckInAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class EventMyCheckInTokenAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+        participation = Participation.objects.filter(
+            user_id=current_user.id,
+            event_id=event.id,
+            status=Participation.Statuses.JOINED,
+        ).first()
+
+        if participation is None:
+            return Response(
+                {'detail': 'Only confirmed attendees can access a check-in QR code.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                'token': make_checkin_token(participation.id),
+                'participation': ParticipationSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventTokenCheckInAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        event = get_object_or_404(Event.objects.select_related('creator'), id=event_id)
+
+        if not (is_admin(current_user) or event.creator_id == current_user.id):
+            return Response(
+                {'detail': 'You are not allowed to check in participants for this event.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        token = str(request.data.get('token', '')).strip()
+        if not token:
+            return Response(
+                {'detail': 'A check-in token is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            payload = parse_checkin_token(token)
+            participation_id = int(payload['p'])
+        except (signing.BadSignature, signing.SignatureExpired, KeyError, TypeError, ValueError):
+            return Response(
+                {'detail': 'Invalid or expired check-in token.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation = get_object_or_404(
+            Participation.objects.select_related('user'),
+            id=participation_id,
+            event_id=event.id,
+        )
+
+        if participation.status != Participation.Statuses.JOINED:
+            return Response(
+                {'detail': 'Only joined participants can be checked in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if participation.checked_in_at is not None:
+            return Response(
+                {'detail': 'Participant is already checked in.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation.checked_in_at = timezone.now()
+        participation.save(update_fields=['checked_in_at'])
+
+        return Response(
+            {
+                'message': 'Participant checked in successfully.',
+                'participation': EventParticipantSerializer(participation).data,
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class AdminDashboardAPIView(APIView):
     authentication_classes = []
     permission_classes = []

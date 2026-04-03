@@ -254,6 +254,48 @@ function normalizeEventParticipant(rawParticipant) {
   }
 }
 
+function normalizeParticipationRecord(rawParticipation) {
+  return {
+    id: rawParticipation.id != null ? String(rawParticipation.id) : '',
+    userId: rawParticipation.user_id != null ? String(rawParticipation.user_id) : '',
+    eventId: rawParticipation.event_id != null ? String(rawParticipation.event_id) : '',
+    userName: rawParticipation.user_name ?? '',
+    email: rawParticipation.email ?? '',
+    status: rawParticipation.status ?? 'joined',
+    joinedAt: rawParticipation.joined_at ?? null,
+    checkedInAt: rawParticipation.checked_in_at ?? null,
+    profileImageUrl: sanitizeImageUrl(rawParticipation.profile_image_url),
+  }
+}
+
+export function extractCheckInToken(value) {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) {
+    return ''
+  }
+
+  try {
+    const parsedUrl = new URL(normalized)
+    return parsedUrl.searchParams.get('token')?.trim() ?? ''
+  } catch {
+    return normalized
+  }
+}
+
+export function buildCheckInResultPath(eventId, token) {
+  const safeToken = encodeURIComponent(token)
+  return `/events/${eventId}/check-in/result?token=${safeToken}`
+}
+
+export function buildAbsoluteCheckInResultUrl(eventId, token) {
+  const path = buildCheckInResultPath(eventId, token)
+  if (typeof window === 'undefined') {
+    return path
+  }
+
+  return new URL(path, window.location.origin).toString()
+}
+
 export function getDefaultRouteForRole(role) {
   if (role === 'admin') {
     return '/admin'
@@ -621,6 +663,31 @@ export async function checkInParticipant(eventId, participationId) {
     message: payload.message,
     event: normalizeEvent(payload.event),
     participation: payload.participation ?? null,
+  }
+}
+
+export async function fetchMyCheckInPass(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/my-checkin-token/`)
+
+  return {
+    token: payload.token ?? '',
+    event: normalizeEvent(payload.event ?? {}),
+    participation: normalizeParticipationRecord(payload.participation ?? {}),
+  }
+}
+
+export async function checkInParticipantByToken(eventId, token) {
+  const payload = await apiRequest(`/api/events/${eventId}/checkin-token/`, {
+    method: 'POST',
+    body: JSON.stringify({
+      token: extractCheckInToken(token),
+    }),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event ?? {}),
+    participation: normalizeParticipationRecord(payload.participation ?? {}),
   }
 }
 

@@ -24,6 +24,8 @@ import Header from './components/Header'
 import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
 import AuthPage from './pages/AuthPage'
+import EventCheckInResultPage from './pages/EventCheckInResultPage'
+import EventCheckInScanPage from './pages/EventCheckInScanPage'
 import EventDetailsPage from './pages/EventDetailsPage'
 import JoinedEventsPage from './pages/JoinedEventsPage'
 import OrganizerPage from './pages/OrganizerPage'
@@ -420,6 +422,22 @@ function App() {
                 <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
                   <AdminUsersPage currentUser={currentUser} />
                 </RequireRole>
+              }
+            />
+            <Route
+              path="/events/:eventId/check-in"
+              element={
+                <RequireAuth currentUser={currentUser} authReady={authReady}>
+                  <EventCheckInScanPage currentUser={currentUser} />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/events/:eventId/check-in/result"
+              element={
+                <RequireAuth currentUser={currentUser} authReady={authReady}>
+                  <EventCheckInResultPage />
+                </RequireAuth>
               }
             />
             <Route

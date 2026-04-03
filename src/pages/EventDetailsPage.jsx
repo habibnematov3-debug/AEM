@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import {
   cancelParticipation,
@@ -8,6 +8,7 @@ import {
   fetchEventParticipants,
   participateInEvent,
 } from '../api/aemApi'
+import EventCheckInPass from '../components/EventCheckInPass'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/event-details.css'
@@ -431,6 +432,8 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
             ) : null}
           </div>
 
+          {hasJoined && !isCreator ? <EventCheckInPass eventId={event.id} /> : null}
+
           <div className="event-details-grid">
             <div className="event-details-item">
               <span>{t('common.date')}</span>
@@ -465,7 +468,15 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
                   <h2>{t('eventDetails.participantsTitle')}</h2>
                   <p>{t('eventDetails.participantsSubtitle')}</p>
                 </div>
-                <span className="event-details-participants__count">{participants.length}</span>
+                <div className="event-details-participants__tools">
+                  <Link
+                    to={`/events/${event.id}/check-in`}
+                    className="event-details-participants__scan"
+                  >
+                    {t('eventDetails.openScanner')}
+                  </Link>
+                  <span className="event-details-participants__count">{participants.length}</span>
+                </div>
               </div>
 
               {participantsStatus === 'loading' ? (

@@ -10,9 +10,11 @@ from accounts.views import (
     EventDetailAPIView,
     EventLikeAPIView,
     EventListCreateAPIView,
+    EventMyCheckInTokenAPIView,
     EventParticipantCheckInAPIView,
     EventParticipantListAPIView,
     EventParticipateAPIView,
+    EventTokenCheckInAPIView,
     MyParticipationListAPIView,
 )
 
@@ -40,6 +42,16 @@ urlpatterns = [
         'api/events/<int:event_id>/participants/<int:participation_id>/checkin/',
         EventParticipantCheckInAPIView.as_view(),
         name='events-participants-checkin',
+    ),
+    path(
+        'api/events/<int:event_id>/my-checkin-token/',
+        EventMyCheckInTokenAPIView.as_view(),
+        name='events-my-checkin-token',
+    ),
+    path(
+        'api/events/<int:event_id>/checkin-token/',
+        EventTokenCheckInAPIView.as_view(),
+        name='events-checkin-token',
     ),
     path('api/participations/me/', MyParticipationListAPIView.as_view(), name='participations-me'),
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='admin-dashboard'),

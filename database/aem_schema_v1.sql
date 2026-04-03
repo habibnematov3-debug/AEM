@@ -1,4 +1,4 @@
--- AEM MVP PostgreSQL schema v1.2
+-- AEM MVP PostgreSQL schema v1.3
 -- For pgAdmin 4
 -- Create a database first, for example: aem_db
 -- Then connect to that database and run this script.
@@ -93,6 +93,23 @@ CREATE TABLE participations (
         UNIQUE (user_id, event_id)
 );
 
+CREATE TABLE event_likes (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_id BIGINT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_event_likes_user
+        FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_event_likes_event
+        FOREIGN KEY (event_id)
+        REFERENCES events (id)
+        ON DELETE CASCADE,
+    CONSTRAINT uq_event_likes_user_event
+        UNIQUE (user_id, event_id)
+);
+
 CREATE INDEX idx_events_creator_id
     ON events (creator_id);
 
@@ -104,5 +121,11 @@ CREATE INDEX idx_participations_event_id
 
 CREATE INDEX idx_participations_user_id
     ON participations (user_id);
+
+CREATE INDEX idx_event_likes_event_id
+    ON event_likes (event_id);
+
+CREATE INDEX idx_event_likes_user_id
+    ON event_likes (user_id);
 
 COMMIT;

@@ -3,7 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import AEMUser, Event, Participation, UserSettings
+from .models import AEMUser, Event, EventLike, Participation, UserSettings
 
 
 def is_data_image_url(value):
@@ -250,6 +250,8 @@ class EventSerializer(serializers.ModelSerializer):
     creator_name = serializers.CharField(source='creator.full_name', read_only=True)
     image_url = serializers.SerializerMethodField()
     is_joined = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    likes_count = serializers.SerializerMethodField()
 
     def get_image_url(self, obj):
         return sanitize_image_url(obj.image_url)
@@ -264,6 +266,16 @@ class EventSerializer(serializers.ModelSerializer):
             event_id=obj.id,
             status=Participation.Statuses.JOINED,
         ).exists()
+
+    def get_is_liked(self, obj):
+        current_user = self.context.get('current_user')
+        if current_user is None:
+            return False
+
+        return EventLike.objects.filter(user_id=current_user.id, event_id=obj.id).exists()
+
+    def get_likes_count(self, obj):
+        return EventLike.objects.filter(event_id=obj.id).count()
 
     class Meta:
         model = Event
@@ -281,6 +293,8 @@ class EventSerializer(serializers.ModelSerializer):
             'end_time',
             'moderation_status',
             'is_joined',
+            'is_liked',
+            'likes_count',
             'created_at',
             'updated_at',
         )

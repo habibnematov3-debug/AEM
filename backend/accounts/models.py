@@ -115,3 +115,25 @@ class Participation(models.Model):
         db_table = 'participations'
         managed = False
         unique_together = (('user', 'event'),)
+
+
+class EventLike(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(
+        AEMUser,
+        on_delete=models.CASCADE,
+        related_name='event_likes',
+        db_column='user_id',
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='likes',
+        db_column='event_id',
+    )
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'event_likes'
+        managed = False
+        unique_together = (('user', 'event'),)

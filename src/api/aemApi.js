@@ -141,6 +141,8 @@ function normalizeEvent(rawEvent) {
     status: formatStatusLabel(rawEvent.moderation_status),
     moderationStatus: rawEvent.moderation_status ?? 'pending',
     isJoined: rawEvent.is_joined ?? false,
+    isLiked: rawEvent.is_liked ?? false,
+    likesCount: rawEvent.likes_count ?? 0,
     creatorId,
     creatorName: rawEvent.creator_name ?? 'Unknown organizer',
     organizerId: creatorId,
@@ -512,6 +514,30 @@ export async function participateInEvent(eventId) {
     message: payload.message,
     event: normalizeEvent(payload.event),
     participation: payload.participation ?? null,
+  }
+}
+
+export async function likeEvent(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/like/`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
+  }
+}
+
+export async function unlikeEvent(eventId) {
+  const payload = await apiRequest(`/api/events/${eventId}/like/`, {
+    method: 'DELETE',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    message: payload.message,
+    event: normalizeEvent(payload.event),
   }
 }
 

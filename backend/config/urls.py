@@ -8,6 +8,7 @@ from accounts.views import (
     AdminUserUpdateAPIView,
     EventCancelParticipationAPIView,
     EventDetailAPIView,
+    EventLikeAPIView,
     EventListCreateAPIView,
     EventParticipantListAPIView,
     EventParticipateAPIView,
@@ -23,6 +24,7 @@ urlpatterns = [
         EventParticipateAPIView.as_view(),
         name='events-participate',
     ),
+    path('api/events/<int:event_id>/like/', EventLikeAPIView.as_view(), name='events-like'),
     path(
         'api/events/<int:event_id>/cancel-participation/',
         EventCancelParticipationAPIView.as_view(),

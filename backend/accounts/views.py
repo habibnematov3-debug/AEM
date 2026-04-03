@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import AEMUser, Event, Participation
+from .models import AEMUser, Event, EventLike, Participation
 from .notifications import (
     notify_event_moderation,
     notify_participation_cancelled,
@@ -357,6 +357,68 @@ class EventParticipateAPIView(APIView):
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
             },
             status=status.HTTP_201_CREATED,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class EventLikeAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+
+        if event.moderation_status != Event.ModerationStatuses.APPROVED:
+            return Response(
+                {'detail': 'Only approved events can be liked.'},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        _, created = EventLike.objects.get_or_create(user_id=current_user.id, event_id=event.id)
+        if not created:
+            return Response(
+                {'detail': 'You have already liked this event.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(
+            {
+                'message': 'Event liked successfully.',
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
+    def delete(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        event = get_object_or_404(
+            Event.objects.select_related('creator'),
+            id=event_id,
+        )
+
+        deleted_count, _ = EventLike.objects.filter(user_id=current_user.id, event_id=event.id).delete()
+        if deleted_count == 0:
+            return Response(
+                {'detail': 'You have not liked this event.'},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(
+            {
+                'message': 'Event like removed successfully.',
+                'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_200_OK,
         )
 
 

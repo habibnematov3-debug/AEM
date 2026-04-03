@@ -97,6 +97,45 @@ def can_view_event(user, event):
     return is_admin(user) or event.creator_id == user.id
 
 
+def event_schedule_has_ended(event, now=None):
+    """True after the event's scheduled end (local date + end_time), matching admin stats logic."""
+    now = now or timezone.localtime()
+    today = now.date()
+    current_time = now.time()
+    if event.event_date < today:
+        return True
+    if event.event_date > today:
+        return False
+    return event.end_time < current_time
+
+
+def exclude_ended_events(queryset, now=None):
+    """Keep events that are still ongoing or upcoming (same boundary as finished admin counts)."""
+    now = now or timezone.localtime()
+    today = now.date()
+    current_time = now.time()
+    return queryset.filter(
+        Q(event_date__gt=today) | Q(event_date=today, end_time__gte=current_time),
+    )
+
+
+def student_may_access_public_event(user, event):
+    """Approved events past their end are hidden from the catalog; detail stays available for organizer, admin, or joined students."""
+    if event.moderation_status != Event.ModerationStatuses.APPROVED:
+        return True
+    if not event_schedule_has_ended(event):
+        return True
+    if user is None:
+        return False
+    if is_admin(user) or event.creator_id == user.id:
+        return True
+    return Participation.objects.filter(
+        user_id=user.id,
+        event_id=event.id,
+        status=Participation.Statuses.JOINED,
+    ).exists()
+
+
 def get_admin_dashboard_stats():
     now = timezone.localtime()
     today = now.date()
@@ -243,6 +282,7 @@ class EventListCreateAPIView(APIView):
             events = events.filter(creator_id=current_user.id)
         else:
             events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
+            events = exclude_ended_events(events)
 
         events = events.order_by('-created_at', '-id')
         return Response(
@@ -286,6 +326,8 @@ class EventDetailAPIView(APIView):
             id=event_id,
         )
         if not can_view_event(current_user, event):
+            return Response({'detail': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
+        if not student_may_access_public_event(current_user, event):
             return Response({'detail': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
         return Response(
             EventSerializer(event, context={'current_user': current_user}).data,
@@ -370,6 +412,12 @@ class EventParticipateAPIView(APIView):
                 status=status.HTTP_403_FORBIDDEN,
             )
 
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         if event.creator_id == current_user.id:
             return Response(
                 {'detail': 'You cannot participate in your own event.'},
@@ -448,6 +496,12 @@ class EventLikeAPIView(APIView):
             return Response(
                 {'detail': 'Only approved events can be liked.'},
                 status=status.HTTP_403_FORBIDDEN,
+            )
+
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         _, created = EventLike.objects.get_or_create(user_id=current_user.id, event_id=event.id)
@@ -545,6 +599,12 @@ class EventCancelParticipationAPIView(APIView):
             return Response(
                 {'detail': 'You have not joined this event.'},
                 status=status.HTTP_404_NOT_FOUND,
+            )
+
+        if event_schedule_has_ended(event):
+            return Response(
+                {'detail': 'This event has already ended.'},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         participation.status = Participation.Statuses.CANCELLED

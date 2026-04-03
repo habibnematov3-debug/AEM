@@ -278,6 +278,7 @@
   background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: #fff;
   box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), opacity var(--duration-fast) ease;
 }
 
 .profile-form__primary:hover:not(:disabled) {
@@ -285,10 +286,26 @@
   box-shadow: var(--shadow-md);
 }
 
+.profile-form__primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .profile-form__secondary {
   background: var(--surface);
   color: var(--muted-strong);
   border: 1px solid var(--border);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.profile-form__secondary:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  background: var(--surface-strong);
+}
+
+.profile-form__secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .profile-form__ghost {

@@ -310,13 +310,7 @@ function EventCard({
             {event.joinedCount} joined
             {event.capacity ? ` / ${event.capacity}` : ''}
             {event.waitlistCount ? ` · ${event.waitlistCount} waitlisted` : ''}
-          </p>
-        </div>
-
-        {variant === 'organizer' ? (
-          <p className="event-card__cta">Manage registrations</p>
-        ) : (
-          <p className="event-card__cta">View details</p>
+            {event.noShowCount ? ` · ${event.noShowCount} no-show` : ''}
         )}
       </div>
     </article>

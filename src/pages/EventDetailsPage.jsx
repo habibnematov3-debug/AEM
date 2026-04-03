@@ -359,6 +359,9 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
             {event.checkedInCount ? (
               <span>{t('eventDetails.checkedInInfo', { count: event.checkedInCount })}</span>
             ) : null}
+            {event.noShowCount ? (
+              <span>{t('eventDetails.noShowInfo', { count: event.noShowCount })}</span>
+            ) : null}
           </div>
 
           <p className="event-details-description">{event.description}</p>

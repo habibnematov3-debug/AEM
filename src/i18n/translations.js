@@ -242,6 +242,7 @@ const translations = {
         finished: 'Finished',
         waitlisted: 'Waitlisted',
         attended: 'Attended',
+        noShows: 'No-shows',
       },
     },
     adminUsersPage: {
@@ -364,6 +365,7 @@ const translations = {
       capacityInfo: 'Capacity: {count}',
       waitlistInfo: '{count} waitlisted',
       checkedInInfo: '{count} attended',
+      noShowInfo: '{count} no-show',
     },
     eventCard: {
       yourEvent: 'Your Event',

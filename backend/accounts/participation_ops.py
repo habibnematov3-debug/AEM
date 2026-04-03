@@ -11,6 +11,10 @@ def count_joined_for_event(event_id):
     ).count()
 
 
+def calculate_no_show_count(joined_count, checked_in_count):
+    return max(0, joined_count - checked_in_count)
+
+
 def event_has_open_seat(event):
     if event.capacity is None:
         return True

@@ -171,6 +171,15 @@ def get_admin_dashboard_stats():
             status=Participation.Statuses.JOINED,
             checked_in_at__isnull=False,
         ).count(),
+        'no_shows': Participation.objects.filter(
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=True,
+        )
+        .filter(
+            Q(event__event_date__lt=today)
+            | Q(event__event_date=today, event__end_time__lt=current_time),
+        )
+        .count(),
     }
 
 

@@ -170,6 +170,7 @@ function normalizeEvent(rawEvent) {
     joinedCount: Number(rawEvent.joined_count ?? 0),
     waitlistCount: Number(rawEvent.waitlist_count ?? 0),
     checkedInCount: Number(rawEvent.checked_in_count ?? 0),
+    noShowCount: Number(rawEvent.no_show_count ?? 0),
     spotsRemaining: rawEvent.spots_remaining ?? null,
     isJoined: rawEvent.is_joined ?? false,
     isWaitlisted: rawEvent.is_waitlisted ?? false,

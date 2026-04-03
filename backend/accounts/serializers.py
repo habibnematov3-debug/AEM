@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
-from .participation_ops import count_joined_for_event
+from .participation_ops import calculate_no_show_count, count_joined_for_event
 
 
 ONLINE_WINDOW = timedelta(minutes=5)
@@ -290,6 +290,7 @@ class EventSerializer(serializers.ModelSerializer):
     joined_count = serializers.SerializerMethodField()
     waitlist_count = serializers.SerializerMethodField()
     checked_in_count = serializers.SerializerMethodField()
+    no_show_count = serializers.SerializerMethodField()
     spots_remaining = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
@@ -330,6 +331,11 @@ class EventSerializer(serializers.ModelSerializer):
         if obj.capacity is None:
             return None
         return max(0, obj.capacity - self._joined_count_value(obj))
+
+    def get_no_show_count(self, obj):
+        joined = self._joined_count_value(obj)
+        checked_in = self.get_checked_in_count(obj)
+        return calculate_no_show_count(joined, checked_in)
 
     def get_is_joined(self, obj):
         current_user = self.context.get('current_user')
@@ -408,6 +414,7 @@ class EventSerializer(serializers.ModelSerializer):
             'joined_count',
             'waitlist_count',
             'checked_in_count',
+            'no_show_count',
             'spots_remaining',
             'is_joined',
             'is_waitlisted',

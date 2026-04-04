@@ -220,11 +220,16 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
 
     let animationFrameId = 0
     let timeoutId = 0
+    let measureCount = 0
+    const maxMeasures = 30
 
     function measureTarget() {
       const targetElement = resolveTargetElement(currentStep)
       if (!targetElement) {
-        setTargetRect(null)
+        if (measureCount < maxMeasures) {
+          measureCount += 1
+          animationFrameId = window.requestAnimationFrame(measureTarget)
+        }
         return
       }
 

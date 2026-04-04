@@ -45,6 +45,7 @@
 .admin-page__intro-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
 }
 
 .admin-page__manage-users-link {
@@ -63,10 +64,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+.admin-page__manage-users-link--button {
+  font: inherit;
+  cursor: pointer;
+}
+
 .admin-page__manage-users-link:hover {
   transform: translateY(-2px);
   border-color: var(--border-strong);
   box-shadow: var(--shadow-md);
+}
+
+.admin-page__manage-users-link:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .admin-page__eyebrow,

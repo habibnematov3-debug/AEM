@@ -7,10 +7,13 @@ import {
   fetchAdminDashboard,
   fetchCurrentUser,
   fetchEvents,
+  fetchMyNotifications,
   fetchOrganizerEvents,
   getDefaultRouteForRole,
   likeEvent,
   logoutUser,
+  markAllNotificationsRead,
+  markNotificationRead,
   moderateAdminEvent,
   signInUser,
   signUpUser,
@@ -137,6 +140,9 @@ function App() {
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
   const [pendingGuideOpen, setPendingGuideOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(false)
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
   const location = useLocation()
   const navigate = useNavigate()
   const isAuthPage = location.pathname === '/'
@@ -212,7 +218,56 @@ function App() {
 
     setIsOnboardingOpen(false)
     setPendingGuideOpen(false)
+    setNotifications([])
+    setUnreadNotificationsCount(0)
   }, [currentUser])
+
+  useEffect(() => {
+    let isMounted = true
+    let refreshIntervalId = 0
+
+    if (!authReady || !currentUser?.id) {
+      setNotifications([])
+      setUnreadNotificationsCount(0)
+      setNotificationsLoading(false)
+      return undefined
+    }
+
+    async function loadNotifications() {
+      if (isMounted) {
+        setNotificationsLoading(true)
+      }
+
+      try {
+        const payload = await fetchMyNotifications(12)
+        if (!isMounted) {
+          return
+        }
+
+        setNotifications(payload.notifications)
+        setUnreadNotificationsCount(payload.unreadCount)
+      } catch {
+        if (!isMounted) {
+          return
+        }
+
+        setNotifications([])
+        setUnreadNotificationsCount(0)
+      } finally {
+        if (isMounted) {
+          setNotificationsLoading(false)
+        }
+      }
+    }
+
+    loadNotifications()
+    refreshIntervalId = window.setInterval(loadNotifications, 60000)
+
+    return () => {
+      isMounted = false
+      window.clearInterval(refreshIntervalId)
+    }
+  }, [authReady, currentUser?.id])
 
   useEffect(() => {
     if (!authReady || !currentUser || pendingGuideOpen || isOnboardingOpen) {
@@ -441,6 +496,36 @@ function App() {
     setIsOnboardingOpen(false)
   }
 
+  async function handleMarkNotificationRead(notificationId) {
+    try {
+      const result = await markNotificationRead(notificationId)
+      setNotifications((currentNotifications) =>
+        currentNotifications.map((notification) =>
+          notification.id === String(notificationId)
+            ? { ...notification, readAt: result.notification.readAt || notification.readAt }
+            : notification,
+        ),
+      )
+      setUnreadNotificationsCount(result.unreadCount)
+    } catch {
+      // Ignore notification mark failures in the shell; the next refresh will resync state.
+    }
+  }
+
+  async function handleMarkAllNotificationsRead() {
+    try {
+      await markAllNotificationsRead()
+      setNotifications((currentNotifications) =>
+        currentNotifications.map((notification) =>
+          notification.readAt ? notification : { ...notification, readAt: new Date().toISOString() },
+        ),
+      )
+      setUnreadNotificationsCount(0)
+    } catch {
+      // Ignore notification mark failures in the shell; the next refresh will resync state.
+    }
+  }
+
   const activeLanguageCode = currentUser?.settings?.languageCode ?? getStoredLanguageCode()
 
   return (
@@ -456,6 +541,11 @@ function App() {
             searchValue={studentSearch}
             onSearchChange={setStudentSearch}
             onOpenGuide={handleOpenGuide}
+            notifications={notifications}
+            notificationsLoading={notificationsLoading}
+            unreadNotificationsCount={unreadNotificationsCount}
+            onMarkNotificationRead={handleMarkNotificationRead}
+            onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
           />
         )}
         <main id="main-content" className="page-shell" tabIndex={-1}>

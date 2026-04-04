@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { fetchAdminEvents } from '../api/aemApi'
+import { fetchAdminEvents, sendAdminReminderBatch } from '../api/aemApi'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
@@ -35,6 +35,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
   const [moderatingEventId, setModeratingEventId] = useState('')
+  const [isSendingReminders, setIsSendingReminders] = useState(false)
   const pendingCount = stats?.pending ?? 0
   const pendingBadgeLabel = pendingCount > 99 ? '99+' : String(pendingCount)
 
@@ -136,6 +137,26 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
     }
   }
 
+  async function handleSendReminders() {
+    setIsSendingReminders(true)
+    setFeedback({ type: '', message: '' })
+
+    try {
+      const result = await sendAdminReminderBatch({ hoursAhead: 24 })
+      setFeedback({
+        type: 'success',
+        message: result.message || t('adminPage.remindersSuccess', { count: result.sentCount }),
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.remindersError'),
+      })
+    } finally {
+      setIsSendingReminders(false)
+    }
+  }
+
   return (
     <section className="admin-page">
       <div className="admin-page__intro" data-tour="admin-intro">
@@ -146,6 +167,14 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         </div>
 
         <div className="admin-page__intro-actions">
+          <button
+            type="button"
+            className="admin-page__manage-users-link admin-page__manage-users-link--button"
+            onClick={handleSendReminders}
+            disabled={isSendingReminders}
+          >
+            {isSendingReminders ? t('adminPage.sendingReminders') : t('adminPage.sendReminders')}
+          </button>
           <Link
             to="/admin/users"
             className="admin-page__manage-users-link"

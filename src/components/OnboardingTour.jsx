@@ -118,21 +118,10 @@ function getBackdropStyle(targetRect) {
   const top = Math.max(targetRect.top - 12, 0)
   const width = Math.min(targetRect.width + 24, window.innerWidth - left)
   const height = Math.min(targetRect.height + 24, window.innerHeight - top)
-  const radius = Math.max(width, height) / 2 + 10
-  const centerX = left + width / 2
-  const centerY = top + height / 2
-
-  const mask = `radial-gradient(circle ${radius}px at ${centerX}px ${centerY}px, transparent 0%, transparent ${radius}px, black ${radius + 1}px, black 100%)`
 
   const clipPath = `path('M0 0 H${window.innerWidth} V${window.innerHeight} H0 Z M${left} ${top} H${left + width} V${top + height} H${left} Z')`
 
   return {
-    WebkitMaskImage: mask,
-    maskImage: mask,
-    WebkitMaskMode: 'alpha',
-    maskMode: 'alpha',
-    maskRepeat: 'no-repeat',
-    WebkitMaskRepeat: 'no-repeat',
     WebkitClipPath: clipPath,
     clipPath,
     clipRule: 'evenodd',

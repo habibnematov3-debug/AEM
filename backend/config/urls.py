@@ -1,6 +1,7 @@
 from django.urls import include, path
 
 from accounts.views import (
+    AdminReminderDispatchAPIView,
     AdminDashboardAPIView,
     AdminEventListAPIView,
     AdminEventModerationAPIView,
@@ -16,6 +17,9 @@ from accounts.views import (
     EventParticipateAPIView,
     EventTokenCheckInAPIView,
     MyParticipationListAPIView,
+    MyNotificationListAPIView,
+    NotificationReadAllAPIView,
+    NotificationReadAPIView,
 )
 
 urlpatterns = [
@@ -53,9 +57,21 @@ urlpatterns = [
         EventTokenCheckInAPIView.as_view(),
         name='events-checkin-token',
     ),
+    path('api/notifications/', MyNotificationListAPIView.as_view(), name='notifications-list'),
+    path(
+        'api/notifications/read-all/',
+        NotificationReadAllAPIView.as_view(),
+        name='notifications-read-all',
+    ),
+    path(
+        'api/notifications/<int:notification_id>/read/',
+        NotificationReadAPIView.as_view(),
+        name='notifications-read',
+    ),
     path('api/participations/me/', MyParticipationListAPIView.as_view(), name='participations-me'),
     path('api/admin/dashboard/', AdminDashboardAPIView.as_view(), name='admin-dashboard'),
     path('api/admin/events/', AdminEventListAPIView.as_view(), name='admin-events'),
+    path('api/admin/reminders/send/', AdminReminderDispatchAPIView.as_view(), name='admin-reminders-send'),
     path('api/admin/users/', AdminUserListAPIView.as_view(), name='admin-users'),
     path('api/admin/users/<int:user_id>/', AdminUserUpdateAPIView.as_view(), name='admin-users-update'),
     path(

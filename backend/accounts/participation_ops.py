@@ -38,5 +38,6 @@ def promote_next_waitlisted(event_id):
     next_p.status = Participation.Statuses.JOINED
     next_p.joined_at = now
     next_p.checked_in_at = None
-    next_p.save(update_fields=['status', 'joined_at', 'checked_in_at'])
+    next_p.reminder_sent_at = None
+    next_p.save(update_fields=['status', 'joined_at', 'checked_in_at', 'reminder_sent_at'])
     return next_p

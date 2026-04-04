@@ -13,11 +13,13 @@ from rest_framework.views import APIView
 
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .checkin_tokens import make_checkin_token, parse_checkin_token
-from .models import AEMUser, Event, EventLike, Participation
+from .models import AEMUser, Event, EventLike, Notification, Participation
 from .notifications import (
+    dispatch_due_event_reminders,
     notify_event_moderation,
     notify_participation_cancelled,
     notify_participation_joined,
+    notify_participation_waitlisted,
     notify_waitlist_promoted,
 )
 from .participation_ops import event_has_open_seat, promote_next_waitlisted
@@ -31,6 +33,7 @@ from .serializers import (
     EventSerializer,
     JoinedParticipationSerializer,
     LoginSerializer,
+    NotificationSerializer,
     ParticipationActivitySerializer,
     ParticipationSerializer,
     ProfileUpdateSerializer,
@@ -484,8 +487,12 @@ class EventParticipateAPIView(APIView):
                 existing_participation.status = Participation.Statuses.WAITLISTED
                 existing_participation.joined_at = now
                 existing_participation.checked_in_at = None
-                existing_participation.save(update_fields=['status', 'joined_at', 'checked_in_at'])
+                existing_participation.reminder_sent_at = None
+                existing_participation.save(
+                    update_fields=['status', 'joined_at', 'checked_in_at', 'reminder_sent_at'],
+                )
                 participation = existing_participation
+                transaction.on_commit(lambda p=participation: notify_participation_waitlisted(p))
                 message = 'The event is full. You have been added to the waitlist.'
 
             return Response(
@@ -526,6 +533,7 @@ class EventParticipateAPIView(APIView):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            transaction.on_commit(lambda p=participation: notify_participation_waitlisted(p))
             message = 'The event is full. You have been added to the waitlist.'
             http_status = status.HTTP_201_CREATED
 
@@ -912,6 +920,130 @@ class EventTokenCheckInAPIView(APIView):
                 'message': 'Participant checked in successfully.',
                 'participation': EventParticipantSerializer(participation).data,
                 'event': EventSerializer(event, context={'current_user': current_user}).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class MyNotificationListAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        limit = 20
+        raw_limit = request.query_params.get('limit')
+        if raw_limit is not None:
+            try:
+                limit = max(1, min(50, int(raw_limit)))
+            except (TypeError, ValueError):
+                limit = 20
+
+        notifications = (
+            Notification.objects.select_related('event')
+            .filter(user_id=current_user.id)
+            .order_by('-created_at', '-id')[:limit]
+        )
+        unread_count = Notification.objects.filter(user_id=current_user.id, read_at__isnull=True).count()
+
+        return Response(
+            {
+                'results': NotificationSerializer(notifications, many=True).data,
+                'unread_count': unread_count,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class NotificationReadAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request, notification_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        notification = get_object_or_404(
+            Notification.objects.select_related('event'),
+            id=notification_id,
+            user_id=current_user.id,
+        )
+
+        if notification.read_at is None:
+            notification.read_at = timezone.now()
+            notification.updated_at = notification.read_at
+            notification.save(update_fields=['read_at', 'updated_at'])
+
+        return Response(
+            {
+                'message': 'Notification marked as read.',
+                'notification': NotificationSerializer(notification).data,
+                'unread_count': Notification.objects.filter(
+                    user_id=current_user.id,
+                    read_at__isnull=True,
+                ).count(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class NotificationReadAllAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        now = timezone.now()
+        Notification.objects.filter(user_id=current_user.id, read_at__isnull=True).update(
+            read_at=now,
+            updated_at=now,
+        )
+
+        return Response(
+            {
+                'message': 'All notifications marked as read.',
+                'unread_count': 0,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminReminderDispatchAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        raw_hours = request.data.get('hours_ahead', 24)
+        try:
+            hours_ahead = max(1, min(168, int(raw_hours)))
+        except (TypeError, ValueError):
+            hours_ahead = 24
+
+        force = parse_boolean_query(request.data.get('force'))
+        sent_count = dispatch_due_event_reminders(hours_ahead=hours_ahead, force=bool(force))
+
+        return Response(
+            {
+                'message': f'Reminders sent: {sent_count}.',
+                'sent_count': sent_count,
             },
             status=status.HTTP_200_OK,
         )

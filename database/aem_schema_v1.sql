@@ -84,6 +84,7 @@ CREATE TABLE participations (
     status VARCHAR(20) NOT NULL DEFAULT 'joined',
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     checked_in_at TIMESTAMPTZ NULL,
+    reminder_sent_at TIMESTAMPTZ NULL,
     CONSTRAINT fk_participations_user
         FOREIGN KEY (user_id)
         REFERENCES users (id)
@@ -115,6 +116,39 @@ CREATE TABLE event_likes (
         UNIQUE (user_id, event_id)
 );
 
+CREATE TABLE notifications (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_id BIGINT NULL,
+    notification_type VARCHAR(40) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    link_url VARCHAR(255) NULL,
+    read_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT fk_notifications_user
+        FOREIGN KEY (user_id)
+        REFERENCES users (id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_notifications_event
+        FOREIGN KEY (event_id)
+        REFERENCES events (id)
+        ON DELETE CASCADE,
+    CONSTRAINT chk_notifications_type
+        CHECK (
+            notification_type IN (
+                'event_approved',
+                'event_rejected',
+                'participation_joined',
+                'participation_waitlisted',
+                'participation_cancelled',
+                'waitlist_promoted',
+                'event_reminder'
+            )
+        )
+);
+
 CREATE INDEX idx_events_creator_id
     ON events (creator_id);
 
@@ -135,5 +169,11 @@ CREATE INDEX idx_event_likes_event_id
 
 CREATE INDEX idx_event_likes_user_id
     ON event_likes (user_id);
+
+CREATE INDEX idx_notifications_user_created_at
+    ON notifications (user_id, created_at DESC);
+
+CREATE INDEX idx_notifications_user_read_at
+    ON notifications (user_id, read_at);
 
 COMMIT;

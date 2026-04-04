@@ -4,7 +4,7 @@ from datetime import timedelta
 from django.utils import timezone
 from rest_framework import serializers
 
-from .models import AEMUser, Event, EventLike, Participation, UserSettings
+from .models import AEMUser, Event, EventLike, Notification, Participation, UserSettings
 from .participation_ops import calculate_no_show_count, count_joined_for_event
 
 
@@ -486,6 +486,24 @@ class EventParticipantSerializer(serializers.ModelSerializer):
             'joined_at',
             'checked_in_at',
             'profile_image_url',
+        )
+        read_only_fields = fields
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    event_id = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Notification
+        fields = (
+            'id',
+            'event_id',
+            'notification_type',
+            'title',
+            'message',
+            'link_url',
+            'read_at',
+            'created_at',
         )
         read_only_fields = fields
 

@@ -268,6 +268,19 @@ function normalizeParticipationRecord(rawParticipation) {
   }
 }
 
+function normalizeNotification(rawNotification) {
+  return {
+    id: rawNotification.id != null ? String(rawNotification.id) : '',
+    eventId: rawNotification.event_id != null ? String(rawNotification.event_id) : '',
+    type: rawNotification.notification_type ?? '',
+    title: rawNotification.title ?? '',
+    message: rawNotification.message ?? '',
+    linkUrl: rawNotification.link_url ?? '',
+    readAt: rawNotification.read_at ?? null,
+    createdAt: rawNotification.created_at ?? null,
+  }
+}
+
 export function extractCheckInToken(value) {
   const normalized = String(value ?? '').trim()
   if (!normalized) {
@@ -479,6 +492,54 @@ export async function updateCurrentUserProfile(profileData) {
   return {
     user,
     message: payload.message,
+  }
+}
+
+export async function fetchMyNotifications(limit = 20) {
+  const payload = await apiRequest(`/api/notifications/?limit=${Math.max(1, Math.min(50, Number(limit) || 20))}`)
+  return {
+    notifications: (payload.results ?? []).map(normalizeNotification),
+    unreadCount: payload.unread_count ?? 0,
+  }
+}
+
+export async function markNotificationRead(notificationId) {
+  const payload = await apiRequest(`/api/notifications/${notificationId}/read/`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    notification: normalizeNotification(payload.notification ?? {}),
+    unreadCount: payload.unread_count ?? 0,
+    message: payload.message ?? '',
+  }
+}
+
+export async function markAllNotificationsRead() {
+  const payload = await apiRequest('/api/notifications/read-all/', {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+
+  return {
+    unreadCount: payload.unread_count ?? 0,
+    message: payload.message ?? '',
+  }
+}
+
+export async function sendAdminReminderBatch({ hoursAhead = 24, force = false } = {}) {
+  const payload = await apiRequest('/api/admin/reminders/send/', {
+    method: 'POST',
+    body: JSON.stringify({
+      hours_ahead: hoursAhead,
+      force,
+    }),
+  })
+
+  return {
+    sentCount: payload.sent_count ?? 0,
+    message: payload.message ?? '',
   }
 }
 

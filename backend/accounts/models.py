@@ -120,6 +120,7 @@ class Participation(models.Model):
     status = models.CharField(max_length=20, choices=Statuses.choices, default=Statuses.JOINED)
     joined_at = models.DateTimeField(default=timezone.now)
     checked_in_at = models.DateTimeField(blank=True, null=True)
+    reminder_sent_at = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         db_table = 'participations'
@@ -147,3 +148,41 @@ class EventLike(models.Model):
         db_table = 'event_likes'
         managed = False
         unique_together = (('user', 'event'),)
+
+
+class Notification(models.Model):
+    class Types(models.TextChoices):
+        EVENT_APPROVED = 'event_approved', 'Event approved'
+        EVENT_REJECTED = 'event_rejected', 'Event rejected'
+        PARTICIPATION_JOINED = 'participation_joined', 'Participation joined'
+        PARTICIPATION_WAITLISTED = 'participation_waitlisted', 'Participation waitlisted'
+        PARTICIPATION_CANCELLED = 'participation_cancelled', 'Participation cancelled'
+        WAITLIST_PROMOTED = 'waitlist_promoted', 'Waitlist promoted'
+        EVENT_REMINDER = 'event_reminder', 'Event reminder'
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(
+        AEMUser,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        db_column='user_id',
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name='notifications',
+        db_column='event_id',
+        blank=True,
+        null=True,
+    )
+    notification_type = models.CharField(max_length=40, choices=Types.choices)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    link_url = models.CharField(max_length=255, blank=True, null=True)
+    read_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'notifications'
+        managed = False

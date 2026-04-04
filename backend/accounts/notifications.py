@@ -1,9 +1,11 @@
 import logging
+from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.utils import timezone
 
-from .models import Event, Participation, UserSettings
+from .models import Event, Notification, Participation, UserSettings
 
 
 logger = logging.getLogger(__name__)
@@ -14,6 +16,10 @@ def format_event_schedule(event):
     start_time = event.start_time.strftime('%H:%M')
     end_time = event.end_time.strftime('%H:%M')
     return f'{event_date} from {start_time} to {end_time}'
+
+
+def build_event_path(event):
+    return f'/events/{event.id}' if event is not None else ''
 
 
 def user_wants_notifications(user):
@@ -47,15 +53,42 @@ def send_notification_email(*, subject, message, recipient):
         return False
 
 
+def create_in_app_notification(
+    *,
+    user,
+    notification_type,
+    title,
+    message,
+    event=None,
+    link_url='',
+):
+    if user is None or not user.is_active:
+        return None
+
+    now = timezone.now()
+    return Notification.objects.create(
+        user=user,
+        event=event,
+        notification_type=notification_type,
+        title=title,
+        message=message,
+        link_url=link_url or build_event_path(event),
+        created_at=now,
+        updated_at=now,
+    )
+
+
 def notify_event_moderation(event, moderation_status):
     organizer = event.creator
-    if not user_wants_notifications(organizer):
-        return False
-
     status_copy = {
         Event.ModerationStatuses.APPROVED: {
-            'subject': f'Your AEM event was approved: {event.title}',
+            'type': Notification.Types.EVENT_APPROVED,
+            'title': f'Event approved: {event.title}',
             'message': (
+                f'Your event "{event.title}" was approved and is now visible to students.'
+            ),
+            'email_subject': f'Your AEM event was approved: {event.title}',
+            'email_message': (
                 f'Hello {organizer.full_name},\n\n'
                 f'Your event "{event.title}" has been approved and is now visible to students.\n\n'
                 f'Location: {event.location}\n'
@@ -64,8 +97,13 @@ def notify_event_moderation(event, moderation_status):
             ),
         },
         Event.ModerationStatuses.REJECTED: {
-            'subject': f'Your AEM event was rejected: {event.title}',
+            'type': Notification.Types.EVENT_REJECTED,
+            'title': f'Event rejected: {event.title}',
             'message': (
+                f'Your event "{event.title}" was rejected by an administrator. Review it and update it if needed.'
+            ),
+            'email_subject': f'Your AEM event was rejected: {event.title}',
+            'email_message': (
                 f'Hello {organizer.full_name},\n\n'
                 f'Your event "{event.title}" was rejected by an administrator.\n\n'
                 f'Location: {event.location}\n'
@@ -79,9 +117,20 @@ def notify_event_moderation(event, moderation_status):
     if payload is None:
         return False
 
-    return send_notification_email(
-        subject=payload['subject'],
+    create_in_app_notification(
+        user=organizer,
+        event=event,
+        notification_type=payload['type'],
+        title=payload['title'],
         message=payload['message'],
+    )
+
+    if not user_wants_notifications(organizer):
+        return True
+
+    return send_notification_email(
+        subject=payload['email_subject'],
+        message=payload['email_message'],
         recipient=organizer.email,
     )
 
@@ -89,9 +138,16 @@ def notify_event_moderation(event, moderation_status):
 def notify_participation_joined(participation):
     attendee = participation.user
     event = participation.event
+    create_in_app_notification(
+        user=attendee,
+        event=event,
+        notification_type=Notification.Types.PARTICIPATION_JOINED,
+        title=f'Joined event: {event.title}',
+        message=f'Your seat is confirmed for "{event.title}".',
+    )
 
     if not user_wants_notifications(attendee):
-        return False
+        return True
 
     return send_notification_email(
         subject=f'Participation confirmed: {event.title}',
@@ -107,12 +163,46 @@ def notify_participation_joined(participation):
     )
 
 
+def notify_participation_waitlisted(participation):
+    attendee = participation.user
+    event = participation.event
+    create_in_app_notification(
+        user=attendee,
+        event=event,
+        notification_type=Notification.Types.PARTICIPATION_WAITLISTED,
+        title=f'Added to waitlist: {event.title}',
+        message=f'The event is full, so you were placed on the waitlist for "{event.title}".',
+    )
+
+    if not user_wants_notifications(attendee):
+        return True
+
+    return send_notification_email(
+        subject=f'Waitlist update: {event.title}',
+        message=(
+            f'Hello {attendee.full_name},\n\n'
+            f'"{event.title}" is currently full, so you were added to the waitlist.\n\n'
+            f'Location: {event.location}\n'
+            f'Schedule: {format_event_schedule(event)}\n\n'
+            'We will notify you if a confirmed seat opens up.'
+        ),
+        recipient=attendee.email,
+    )
+
+
 def notify_participation_cancelled(participation):
     attendee = participation.user
     event = participation.event
+    create_in_app_notification(
+        user=attendee,
+        event=event,
+        notification_type=Notification.Types.PARTICIPATION_CANCELLED,
+        title=f'Participation cancelled: {event.title}',
+        message=f'Your registration for "{event.title}" was cancelled.',
+    )
 
     if not user_wants_notifications(attendee):
-        return False
+        return True
 
     return send_notification_email(
         subject=f'Participation cancelled: {event.title}',
@@ -130,9 +220,16 @@ def notify_participation_cancelled(participation):
 def notify_waitlist_promoted(participation):
     attendee = participation.user
     event = participation.event
+    create_in_app_notification(
+        user=attendee,
+        event=event,
+        notification_type=Notification.Types.WAITLIST_PROMOTED,
+        title=f'Seat confirmed: {event.title}',
+        message=f'You were promoted from the waitlist and now have a confirmed seat for "{event.title}".',
+    )
 
     if not user_wants_notifications(attendee):
-        return False
+        return True
 
     return send_notification_email(
         subject=f'You are confirmed for: {event.title}',
@@ -145,3 +242,75 @@ def notify_waitlist_promoted(participation):
         ),
         recipient=attendee.email,
     )
+
+
+def notify_event_reminder(participation, *, hours_left):
+    attendee = participation.user
+    event = participation.event
+    hours_label = max(1, int(round(hours_left)))
+    create_in_app_notification(
+        user=attendee,
+        event=event,
+        notification_type=Notification.Types.EVENT_REMINDER,
+        title=f'Upcoming event reminder: {event.title}',
+        message=(
+            f'"{event.title}" starts in about {hours_label} hour'
+            f'{"s" if hours_label != 1 else ""}.'
+        ),
+    )
+
+    if not user_wants_notifications(attendee):
+        return True
+
+    return send_notification_email(
+        subject=f'Reminder: {event.title} starts soon',
+        message=(
+            f'Hello {attendee.full_name},\n\n'
+            f'This is a reminder that "{event.title}" starts in about {hours_label} hour'
+            f'{"s" if hours_label != 1 else ""}.\n\n'
+            f'Location: {event.location}\n'
+            f'Schedule: {format_event_schedule(event)}\n\n'
+            'Open AEM to review your event details and QR check-in pass.'
+        ),
+        recipient=attendee.email,
+    )
+
+
+def get_event_start_datetime(event):
+    current_timezone = timezone.get_current_timezone()
+    return timezone.make_aware(
+        datetime.combine(event.event_date, event.start_time),
+        current_timezone,
+    )
+
+
+def dispatch_due_event_reminders(*, now=None, hours_ahead=24, force=False):
+    current_time = timezone.localtime(now or timezone.now())
+    upper_bound = current_time + timedelta(hours=hours_ahead)
+    participations = (
+        Participation.objects.select_related('user', 'event', 'event__creator')
+        .filter(
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=True,
+            event__moderation_status=Event.ModerationStatuses.APPROVED,
+        )
+        .order_by('joined_at', 'id')
+    )
+
+    sent_count = 0
+    for participation in participations:
+        if not force and participation.reminder_sent_at is not None:
+            continue
+
+        event = participation.event
+        start_at = get_event_start_datetime(event)
+        if start_at <= current_time or start_at > upper_bound:
+            continue
+
+        hours_left = (start_at - current_time).total_seconds() / 3600
+        notify_event_reminder(participation, hours_left=hours_left)
+        participation.reminder_sent_at = current_time
+        participation.save(update_fields=['reminder_sent_at'])
+        sent_count += 1
+
+    return sent_count

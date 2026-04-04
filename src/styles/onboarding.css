@@ -7,8 +7,8 @@
 .onboarding-tour__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 18, 34, 0.54);
-  backdrop-filter: blur(6px);
+  background: rgba(9, 18, 34, 0.28);
+  backdrop-filter: blur(3px);
 }
 
 .onboarding-tour__spotlight {
@@ -26,10 +26,10 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  width: min(420px, calc(100% - 24px));
+  width: min(380px, calc(100% - 24px));
   display: grid;
-  gap: 16px;
-  padding: 22px;
+  gap: 12px;
+  padding: 18px;
   border-radius: 28px;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background:
@@ -98,32 +98,37 @@
 }
 
 .onboarding-tour__counter {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  color: rgba(248, 251, 255, 0.78);
+  color: rgba(248, 251, 255, 0.72);
 }
 
 .onboarding-tour h2 {
-  margin: 0;
+  margin: 0 0 4px 0;
   font-family: var(--font-display);
-  font-size: clamp(1.45rem, 4vw, 2rem);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
+  font-size: clamp(1.3rem, 4vw, 1.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.onboarding-tour h2:first-child {
+  margin-top: 0;
 }
 
 .onboarding-tour__description {
   margin: 0;
-  color: rgba(248, 251, 255, 0.86);
-  line-height: 1.7;
+  font-size: 0.92rem;
+  color: rgba(248, 251, 255, 0.82);
+  line-height: 1.6;
 }
 
 .onboarding-tour__instruction {
   display: grid;
   gap: 6px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .onboarding-tour__instruction span {
@@ -135,7 +140,7 @@
 }
 
 .onboarding-tour__instruction strong {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 1.5;
   color: #fff;
 }

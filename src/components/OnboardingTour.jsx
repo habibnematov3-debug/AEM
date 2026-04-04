@@ -24,14 +24,28 @@ function getDialogLayout(targetRect) {
     return { placement: 'bottom', style: undefined }
   }
 
-  const gap = 22
-  const dialogWidth = Math.min(420, window.innerWidth - 48)
-  const dialogHeight = 330
+  const gap = 18 // Reduced from 22 for tighter spacing
+  const dialogWidth = Math.min(380, window.innerWidth - 48) // Reduced from 420
+  const dialogHeight = 300 // Reduced from 330
   const spaceRight = window.innerWidth - (targetRect.left + targetRect.width)
   const spaceLeft = targetRect.left
   const spaceBelow = window.innerHeight - (targetRect.top + targetRect.height)
+  const spaceBelowTarget = window.innerHeight - (targetRect.top + targetRect.height)
   const preferredLeft = clamp(targetRect.left, 24, window.innerWidth - dialogWidth - 24)
 
+  // Prefer positioning below the spotlight when possible (most intuitive for first steps)
+  if (spaceBelowTarget >= dialogHeight + gap) {
+    return {
+      placement: 'bottom',
+      style: {
+        width: `${dialogWidth}px`,
+        top: `${Math.min(targetRect.top + targetRect.height + gap, window.innerHeight - dialogHeight - 24)}px`,
+        left: `${preferredLeft}px`,
+      },
+    }
+  }
+
+  // Fall back to right side
   if (spaceRight >= dialogWidth + gap) {
     return {
       placement: 'right',
@@ -47,6 +61,7 @@ function getDialogLayout(targetRect) {
     }
   }
 
+  // Fall back to left side
   if (spaceLeft >= dialogWidth + gap) {
     return {
       placement: 'left',
@@ -62,17 +77,7 @@ function getDialogLayout(targetRect) {
     }
   }
 
-  if (spaceBelow >= dialogHeight + gap) {
-    return {
-      placement: 'bottom',
-      style: {
-        width: `${dialogWidth}px`,
-        top: `${targetRect.top + targetRect.height + gap}px`,
-        left: `${preferredLeft}px`,
-      },
-    }
-  }
-
+  // Fall back to top
   return {
     placement: 'top',
     style: {
@@ -109,7 +114,7 @@ function buildTourSteps(role, t) {
     return [
       {
         route: '/admin',
-        selector: '[data-tour="admin-intro"]',
+        selector: '[data-tour="admin-stats"]',
         title: t('onboarding.admin.steps.overview.title'),
         description: t('onboarding.admin.steps.overview.description'),
         instruction: t('onboarding.admin.steps.overview.instruction'),

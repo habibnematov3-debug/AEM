@@ -395,34 +395,34 @@ const translations = {
       admin: {
         steps: {
           overview: {
-            title: 'This is your admin dashboard',
+            title: 'Platform Dashboard',
             description:
-              'It gives you a fast overview of platform activity so you can review what needs attention first.',
-            instruction: 'Start from this dashboard whenever you need to review platform status.',
+              'Quickly see users, events, pending approvals, and attendance metrics. Use this dashboard as your central operation hub every time you log in.',
+            instruction: 'Look at the stat cards below to understand current platform activity.',
           },
           stats: {
-            title: 'Watch the platform at a glance',
+            title: 'Monitor Key Metrics',
             description:
-              'These metrics summarize users, events, moderation, attendance, waitlist volume, and no-show behavior.',
-            instruction: 'Use these numbers to spot moderation load and attendance trends quickly.',
+              'The 10 cards show total users, events, pending reviews, attendance, and no-show rates. Check the pending count first—that\'s your main action item.',
+            instruction: 'Scan across these cards to spot what needs your attention.',
           },
           users: {
-            title: 'Manage user access',
+            title: 'Manage Admin Team',
             description:
-              'Open Manage Users to review accounts, change roles, and control who can access admin capabilities.',
-            instruction: 'Use the search and filters here to find users and adjust their access.',
+              'Switch user roles, activate/deactivate accounts, and control who has admin access to this panel.',
+            instruction: 'Click Manage Users to adjust permissions.',
           },
           moderation: {
-            title: 'Approve or reject events here',
+            title: 'Review Event Submissions',
             description:
-              'The moderation panel is where pending events are reviewed before they become visible to students.',
-            instruction: 'Approve or reject pending events from this moderation area.',
+              'New events appear here as Pending. Review titles, descriptions, and details, then Approve to publish or Reject to hide.',
+            instruction: 'Use the filter tabs and search to find submissions to review.',
           },
           guide: {
-            title: 'Guide stays available later',
+            title: 'Replay This Guide',
             description:
-              'Use the Guide button whenever you want to replay this onboarding flow for yourself or during demos.',
-            instruction: 'Use this button whenever you want to restart the guide.',
+              'Return to this tour anytime you need a refresher or to show new admins the platform.',
+            instruction: 'Click the Guide icon in the header to start over.',
           },
         },
       },

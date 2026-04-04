@@ -7,25 +7,23 @@
 .onboarding-tour__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 18, 34, 0.28);
-  backdrop-filter: blur(3px);
+  background: rgba(9, 18, 34, 0.34);
+  backdrop-filter: blur(4px);
 }
 
 .onboarding-tour__spotlight {
   position: fixed;
   border-radius: 22px;
-  background: radial-gradient(circle at center, rgba(246, 191, 76, 0.08) 0%, transparent 100%);
-  border: 3px solid #f6bf4c;
+  background: transparent;
+  border: 3px solid rgba(246, 191, 76, 0.95);
   box-shadow:
-    0 0 0 9999px rgba(9, 18, 34, 0.34),
-    0 0 0 2px rgba(255, 255, 255, 0.84),
-    0 0 20px rgba(246, 191, 76, 0.6),
-    0 0 40px rgba(246, 191, 76, 0.4),
-    inset 0 0 30px rgba(246, 191, 76, 0.2),
-    0 24px 48px rgba(15, 42, 77, 0.34);
+    0 0 24px rgba(246, 191, 76, 0.65),
+    0 0 48px rgba(246, 191, 76, 0.35),
+    inset 0 0 18px rgba(246, 191, 76, 0.2),
+    0 18px 42px rgba(8, 22, 50, 0.28);
   animation: spotlightGlow 2.2s ease-in-out infinite;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 
 .onboarding-tour__dialog {

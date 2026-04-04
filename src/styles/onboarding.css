@@ -14,12 +14,18 @@
 .onboarding-tour__spotlight {
   position: fixed;
   border-radius: 22px;
+  background: radial-gradient(circle at center, rgba(246, 191, 76, 0.08) 0%, transparent 100%);
+  border: 3px solid #f6bf4c;
   box-shadow:
     0 0 0 9999px rgba(9, 18, 34, 0.34),
     0 0 0 2px rgba(255, 255, 255, 0.84),
+    0 0 20px rgba(246, 191, 76, 0.6),
+    0 0 40px rgba(246, 191, 76, 0.4),
+    inset 0 0 30px rgba(246, 191, 76, 0.2),
     0 24px 48px rgba(15, 42, 77, 0.34);
-  animation: onboardingPulse 1.8s ease-in-out infinite;
+  animation: spotlightGlow 2.2s ease-in-out infinite;
   pointer-events: none;
+  z-index: 1;
 }
 
 .onboarding-tour__dialog {
@@ -219,6 +225,33 @@
   transform: translateY(-1px);
 }
 
+@keyframes spotlightGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    border-color: #f6bf4c;
+    box-shadow:
+      0 0 0 9999px rgba(9, 18, 34, 0.34),
+      0 0 0 2px rgba(255, 255, 255, 0.84),
+      0 0 20px rgba(246, 191, 76, 0.6),
+      0 0 40px rgba(246, 191, 76, 0.4),
+      inset 0 0 30px rgba(246, 191, 76, 0.2),
+      0 24px 48px rgba(15, 42, 77, 0.34);
+  }
+
+  50% {
+    transform: scale(1.04);
+    border-color: #ffd147;
+    box-shadow:
+      0 0 0 9999px rgba(9, 18, 34, 0.34),
+      0 0 0 2px rgba(255, 255, 255, 0.92),
+      0 0 30px rgba(246, 191, 76, 0.8),
+      0 0 60px rgba(246, 191, 76, 0.6),
+      inset 0 0 40px rgba(246, 191, 76, 0.3),
+      0 24px 48px rgba(15, 42, 77, 0.34);
+  }
+}
+
 @keyframes onboardingPulse {
   0%,
   100% {
@@ -233,6 +266,7 @@
 @media (prefers-reduced-motion: reduce) {
   .onboarding-tour__spotlight {
     animation: none;
+    transform: scale(1);
   }
 
   .onboarding-tour__primary:hover,

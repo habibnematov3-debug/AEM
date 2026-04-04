@@ -7,8 +7,8 @@
 .onboarding-tour__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 18, 34, 0.34);
-  backdrop-filter: blur(4px);
+  background: rgba(9, 18, 34, 0.24);
+  backdrop-filter: blur(1px);
 }
 
 .onboarding-tour__spotlight {

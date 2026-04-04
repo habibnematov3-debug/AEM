@@ -1141,6 +1141,40 @@ class AdminEventListAPIView(APIView):
             status=status.HTTP_200_OK,
         )
 
+    def delete(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        event_ids = request.data.get('event_ids')
+        if not isinstance(event_ids, list) or not event_ids:
+            return Response(
+                {'detail': 'event_ids must be a non-empty list.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            event_ids = [int(event_id) for event_id in event_ids]
+        except (TypeError, ValueError):
+            return Response(
+                {'detail': 'event_ids must contain integers only.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        events_to_delete = Event.objects.filter(id__in=event_ids)
+        deleted_count, _ = events_to_delete.delete()
+
+        return Response(
+            {
+                'message': f'{deleted_count} events deleted successfully.',
+                'stats': get_admin_dashboard_stats(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminEventModerationAPIView(APIView):

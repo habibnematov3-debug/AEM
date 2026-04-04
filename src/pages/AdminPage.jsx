@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { fetchAdminEvents, sendAdminReminderBatch, deleteAdminEvent } from '../api/aemApi'
+import { fetchAdminEvents, sendAdminReminderBatch, deleteAdminEvents, deleteAdminEvent } from '../api/aemApi'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
@@ -36,8 +36,11 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [feedback, setFeedback] = useState({ type: '', message: '' })
   const [moderatingEventId, setModeratingEventId] = useState('')
   const [deletingEventId, setDeletingEventId] = useState('')
+  const [selectedEventIds, setSelectedEventIds] = useState(new Set())
   const [isSendingReminders, setIsSendingReminders] = useState(false)
   const pendingCount = stats?.pending ?? 0
+  const selectedCount = selectedEventIds.size
+  const allEventsSelected = events.length > 0 && events.every((event) => selectedEventIds.has(event.id))
   const pendingBadgeLabel = pendingCount > 99 ? '99+' : String(pendingCount)
 
   useEffect(() => {
@@ -65,6 +68,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         setRecentUsers(dashboardData.recentUsers)
         setRecentParticipations(dashboardData.recentParticipations)
         setEvents(adminEvents)
+        setSelectedEventIds(new Set())
       } catch (error) {
         if (!isMounted) {
           return
@@ -117,6 +121,11 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       setEvents((currentEvents) =>
         currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
       )
+      setSelectedEventIds((currentSelected) => {
+        const next = new Set(currentSelected)
+        next.delete(eventId)
+        return next
+      })
       setFeedback({
         type: 'success',
         message:
@@ -181,6 +190,58 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       })
     } finally {
       setIsSendingReminders(false)
+    }
+  }
+
+  function handleToggleEventSelection(eventId) {
+    setSelectedEventIds((currentSelected) => {
+      const next = new Set(currentSelected)
+      if (next.has(eventId)) {
+        next.delete(eventId)
+      } else {
+        next.add(eventId)
+      }
+      return next
+    })
+  }
+
+  function handleToggleSelectAll() {
+    setSelectedEventIds((currentSelected) => {
+      if (events.length > 0 && events.every((event) => currentSelected.has(event.id))) {
+        return new Set()
+      }
+      return new Set(events.map((event) => event.id))
+    })
+  }
+
+  async function handleBulkDelete() {
+    if (!selectedCount) {
+      return
+    }
+
+    if (!window.confirm(t('adminPage.deleteSelectedConfirm', { count: selectedCount }))) {
+      return
+    }
+
+    setDeletingEventId('bulk')
+    setFeedback({ type: '', message: '' })
+
+    try {
+      const result = await deleteAdminEvents(Array.from(selectedEventIds))
+      setStats(result.stats)
+      setEvents((currentEvents) => currentEvents.filter((event) => !selectedEventIds.has(event.id)))
+      setSelectedEventIds(new Set())
+      setFeedback({
+        type: 'success',
+        message: t('adminPage.deleteSelectedSuccess', { count: selectedCount }),
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.deleteSelectedError'),
+      })
+    } finally {
+      setDeletingEventId('')
     }
   }
 
@@ -345,6 +406,30 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
           </div>
         </div>
 
+        {events.length ? (
+          <div className="admin-page__bulk-actions">
+            <label className="admin-page__bulk-select">
+              <input
+                type="checkbox"
+                checked={allEventsSelected}
+                onChange={handleToggleSelectAll}
+              />
+              <span>{t('adminPage.selectAll')}</span>
+            </label>
+
+            <button
+              type="button"
+              className="admin-page__delete-selected-button"
+              disabled={selectedCount === 0 || deletingEventId === 'bulk'}
+              onClick={handleBulkDelete}
+            >
+              {deletingEventId === 'bulk'
+                ? t('adminPage.deleting')
+                : t('adminPage.deleteSelected', { count: selectedCount })}
+            </button>
+          </div>
+        ) : null}
+
         {isLoading ? (
           <div className="admin-page__empty">
             <h3>{t('adminPage.loadingTitle')}</h3>
@@ -353,13 +438,24 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         ) : events.length ? (
           <div className="admin-page__events">
             {events.map((event) => (
-              <article key={event.id} className="admin-page__event-card">
+              <article
+                key={event.id}
+                className={`admin-page__event-card ${selectedEventIds.has(event.id) ? 'admin-page__event-card--selected' : ''}`}
+              >
                 <div className="admin-page__event-media">
                   <img src={event.image} alt={event.title} />
                 </div>
 
                 <div className="admin-page__event-content">
                   <div className="admin-page__event-topline">
+                    <label className="admin-page__event-select">
+                      <input
+                        type="checkbox"
+                        checked={selectedEventIds.has(event.id)}
+                        onChange={() => handleToggleEventSelection(event.id)}
+                      />
+                      <span>{t('adminPage.selectEvent')}</span>
+                    </label>
                     <span className="admin-page__event-category">{event.category}</span>
                     <span className={`admin-page__event-status admin-page__event-status--${event.moderationStatus}`}>
                       {t(`adminPage.statuses.${event.moderationStatus}`)}

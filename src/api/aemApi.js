@@ -820,6 +820,18 @@ export async function deleteAdminEvent(eventId) {
   }
 }
 
+export async function deleteAdminEvents(eventIds) {
+  const payload = await apiRequest('/api/admin/events/', {
+    method: 'DELETE',
+    body: JSON.stringify({ event_ids: eventIds }),
+  })
+
+  return {
+    message: payload.message,
+    stats: normalizeAdminStats(payload.stats),
+  }
+}
+
 export async function fetchAdminUsers({ role = '', query = '', isActive = '' } = {}) {
   const params = new URLSearchParams()
   if (role) {

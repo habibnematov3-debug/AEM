@@ -1,0 +1,215 @@
+.onboarding-tour {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+}
+
+.onboarding-tour__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 18, 34, 0.68);
+  backdrop-filter: blur(10px);
+}
+
+.onboarding-tour__spotlight {
+  position: fixed;
+  border-radius: 24px;
+  box-shadow:
+    0 0 0 9999px rgba(9, 18, 34, 0.52),
+    0 0 0 2px rgba(255, 255, 255, 0.82),
+    0 24px 48px rgba(15, 42, 77, 0.34);
+  animation: onboardingPulse 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.onboarding-tour__dialog {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: min(420px, calc(100% - 24px));
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(246, 191, 76, 0.18), transparent 35%),
+    linear-gradient(180deg, rgba(12, 26, 49, 0.98) 0%, rgba(17, 37, 67, 0.98) 100%);
+  color: #f8fbff;
+  box-shadow: 0 30px 80px rgba(8, 18, 34, 0.48);
+}
+
+.onboarding-tour__dialog:focus {
+  outline: none;
+}
+
+.onboarding-tour__dialog:focus-visible {
+  box-shadow:
+    0 30px 80px rgba(8, 18, 34, 0.48),
+    0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+.onboarding-tour__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.onboarding-tour__eyebrow {
+  margin: 0;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f6bf4c;
+}
+
+.onboarding-tour__counter {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: rgba(248, 251, 255, 0.78);
+}
+
+.onboarding-tour h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.onboarding-tour__description {
+  margin: 0;
+  color: rgba(248, 251, 255, 0.86);
+  line-height: 1.7;
+}
+
+.onboarding-tour__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.onboarding-tour__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(248, 251, 255, 0.24);
+}
+
+.onboarding-tour__dot--active {
+  width: 28px;
+  background: linear-gradient(90deg, #f6bf4c 0%, #2f8eff 100%);
+}
+
+.onboarding-tour__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.onboarding-tour__action-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.onboarding-tour__primary,
+.onboarding-tour__secondary,
+.onboarding-tour__ghost {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.onboarding-tour__primary {
+  border: none;
+  background: linear-gradient(180deg, #2f8eff 0%, #1d64b6 100%);
+  color: #fff;
+  box-shadow: 0 16px 30px rgba(47, 142, 255, 0.28);
+}
+
+.onboarding-tour__secondary {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(248, 251, 255, 0.88);
+}
+
+.onboarding-tour__secondary:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+.onboarding-tour__ghost {
+  border: none;
+  background: transparent;
+  color: rgba(248, 251, 255, 0.7);
+}
+
+.onboarding-tour__primary:hover,
+.onboarding-tour__secondary:hover,
+.onboarding-tour__ghost:hover {
+  transform: translateY(-1px);
+}
+
+@keyframes onboardingPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.008);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-tour__spotlight {
+    animation: none;
+  }
+
+  .onboarding-tour__primary:hover,
+  .onboarding-tour__secondary:hover,
+  .onboarding-tour__ghost:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .onboarding-tour__dialog {
+    right: 12px;
+    left: 12px;
+    bottom: 12px;
+    width: auto;
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .onboarding-tour__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .onboarding-tour__action-group {
+    width: 100%;
+  }
+
+  .onboarding-tour__primary,
+  .onboarding-tour__secondary,
+  .onboarding-tour__ghost {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .onboarding-tour__action-group .onboarding-tour__primary,
+  .onboarding-tour__action-group .onboarding-tour__secondary {
+    flex: 1 1 0;
+  }
+}

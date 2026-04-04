@@ -264,6 +264,32 @@
   box-shadow: 0 10px 18px rgba(195, 52, 68, 0.22);
 }
 
+.site-header__guide {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(29, 100, 182, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 247, 255, 0.94) 100%);
+  color: var(--accent-dark);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+}
+
+.site-header__guide:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.site-header__guide:focus-visible {
+  outline: none;
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 3px rgba(29, 100, 182, 0.16);
+}
+
 .site-header__profile {
   width: 44px;
   height: 44px;
@@ -305,6 +331,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .site-header__link:hover,
+  .site-header__guide:hover,
   .site-header__profile:hover,
   .site-header__brand--students:hover,
   .site-header__brand-group .site-header__brand:hover {
@@ -400,6 +427,12 @@
     height: 40px;
     flex: 0 0 40px;
   }
+
+  .site-header__guide {
+    min-height: 38px;
+    padding: 0 12px;
+    font-size: 0.84rem;
+  }
 }
 
 @media (max-width: 460px) {
@@ -448,6 +481,13 @@
   .site-header__link {
     min-height: 36px;
     padding: 0 12px;
+  }
+
+  .site-header__guide {
+    min-height: 36px;
+    margin-right: 6px;
+    padding: 0 10px;
+    font-size: 0.82rem;
   }
 
   .site-header__brand--students {

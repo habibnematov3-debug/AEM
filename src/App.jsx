@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import {
   createEvent,
@@ -21,6 +21,7 @@ import {
 import AdminPage from './pages/AdminPage'
 import AdminUsersPage from './pages/AdminUsersPage'
 import Header from './components/Header'
+import OnboardingTour from './components/OnboardingTour'
 import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
 import AuthPage from './pages/AuthPage'
@@ -36,6 +37,31 @@ import './styles/pages.css'
 
 const AUTH_ESTABLISH_ERROR_MESSAGE =
   'Authentication could not be completed. Please sign in again.'
+const ONBOARDING_STORAGE_KEY_PREFIX = 'aem-onboarding-v1'
+
+function getOnboardingStorageKey(user) {
+  if (!user?.id) {
+    return ''
+  }
+
+  return `${ONBOARDING_STORAGE_KEY_PREFIX}:${user.id}:${user.role}`
+}
+
+function hasSeenOnboarding(user) {
+  if (!user?.id || typeof window === 'undefined' || !window.localStorage) {
+    return false
+  }
+
+  return window.localStorage.getItem(getOnboardingStorageKey(user)) === 'done'
+}
+
+function markOnboardingSeen(user) {
+  if (!user?.id || typeof window === 'undefined' || !window.localStorage) {
+    return
+  }
+
+  window.localStorage.setItem(getOnboardingStorageKey(user), 'done')
+}
 
 function RequireAuth({ currentUser, authReady, children }) {
   const { t } = useI18n()
@@ -109,7 +135,10 @@ function App() {
   const [events, setEvents] = useState([])
   const [authReady, setAuthReady] = useState(false)
   const [adminPendingCount, setAdminPendingCount] = useState(0)
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
+  const [pendingGuideOpen, setPendingGuideOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
   const isAuthPage = location.pathname === '/'
   const isProfilePage = location.pathname === '/profile'
   const isStudentsPage = location.pathname === '/students'
@@ -127,6 +156,8 @@ function App() {
     isAdminPage ||
     location.pathname.startsWith('/events/') ||
     isProfilePage
+  const onboardingRole = currentUser?.role === 'admin' ? 'admin' : 'student'
+  const onboardingStartPath = currentUser ? getDefaultRouteForRole(currentUser.role) : '/students'
 
   useEffect(() => {
     let isMounted = true
@@ -173,6 +204,51 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = currentUser?.settings?.theme ?? 'light'
   }, [currentUser])
+
+  useEffect(() => {
+    if (currentUser) {
+      return
+    }
+
+    setIsOnboardingOpen(false)
+    setPendingGuideOpen(false)
+  }, [currentUser])
+
+  useEffect(() => {
+    if (!authReady || !currentUser || pendingGuideOpen || isOnboardingOpen) {
+      return
+    }
+
+    if (location.pathname !== onboardingStartPath || hasSeenOnboarding(currentUser)) {
+      return
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsOnboardingOpen(true)
+    }, 260)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [
+    authReady,
+    currentUser,
+    isOnboardingOpen,
+    location.pathname,
+    onboardingStartPath,
+    pendingGuideOpen,
+  ])
+
+  useEffect(() => {
+    if (!pendingGuideOpen || !currentUser) {
+      return
+    }
+
+    if (location.pathname !== onboardingStartPath) {
+      return
+    }
+
+    setIsOnboardingOpen(true)
+    setPendingGuideOpen(false)
+  }, [currentUser, location.pathname, onboardingStartPath, pendingGuideOpen])
 
   useEffect(() => {
     let isMounted = true
@@ -341,6 +417,30 @@ function App() {
     return result
   }
 
+  function handleOpenGuide() {
+    if (!currentUser) {
+      return
+    }
+
+    if (location.pathname !== onboardingStartPath) {
+      setPendingGuideOpen(true)
+      navigate(onboardingStartPath)
+      return
+    }
+
+    setPendingGuideOpen(false)
+    setIsOnboardingOpen(true)
+  }
+
+  function handleCloseOnboarding() {
+    if (currentUser) {
+      markOnboardingSeen(currentUser)
+    }
+
+    setPendingGuideOpen(false)
+    setIsOnboardingOpen(false)
+  }
+
   const activeLanguageCode = currentUser?.settings?.languageCode ?? getStoredLanguageCode()
 
   return (
@@ -355,6 +455,7 @@ function App() {
             showSearch={!isProfilePage}
             searchValue={studentSearch}
             onSearchChange={setStudentSearch}
+            onOpenGuide={handleOpenGuide}
           />
         )}
         <main id="main-content" className="page-shell" tabIndex={-1}>
@@ -464,6 +565,14 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>
+        {isOnboardingOpen ? (
+          <OnboardingTour
+            key={`${currentUser?.id ?? 'guest'}-${onboardingRole}`}
+            role={onboardingRole}
+            onClose={handleCloseOnboarding}
+            onComplete={handleCloseOnboarding}
+          />
+        ) : null}
       </div>
     </LanguageProvider>
   )

@@ -82,7 +82,7 @@ function StudentsPage({
 
   return (
     <section className="students-events-page" aria-busy={eventsLoading}>
-      <div className="students-events-page__intro">
+      <div className="students-events-page__intro" data-tour="students-intro">
         <p className="students-events-page__eyebrow">
           {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}
         </p>
@@ -107,40 +107,42 @@ function StudentsPage({
             ))}
       </div>
 
-      {eventsLoading ? (
-        <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
-          {Array.from({ length: 6 }, (_, index) => (
-            <div key={`card-sk-${index}`} className="students-events-skeleton-card" />
-          ))}
-        </div>
-      ) : filteredEvents.length ? (
-        <div className="students-events-grid">
-          {filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant="student"
-              currentUser={currentUser}
-              onToggleLike={onToggleEventLike}
-            />
-          ))}
-        </div>
-      ) : events.length === 0 ? (
-        <div className="students-events-empty">
-          <h2>{t('students.emptyNoEventsTitle')}</h2>
-          <p>{t('students.emptyNoEventsDescription')}</p>
-        </div>
-      ) : (
-        <div className="students-events-empty">
-          <h2>{t('students.emptyFilterTitle')}</h2>
-          <p>{t('students.emptyFilterDescription')}</p>
-          {searchActive ? (
-            <button type="button" className="students-events-empty__action" onClick={onClearSearch}>
-              {t('students.clearSearch')}
-            </button>
-          ) : null}
-        </div>
-      )}
+      <div data-tour="students-catalog">
+        {eventsLoading ? (
+          <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
+            {Array.from({ length: 6 }, (_, index) => (
+              <div key={`card-sk-${index}`} className="students-events-skeleton-card" />
+            ))}
+          </div>
+        ) : filteredEvents.length ? (
+          <div className="students-events-grid">
+            {filteredEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                variant="student"
+                currentUser={currentUser}
+                onToggleLike={onToggleEventLike}
+              />
+            ))}
+          </div>
+        ) : events.length === 0 ? (
+          <div className="students-events-empty">
+            <h2>{t('students.emptyNoEventsTitle')}</h2>
+            <p>{t('students.emptyNoEventsDescription')}</p>
+          </div>
+        ) : (
+          <div className="students-events-empty">
+            <h2>{t('students.emptyFilterTitle')}</h2>
+            <p>{t('students.emptyFilterDescription')}</p>
+            {searchActive ? (
+              <button type="button" className="students-events-empty__action" onClick={onClearSearch}>
+                {t('students.clearSearch')}
+              </button>
+            ) : null}
+          </div>
+        )}
+      </div>
     </section>
   )
 }

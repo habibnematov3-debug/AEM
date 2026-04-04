@@ -138,7 +138,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
 
   return (
     <section className="admin-page">
-      <div className="admin-page__intro">
+      <div className="admin-page__intro" data-tour="admin-intro">
         <div>
           <p className="admin-page__eyebrow">{t('adminPage.eyebrow')}</p>
           <h1>{t('adminPage.title')}</h1>
@@ -146,7 +146,11 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         </div>
 
         <div className="admin-page__intro-actions">
-          <Link to="/admin/users" className="admin-page__manage-users-link">
+          <Link
+            to="/admin/users"
+            className="admin-page__manage-users-link"
+            data-tour="admin-manage-users"
+          >
             {t('adminPage.manageUsers')}
           </Link>
         </div>
@@ -164,7 +168,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         </div>
       ) : null}
 
-      <div className="admin-page__stats">
+      <div className="admin-page__stats" data-tour="admin-stats">
         {statCards.map((item) => (
           <article key={item.key} className="admin-page__stat-card">
             <span>{item.label}</span>
@@ -238,7 +242,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         </article>
       </div>
 
-      <div className="admin-page__panel">
+      <div className="admin-page__panel" data-tour="admin-moderation">
         <div className="admin-page__panel-top">
           <div>
             <p className="admin-page__panel-eyebrow">{t('adminPage.moderationEyebrow')}</p>

@@ -10,6 +10,7 @@ function Header({
   showSearch = true,
   searchValue = '',
   onSearchChange = () => {},
+  onOpenGuide = null,
 }) {
   const { t } = useI18n()
   const isAdmin = currentUser?.role === 'admin'
@@ -49,6 +50,21 @@ function Header({
   const profileLabel = currentUser?.name ?? t('header.profile')
   const profileImageUrl = currentUser?.profileImageUrl ?? currentUser?.settings?.profileImageUrl ?? ''
 
+  function getTourMarker(path) {
+    switch (path) {
+      case '/students':
+        return 'header-events-nav'
+      case '/joined-events':
+        return 'header-joined-events-nav'
+      case '/organizer':
+        return 'header-my-events-nav'
+      case '/admin':
+        return 'header-admin-nav'
+      default:
+        return undefined
+    }
+  }
+
   function isNavItemActive(path) {
     if (variant === 'students' && path === '/students') {
       return location.pathname === '/students' || location.pathname.startsWith('/events/')
@@ -81,7 +97,11 @@ function Header({
         </div>
 
         {variant === 'students' && showSearch ? (
-          <label className="site-header__search" aria-label={t('header.searchLabel')}>
+          <label
+            className="site-header__search"
+            aria-label={t('header.searchLabel')}
+            data-tour="header-search"
+          >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M10.5 4a6.5 6.5 0 1 0 4.03 11.6l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
@@ -103,6 +123,7 @@ function Header({
               <NavLink
                 key={item.to}
                 to={item.to}
+                data-tour={getTourMarker(item.to)}
                 className={
                   isNavItemActive(item.to)
                     ? 'site-header__link site-header__link--active'
@@ -121,6 +142,17 @@ function Header({
               </NavLink>
             ))}
           </nav>
+
+          {variant === 'students' && currentUser?.id && typeof onOpenGuide === 'function' ? (
+            <button
+              type="button"
+              className="site-header__guide"
+              onClick={onOpenGuide}
+              data-tour="header-guide"
+            >
+              {t('header.guide')}
+            </button>
+          ) : null}
 
           {variant === 'students' ? (
             <NavLink

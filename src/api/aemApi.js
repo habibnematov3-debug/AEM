@@ -274,12 +274,17 @@ export function extractCheckInToken(value) {
     return ''
   }
 
-  try {
-    const parsedUrl = new URL(normalized)
-    return parsedUrl.searchParams.get('token')?.trim() ?? ''
-  } catch {
-    return normalized
+  const lowerCasedValue = normalized.toLowerCase()
+  if (lowerCasedValue.startsWith('http://') || lowerCasedValue.startsWith('https://')) {
+    try {
+      const parsedUrl = new URL(normalized)
+      return parsedUrl.searchParams.get('token')?.trim() ?? ''
+    } catch {
+      return ''
+    }
   }
+
+  return normalized
 }
 
 export function buildCheckInResultPath(eventId, token) {

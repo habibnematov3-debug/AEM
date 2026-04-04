@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import { fetchAdminEvents, sendAdminReminderBatch } from '../api/aemApi'
+import { fetchAdminEvents, sendAdminReminderBatch, deleteAdminEvent } from '../api/aemApi'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
@@ -35,6 +35,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [isLoading, setIsLoading] = useState(true)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
   const [moderatingEventId, setModeratingEventId] = useState('')
+  const [deletingEventId, setDeletingEventId] = useState('')
   const [isSendingReminders, setIsSendingReminders] = useState(false)
   const pendingCount = stats?.pending ?? 0
   const pendingBadgeLabel = pendingCount > 99 ? '99+' : String(pendingCount)
@@ -134,6 +135,32 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       })
     } finally {
       setModeratingEventId('')
+    }
+  }
+
+  async function handleDeleteEvent(eventId) {
+    if (!window.confirm(t('adminPage.deleteConfirm'))) {
+      return
+    }
+
+    setDeletingEventId(eventId)
+    setFeedback({ type: '', message: '' })
+
+    try {
+      const result = await deleteAdminEvent(eventId)
+      setStats(result.stats)
+      setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId))
+      setFeedback({
+        type: 'success',
+        message: t('adminPage.deleteSuccess'),
+      })
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.deleteError'),
+      })
+    } finally {
+      setDeletingEventId('')
     }
   }
 
@@ -367,6 +394,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
                       className="admin-page__approve-button"
                       disabled={
                         moderatingEventId === event.id ||
+                        deletingEventId === event.id ||
                         event.moderationStatus === 'approved'
                       }
                       onClick={() => handleModeration(event.id, 'approved')}
@@ -381,6 +409,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
                       className="admin-page__reject-button"
                       disabled={
                         moderatingEventId === event.id ||
+                        deletingEventId === event.id ||
                         event.moderationStatus === 'rejected'
                       }
                       onClick={() => handleModeration(event.id, 'rejected')}
@@ -388,6 +417,17 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
                       {moderatingEventId === event.id
                         ? t('adminPage.moderating')
                         : t('adminPage.reject')}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="admin-page__delete-button"
+                      disabled={moderatingEventId === event.id || deletingEventId === event.id}
+                      onClick={() => handleDeleteEvent(event.id)}
+                    >
+                      {deletingEventId === event.id
+                        ? t('adminPage.deleting')
+                        : t('adminPage.delete')}
                     </button>
                   </div>
                 </div>

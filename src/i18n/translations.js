@@ -232,6 +232,11 @@ const translations = {
       emptyDescription: 'Try another moderation filter or check back later.',
       approve: 'Approve',
       reject: 'Reject',
+      delete: 'Delete',
+      deleting: 'Deleting...',
+      deleteSuccess: 'Event deleted successfully.',
+      deleteError: 'Could not delete the event.',
+      deleteConfirm: 'Are you sure you want to delete this event? This action cannot be undone.',
       moderating: 'Updating...',
       filters: {
         pending: 'Pending',

@@ -809,6 +809,17 @@ export async function moderateAdminEvent(eventId, moderationStatus) {
   }
 }
 
+export async function deleteAdminEvent(eventId) {
+  const payload = await apiRequest(`/api/admin/events/${eventId}/delete/`, {
+    method: 'DELETE',
+  })
+
+  return {
+    message: payload.message,
+    stats: normalizeAdminStats(payload.stats),
+  }
+}
+
 export async function fetchAdminUsers({ role = '', query = '', isActive = '' } = {}) {
   const params = new URLSearchParams()
   if (role) {

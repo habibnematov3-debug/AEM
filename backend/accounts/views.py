@@ -1177,6 +1177,32 @@ class AdminEventModerationAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class AdminEventDeleteAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def delete(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        event = get_object_or_404(Event, id=event_id)
+        event_title = event.title
+        event.delete()
+
+        return Response(
+            {
+                'message': f'Event "{event_title}" has been deleted successfully.',
+                'stats': get_admin_dashboard_stats(),
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class AdminUserListAPIView(APIView):
     authentication_classes = []
     permission_classes = []

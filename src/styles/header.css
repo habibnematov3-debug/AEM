@@ -382,6 +382,8 @@
   background: var(--surface);
   text-align: left;
   color: inherit;
+  text-decoration: none;
+  cursor: pointer;
   box-shadow: var(--shadow-sm);
 }
 

@@ -48,6 +48,7 @@ function EventCard({
   onCancel = () => {},
   onToggleLike = null,
   isCanceling = false,
+  tourMarker = '',
 }) {
   const { languageCode, t } = useI18n()
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
@@ -79,7 +80,10 @@ function EventCard({
     const canToggleLike = Boolean(currentUser?.id) && typeof onToggleLike === 'function'
 
     return (
-      <article className="event-card event-card--student event-card--interactive">
+      <article
+        className="event-card event-card--student event-card--interactive"
+        data-tour={tourMarker || undefined}
+      >
         <Link
           to={`/events/${event.id}`}
           className="event-card__media-link"
@@ -180,7 +184,7 @@ function EventCard({
 
   if (variant === 'organizer-minimal') {
     return (
-      <article className="event-card event-card--student">
+      <article className="event-card event-card--student" data-tour={tourMarker || undefined}>
         <div className="event-card__media">
           <img className="event-card__image" src={event.image} alt={event.title} />
         </div>
@@ -251,7 +255,7 @@ function EventCard({
     const participationDateText = formatTimestampDate(event.joinedAt, dateText, languageCode)
 
     return (
-      <article className="event-card event-card--student">
+      <article className="event-card event-card--student" data-tour={tourMarker || undefined}>
         <div className="event-card__media">
           <img className="event-card__image" src={event.image} alt={event.title} />
         </div>

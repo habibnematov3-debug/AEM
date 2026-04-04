@@ -242,8 +242,8 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         </article>
       </div>
 
-      <div className="admin-page__panel" data-tour="admin-moderation">
-        <div className="admin-page__panel-top">
+      <div className="admin-page__panel">
+        <div className="admin-page__panel-top" data-tour="admin-moderation">
           <div>
             <p className="admin-page__panel-eyebrow">{t('adminPage.moderationEyebrow')}</p>
             <div className="admin-page__panel-heading">

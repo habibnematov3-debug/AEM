@@ -147,7 +147,7 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
 
   return (
     <section className="joined-events-page">
-      <div className="joined-events-page__intro">
+      <div className="joined-events-page__intro" data-tour="joined-intro">
         <p className="joined-events-page__eyebrow">
           {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}
         </p>
@@ -212,6 +212,7 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
               variant="joined"
               onCancel={handleCancelParticipation}
               isCanceling={cancelingEventId === participation.event.id}
+              tourMarker={displayedParticipations[0]?.id === participation.id ? 'joined-first-card' : ''}
             />
           ))}
         </div>

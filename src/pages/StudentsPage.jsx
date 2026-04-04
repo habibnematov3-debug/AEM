@@ -116,15 +116,16 @@ function StudentsPage({
           </div>
         ) : filteredEvents.length ? (
           <div className="students-events-grid">
-            {filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant="student"
-                currentUser={currentUser}
-                onToggleLike={onToggleEventLike}
-              />
-            ))}
+          {filteredEvents.map((event) => (
+            <EventCard
+              key={event.id}
+              event={event}
+              variant="student"
+              currentUser={currentUser}
+              onToggleLike={onToggleEventLike}
+              tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
+            />
+          ))}
           </div>
         ) : events.length === 0 ? (
           <div className="students-events-empty">

@@ -155,7 +155,7 @@ function AdminUsersPage({ currentUser }) {
 
   return (
     <section className="admin-users-page">
-      <div className="admin-users-page__intro">
+      <div className="admin-users-page__intro" data-tour="admin-users-intro">
         <div>
           <p className="admin-users-page__eyebrow">{t('adminUsersPage.eyebrow')}</p>
           <h1>{t('adminUsersPage.title')}</h1>
@@ -184,7 +184,7 @@ function AdminUsersPage({ currentUser }) {
         </div>
       ) : null}
 
-      <div className="admin-users-page__toolbar">
+      <div className="admin-users-page__toolbar" data-tour="admin-users-toolbar">
         <label className="admin-users-page__search">
           <span className="sr-only">{t('common.search')}</span>
           <input

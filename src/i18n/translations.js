@@ -333,6 +333,7 @@ const translations = {
     onboarding: {
       eyebrow: 'Quick Tour',
       stepCounter: 'Step {current} of {total}',
+      tryLabel: 'Try this',
       skip: 'Skip tour',
       back: 'Back',
       next: 'Next',
@@ -343,31 +344,37 @@ const translations = {
             title: 'This is your event feed',
             description:
               'Start here to discover approved university events, open details, and join the ones you want to attend.',
+            instruction: 'Scroll this page and open any event card to see full details.',
           },
           search: {
             title: 'Find events faster',
             description:
               'Use search to filter by title, location, or category when you want something specific.',
+            instruction: 'Type a keyword or event category into this search bar.',
           },
           catalog: {
             title: 'Browse live event cards',
             description:
               'Each card opens full event details where you can like the event, join it, or see capacity and waitlist status.',
+            instruction: 'Click this event card to open the full event page.',
           },
           joined: {
             title: 'Track your joined events',
             description:
               'Open My Joined Events to review your registrations, leave a waitlist, and access your personal QR check-in pass.',
+            instruction: 'Review your registered events here and manage your participation.',
           },
           organizer: {
             title: 'Create and run your own events',
             description:
               'My Events is your organizer workspace for creating events, editing them, and later managing participants, waitlists, and check-in.',
+            instruction: 'Use this button to create a new event as an organizer.',
           },
           guide: {
             title: 'Reopen this tour anytime',
             description:
               'Use the Guide button whenever you want a quick refresher after new features are added.',
+            instruction: 'Click Guide later if you want to replay the walkthrough.',
           },
         },
       },
@@ -377,31 +384,31 @@ const translations = {
             title: 'This is your admin dashboard',
             description:
               'It gives you a fast overview of platform activity so you can review what needs attention first.',
+            instruction: 'Start from this dashboard whenever you need to review platform status.',
           },
           stats: {
             title: 'Watch the platform at a glance',
             description:
               'These metrics summarize users, events, moderation, attendance, waitlist volume, and no-show behavior.',
+            instruction: 'Use these numbers to spot moderation load and attendance trends quickly.',
           },
           users: {
             title: 'Manage user access',
             description:
               'Open Manage Users to review accounts, change roles, and control who can access admin capabilities.',
+            instruction: 'Use the search and filters here to find users and adjust their access.',
           },
           moderation: {
             title: 'Approve or reject events here',
             description:
               'The moderation panel is where pending events are reviewed before they become visible to students.',
-          },
-          events: {
-            title: 'Browse the platform like a user',
-            description:
-              'Use Events in the header to see the public student view and verify how approved events appear in the app.',
+            instruction: 'Approve or reject pending events from this moderation area.',
           },
           guide: {
             title: 'Guide stays available later',
             description:
               'Use the Guide button whenever you want to replay this onboarding flow for yourself or during demos.',
+            instruction: 'Use this button whenever you want to restart the guide.',
           },
         },
       },

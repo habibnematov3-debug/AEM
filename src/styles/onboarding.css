@@ -7,16 +7,16 @@
 .onboarding-tour__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(9, 18, 34, 0.68);
-  backdrop-filter: blur(10px);
+  background: rgba(9, 18, 34, 0.54);
+  backdrop-filter: blur(6px);
 }
 
 .onboarding-tour__spotlight {
   position: fixed;
-  border-radius: 24px;
+  border-radius: 22px;
   box-shadow:
-    0 0 0 9999px rgba(9, 18, 34, 0.52),
-    0 0 0 2px rgba(255, 255, 255, 0.82),
+    0 0 0 9999px rgba(9, 18, 34, 0.34),
+    0 0 0 2px rgba(255, 255, 255, 0.84),
     0 24px 48px rgba(15, 42, 77, 0.34);
   animation: onboardingPulse 1.8s ease-in-out infinite;
   pointer-events: none;
@@ -37,6 +37,38 @@
     linear-gradient(180deg, rgba(12, 26, 49, 0.98) 0%, rgba(17, 37, 67, 0.98) 100%);
   color: #f8fbff;
   box-shadow: 0 30px 80px rgba(8, 18, 34, 0.48);
+}
+
+.onboarding-tour__dialog--right .onboarding-tour__arrow,
+.onboarding-tour__dialog--left .onboarding-tour__arrow,
+.onboarding-tour__dialog--top .onboarding-tour__arrow {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: #14284a;
+  border-left: 1px solid rgba(255, 255, 255, 0.16);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  transform: rotate(45deg);
+}
+
+.onboarding-tour__dialog--right .onboarding-tour__arrow {
+  top: 50%;
+  left: -10px;
+  margin-top: -9px;
+}
+
+.onboarding-tour__dialog--left .onboarding-tour__arrow {
+  top: 50%;
+  right: -10px;
+  margin-top: -9px;
+  transform: rotate(225deg);
+}
+
+.onboarding-tour__dialog--top .onboarding-tour__arrow {
+  bottom: -10px;
+  left: 50%;
+  margin-left: -9px;
+  transform: rotate(225deg);
 }
 
 .onboarding-tour__dialog:focus {
@@ -83,6 +115,29 @@
   margin: 0;
   color: rgba(248, 251, 255, 0.86);
   line-height: 1.7;
+}
+
+.onboarding-tour__instruction {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.onboarding-tour__instruction span {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #f6bf4c;
+}
+
+.onboarding-tour__instruction strong {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #fff;
 }
 
 .onboarding-tour__progress {
@@ -190,6 +245,10 @@
     width: auto;
     padding: 18px;
     border-radius: 22px;
+  }
+
+  .onboarding-tour__arrow {
+    display: none;
   }
 
   .onboarding-tour__actions {

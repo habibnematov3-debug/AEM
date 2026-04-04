@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/onboarding.css'
@@ -10,78 +11,190 @@ function prefersReducedMotion() {
   )
 }
 
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max)
+}
+
+function getDialogLayout(targetRect) {
+  if (!targetRect || typeof window === 'undefined') {
+    return { placement: 'floating', style: undefined }
+  }
+
+  if (window.innerWidth <= 720) {
+    return { placement: 'bottom', style: undefined }
+  }
+
+  const gap = 22
+  const dialogWidth = Math.min(420, window.innerWidth - 48)
+  const dialogHeight = 330
+  const spaceRight = window.innerWidth - (targetRect.left + targetRect.width)
+  const spaceLeft = targetRect.left
+  const spaceBelow = window.innerHeight - (targetRect.top + targetRect.height)
+  const preferredLeft = clamp(targetRect.left, 24, window.innerWidth - dialogWidth - 24)
+
+  if (spaceRight >= dialogWidth + gap) {
+    return {
+      placement: 'right',
+      style: {
+        width: `${dialogWidth}px`,
+        top: `${clamp(
+          targetRect.top + targetRect.height / 2 - dialogHeight / 2,
+          24,
+          window.innerHeight - dialogHeight - 24,
+        )}px`,
+        left: `${targetRect.left + targetRect.width + gap}px`,
+      },
+    }
+  }
+
+  if (spaceLeft >= dialogWidth + gap) {
+    return {
+      placement: 'left',
+      style: {
+        width: `${dialogWidth}px`,
+        top: `${clamp(
+          targetRect.top + targetRect.height / 2 - dialogHeight / 2,
+          24,
+          window.innerHeight - dialogHeight - 24,
+        )}px`,
+        left: `${targetRect.left - dialogWidth - gap}px`,
+      },
+    }
+  }
+
+  if (spaceBelow >= dialogHeight + gap) {
+    return {
+      placement: 'bottom',
+      style: {
+        width: `${dialogWidth}px`,
+        top: `${targetRect.top + targetRect.height + gap}px`,
+        left: `${preferredLeft}px`,
+      },
+    }
+  }
+
+  return {
+    placement: 'top',
+    style: {
+      width: `${dialogWidth}px`,
+      top: `${Math.max(24, targetRect.top - dialogHeight - gap)}px`,
+      left: `${preferredLeft}px`,
+    },
+  }
+}
+
+function resolveTargetElement(step) {
+  if (!step) {
+    return null
+  }
+
+  const selectors = Array.isArray(step.selectors)
+    ? step.selectors
+    : step.selector
+      ? [step.selector]
+      : []
+
+  for (const selector of selectors) {
+    const targetElement = document.querySelector(selector)
+    if (targetElement) {
+      return targetElement
+    }
+  }
+
+  return null
+}
+
 function buildTourSteps(role, t) {
   if (role === 'admin') {
     return [
       {
+        route: '/admin',
         selector: '[data-tour="admin-intro"]',
         title: t('onboarding.admin.steps.overview.title'),
         description: t('onboarding.admin.steps.overview.description'),
+        instruction: t('onboarding.admin.steps.overview.instruction'),
       },
       {
+        route: '/admin',
         selector: '[data-tour="admin-stats"]',
         title: t('onboarding.admin.steps.stats.title'),
         description: t('onboarding.admin.steps.stats.description'),
+        instruction: t('onboarding.admin.steps.stats.instruction'),
       },
       {
-        selector: '[data-tour="admin-manage-users"]',
+        route: '/admin/users',
+        selector: '[data-tour="admin-users-toolbar"]',
         title: t('onboarding.admin.steps.users.title'),
         description: t('onboarding.admin.steps.users.description'),
+        instruction: t('onboarding.admin.steps.users.instruction'),
       },
       {
+        route: '/admin',
         selector: '[data-tour="admin-moderation"]',
         title: t('onboarding.admin.steps.moderation.title'),
         description: t('onboarding.admin.steps.moderation.description'),
+        instruction: t('onboarding.admin.steps.moderation.instruction'),
       },
       {
-        selector: '[data-tour="header-events-nav"]',
-        title: t('onboarding.admin.steps.events.title'),
-        description: t('onboarding.admin.steps.events.description'),
-      },
-      {
+        route: '/admin',
         selector: '[data-tour="header-guide"]',
         title: t('onboarding.admin.steps.guide.title'),
         description: t('onboarding.admin.steps.guide.description'),
+        instruction: t('onboarding.admin.steps.guide.instruction'),
       },
     ]
   }
 
   return [
     {
+      route: '/students',
       selector: '[data-tour="students-intro"]',
       title: t('onboarding.student.steps.overview.title'),
       description: t('onboarding.student.steps.overview.description'),
+      instruction: t('onboarding.student.steps.overview.instruction'),
     },
     {
+      route: '/students',
       selector: '[data-tour="header-search"]',
       title: t('onboarding.student.steps.search.title'),
       description: t('onboarding.student.steps.search.description'),
+      instruction: t('onboarding.student.steps.search.instruction'),
     },
     {
-      selector: '[data-tour="students-catalog"]',
+      route: '/students',
+      selectors: ['[data-tour="students-first-card"]', '[data-tour="students-catalog"]'],
       title: t('onboarding.student.steps.catalog.title'),
       description: t('onboarding.student.steps.catalog.description'),
+      instruction: t('onboarding.student.steps.catalog.instruction'),
     },
     {
-      selector: '[data-tour="header-joined-events-nav"]',
+      route: '/joined-events',
+      selectors: ['[data-tour="joined-first-card"]', '[data-tour="joined-intro"]'],
       title: t('onboarding.student.steps.joined.title'),
       description: t('onboarding.student.steps.joined.description'),
+      instruction: t('onboarding.student.steps.joined.instruction'),
     },
     {
-      selector: '[data-tour="header-my-events-nav"]',
+      route: '/organizer',
+      selector: '[data-tour="organizer-create-event"]',
       title: t('onboarding.student.steps.organizer.title'),
       description: t('onboarding.student.steps.organizer.description'),
+      instruction: t('onboarding.student.steps.organizer.instruction'),
     },
     {
+      route: '/organizer',
       selector: '[data-tour="header-guide"]',
       title: t('onboarding.student.steps.guide.title'),
       description: t('onboarding.student.steps.guide.description'),
+      instruction: t('onboarding.student.steps.guide.instruction'),
     },
   ]
 }
 
 function OnboardingTour({ role = 'student', onClose, onComplete }) {
   const { t } = useI18n()
+  const navigate = useNavigate()
+  const location = useLocation()
   const dialogRef = useRef(null)
   const [stepIndex, setStepIndex] = useState(0)
   const [targetRect, setTargetRect] = useState(null)
@@ -93,6 +206,14 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
   }, [stepIndex])
 
   useEffect(() => {
+    if (!currentStep?.route || location.pathname === currentStep.route) {
+      return
+    }
+
+    navigate(currentStep.route)
+  }, [currentStep, location.pathname, navigate])
+
+  useEffect(() => {
     if (!currentStep) {
       return
     }
@@ -101,7 +222,7 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
     let timeoutId = 0
 
     function measureTarget() {
-      const targetElement = document.querySelector(currentStep.selector)
+      const targetElement = resolveTargetElement(currentStep)
       if (!targetElement) {
         setTargetRect(null)
         return
@@ -117,7 +238,7 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
       })
     }
 
-    const targetElement = document.querySelector(currentStep.selector)
+    const targetElement = resolveTargetElement(currentStep)
     if (targetElement) {
       targetElement.scrollIntoView({
         behavior: prefersReducedMotion() ? 'auto' : 'smooth',
@@ -139,7 +260,7 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
       window.removeEventListener('resize', measureTarget)
       window.removeEventListener('scroll', measureTarget, true)
     }
-  }, [currentStep])
+  }, [currentStep, location.pathname])
 
   useEffect(() => {
     function handleKeyDown(event) {
@@ -157,6 +278,7 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
   }
 
   const isLastStep = stepIndex === steps.length - 1
+  const dialogLayout = getDialogLayout(targetRect)
 
   function handleNext() {
     if (isLastStep) {
@@ -164,11 +286,21 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
       return
     }
 
-    setStepIndex((currentIndex) => Math.min(currentIndex + 1, steps.length - 1))
+    const nextIndex = Math.min(stepIndex + 1, steps.length - 1)
+    const nextStep = steps[nextIndex]
+    if (nextStep?.route && nextStep.route !== location.pathname) {
+      navigate(nextStep.route)
+    }
+    setStepIndex(nextIndex)
   }
 
   function handleBack() {
-    setStepIndex((currentIndex) => Math.max(currentIndex - 1, 0))
+    const nextIndex = Math.max(stepIndex - 1, 0)
+    const nextStep = steps[nextIndex]
+    if (nextStep?.route && nextStep.route !== location.pathname) {
+      navigate(nextStep.route)
+    }
+    setStepIndex(nextIndex)
   }
 
   return (
@@ -190,12 +322,17 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
 
       <section
         ref={dialogRef}
-        className="onboarding-tour__dialog"
+        className={`onboarding-tour__dialog onboarding-tour__dialog--${dialogLayout.placement}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="onboarding-tour-title"
         tabIndex={-1}
+        style={dialogLayout.style}
       >
+        {dialogLayout.placement !== 'floating' && dialogLayout.placement !== 'bottom' ? (
+          <span className="onboarding-tour__arrow" aria-hidden="true" />
+        ) : null}
+
         <div className="onboarding-tour__topline">
           <p className="onboarding-tour__eyebrow">{t('onboarding.eyebrow')}</p>
           <span className="onboarding-tour__counter">
@@ -206,10 +343,17 @@ function OnboardingTour({ role = 'student', onClose, onComplete }) {
         <h2 id="onboarding-tour-title">{currentStep.title}</h2>
         <p className="onboarding-tour__description">{currentStep.description}</p>
 
+        {currentStep.instruction ? (
+          <div className="onboarding-tour__instruction">
+            <span>{t('onboarding.tryLabel')}</span>
+            <strong>{currentStep.instruction}</strong>
+          </div>
+        ) : null}
+
         <div className="onboarding-tour__progress" aria-hidden="true">
           {steps.map((step, index) => (
             <span
-              key={`${step.selector}-${index}`}
+              key={`${step.selector ?? step.selectors?.join('|') ?? index}-${index}`}
               className={
                 index === stepIndex
                   ? 'onboarding-tour__dot onboarding-tour__dot--active'

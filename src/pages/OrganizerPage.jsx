@@ -187,7 +187,7 @@ function OrganizerPage({
   return (
     <section className="organizer-events-page">
       <div className="organizer-events-page__topbar">
-        <div className="organizer-events-page__intro">
+        <div className="organizer-events-page__intro" data-tour="organizer-intro">
           <p className="organizer-events-page__eyebrow">{t('organizerPage.eyebrow')}</p>
           <h1>{t('organizerPage.title')}</h1>
           <p>{t('organizerPage.subtitle')}</p>
@@ -197,6 +197,7 @@ function OrganizerPage({
         <button
           type="button"
           className="organizer-events-page__create-button"
+          data-tour="organizer-create-event"
           onClick={() => {
             setFormFeedback({ type: '', message: '' })
             setEditingEvent(null)

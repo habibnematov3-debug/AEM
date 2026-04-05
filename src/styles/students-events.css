@@ -135,6 +135,25 @@
   letter-spacing: -0.03em;
 }
 
+.students-events-page__recommendations {
+  display: grid;
+  gap: 16px;
+  animation: fadeInUp 600ms var(--ease-out) 150ms both;
+}
+
+.students-events-page__recommendations h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  color: var(--text);
+}
+
+.students-events-page__recommendations p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
 .students-events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

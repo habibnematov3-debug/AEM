@@ -1087,6 +1087,65 @@ class AdminDashboardAPIView(APIView):
         )
 
 
+class RecommendedEventsAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        # Get user's liked categories
+        liked_categories = EventLike.objects.filter(user=current_user).values_list(
+            'event__category', flat=True
+        ).distinct()
+
+        # Get categories from joined events
+        joined_categories = Participation.objects.filter(
+            user=current_user, status=Participation.Statuses.JOINED
+        ).values_list('event__category', flat=True).distinct()
+
+        # Combine preferred categories
+        preferred_categories = set(liked_categories) | set(joined_categories)
+
+        # Fetch recommended events
+        now = timezone.now()
+        events = Event.objects.filter(
+            moderation_status=Event.ModerationStatuses.APPROVED
+        ).exclude(  # Exclude past events
+            Q(event_date__lt=now.date()) |
+            Q(event_date=now.date(), end_time__lt=now.time())
+        ).exclude(  # Exclude already joined or waitlisted
+            participations__user=current_user,
+            participations__status__in=[Participation.Statuses.JOINED, Participation.Statuses.WAITLISTED]
+        )
+
+        # Annotate with score and joined count
+        events = events.annotate(
+            joined_count=Count(
+                'participations',
+                filter=Q(participations__status=Participation.Statuses.JOINED),
+            ),
+            score=Case(
+                When(category__in=preferred_categories, then=Value(10)),
+                default=Value(1),
+                output_field=IntegerField(),
+            )
+        ).order_by('-score', '-joined_count', '-created_at')[:10]
+
+        return Response(
+            {
+                'results': EventSerializer(
+                    events,
+                    many=True,
+                    context={'current_user': current_user},
+                ).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class AdminEventListAPIView(APIView):
     authentication_classes = []

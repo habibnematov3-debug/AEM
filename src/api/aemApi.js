@@ -606,6 +606,11 @@ export async function fetchEvents() {
   return (payload.results ?? []).map(normalizeEvent)
 }
 
+export async function fetchRecommendedEvents() {
+  const payload = await apiRequest('/api/events/recommended/')
+  return (payload.results ?? []).map(normalizeEvent)
+}
+
 export async function fetchOrganizerEvents() {
   const payload = await apiRequest('/api/events/?scope=organizer')
   return (payload.results ?? []).map(normalizeEvent)

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import EventCard from '../components/EventCard'
 import { useI18n } from '../i18n/LanguageContext'
+import { fetchRecommendedEvents } from '../api/aemApi'
 import '../styles/students-events.css'
 
 function getEventStartTimestamp(event) {
@@ -25,11 +26,32 @@ function StudentsPage({
   const { t } = useI18n()
   const searchActive = searchValue.trim().length > 0
   const [summaryNow, setSummaryNow] = useState(() => Date.now())
+  const [recommendedEvents, setRecommendedEvents] = useState([])
+  const [recommendedLoading, setRecommendedLoading] = useState(false)
 
   useEffect(() => {
     const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
     return () => window.clearInterval(id)
   }, [])
+
+  useEffect(() => {
+    async function loadRecommended() {
+      setRecommendedLoading(true)
+      try {
+        const fetched = await fetchRecommendedEvents()
+        setRecommendedEvents(fetched)
+      } catch (error) {
+        console.error('Failed to load recommended events:', error)
+        setRecommendedEvents([])
+      } finally {
+        setRecommendedLoading(false)
+      }
+    }
+
+    if (currentUser) {
+      loadRecommended()
+    }
+  }, [currentUser])
 
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
@@ -105,6 +127,31 @@ function StudentsPage({
                 <strong>{card.value}</strong>
               </article>
             ))}
+      </div>
+
+      <div className="students-events-page__recommendations">
+        <h2>{t('students.recommendationsTitle')}</h2>
+        {recommendedLoading ? (
+          <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
+            {Array.from({ length: 3 }, (_, index) => (
+              <div key={`rec-sk-${index}`} className="students-events-skeleton-card" />
+            ))}
+          </div>
+        ) : recommendedEvents.length > 0 ? (
+          <div className="students-events-grid">
+            {recommendedEvents.map((event) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                variant="student"
+                currentUser={currentUser}
+                onToggleLike={onToggleEventLike}
+              />
+            ))}
+          </div>
+        ) : (
+          <p>{t('students.noRecommendations')}</p>
+        )}
       </div>
 
       <div data-tour="students-catalog">

@@ -29,7 +29,6 @@ function getDialogLayout(targetRect) {
   const dialogHeight = 300 // Reduced from 330
   const spaceRight = window.innerWidth - (targetRect.left + targetRect.width)
   const spaceLeft = targetRect.left
-  const spaceBelow = window.innerHeight - (targetRect.top + targetRect.height)
   const spaceBelowTarget = window.innerHeight - (targetRect.top + targetRect.height)
   const preferredLeft = clamp(targetRect.left, 24, window.innerWidth - dialogWidth - 24)
 

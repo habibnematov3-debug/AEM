@@ -128,6 +128,8 @@ const translations = {
       emptyFilterTitle: 'No matching events',
       emptyFilterDescription: 'Try a different search or clear the search bar to see all events.',
       clearSearch: 'Clear search',
+      recommendationsTitle: 'Recommended for You',
+      noRecommendations: 'No recommendations available yet. Explore events to get personalized suggestions!',
     },
     joinedEventsPage: {
       title: 'My Joined Events',
@@ -710,6 +712,8 @@ const translations = {
       emptyFilterDescription:
         'Попробуйте другой запрос или очистите строку поиска, чтобы увидеть все события.',
       clearSearch: 'Очистить поиск',
+      recommendationsTitle: 'Рекомендовано для вас',
+      noRecommendations: 'Рекомендаций пока нет. Исследуйте события, чтобы получить персональные предложения!',
     },
     organizerPage: {
       eyebrow: 'Рабочее пространство организатора',
@@ -943,6 +947,8 @@ const translations = {
       emptyFilterDescription:
         'Boshqa so‘z bilan qidiring yoki qidiruvni tozalab, barcha tadbirlarni ko‘ring.',
       clearSearch: 'Qidiruvni tozalash',
+      recommendationsTitle: 'Siz uchun tavsiya etilgan',
+      noRecommendations: 'Tavsiyalar hali yo‘q. Shaxsiy takliflarni olish uchun tadbirlarni o‘rganing!',
     },
     organizerPage: {
       eyebrow: 'Organizator ish maydoni',

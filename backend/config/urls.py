@@ -21,11 +21,13 @@ from accounts.views import (
     MyNotificationListAPIView,
     NotificationReadAllAPIView,
     NotificationReadAPIView,
+    RecommendedEventsAPIView,
 )
 
 urlpatterns = [
     path('api/auth/', include('accounts.urls')),
     path('api/events/', EventListCreateAPIView.as_view(), name='events-list-create'),
+    path('api/events/recommended/', RecommendedEventsAPIView.as_view(), name='events-recommended'),
     path('api/events/<int:event_id>/', EventDetailAPIView.as_view(), name='events-detail'),
     path(
         'api/events/<int:event_id>/participate/',

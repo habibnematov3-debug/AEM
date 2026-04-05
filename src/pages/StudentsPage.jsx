@@ -29,6 +29,7 @@ function StudentsPage({
   const [recommendedEvents, setRecommendedEvents] = useState([])
   const [recommendedLoading, setRecommendedLoading] = useState(false)
   const [recommendedError, setRecommendedError] = useState('')
+  const [recommendedRequestKey, setRecommendedRequestKey] = useState(0)
 
   useEffect(() => {
     const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
@@ -73,7 +74,7 @@ function StudentsPage({
     return () => {
       isMounted = false
     }
-  }, [currentUser, t])
+  }, [currentUser, recommendedRequestKey, t])
 
   async function handleRecommendedLike(event) {
     if (typeof onToggleEventLike !== 'function') {
@@ -192,7 +193,14 @@ function StudentsPage({
             className="students-events-page__recommendations-state students-events-page__recommendations-state--error"
             role="alert"
           >
-            {recommendedError}
+            <span>{recommendedError}</span>
+            <button
+              type="button"
+              className="students-events-empty__action"
+              onClick={() => setRecommendedRequestKey((currentKey) => currentKey + 1)}
+            >
+              {t('common.retry')}
+            </button>
           </div>
         ) : (
           <div className="students-events-page__recommendations-state" aria-live="polite">

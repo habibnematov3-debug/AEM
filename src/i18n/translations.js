@@ -43,6 +43,7 @@ const translations = {
       notifications: 'Email Notifications',
       profileImageUrl: 'Profile Image URL',
       removePhoto: 'Remove Photo',
+      retry: 'Retry',
       defaultStudent: 'User',
       unknownOrganizer: 'Unknown organizer',
       general: 'General',
@@ -1072,6 +1073,8 @@ translations.ru.students.recommendationsLoadError =
   '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u0438. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0447\u0443\u0442\u044c \u043f\u043e\u0437\u0436\u0435.'
 translations.uz.students.recommendationsLoadError =
   'Tavsiyalarni hozir yuklab bolmadi. Birozdan keyin yana urinib koring.'
+translations.ru.common.retry = '\u041f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c'
+translations.uz.common.retry = 'Qayta urinish'
 
 const LANGUAGE_STORAGE_KEY = 'aem-language'
 const supportedLanguages = ['en', 'ru', 'uz']

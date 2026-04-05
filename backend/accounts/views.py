@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import timedelta
 
 from django.core import signing
@@ -43,6 +44,51 @@ from .serializers import (
 
 
 PRESENCE_HEARTBEAT = timedelta(minutes=1)
+RECOMMENDED_EVENTS_LIMIT = 10
+RECOMMENDED_EVENTS_CANDIDATE_POOL = 40
+RECOMMENDED_CATEGORY_CAP = 3
+RECOMMENDATION_LIKE_WEIGHT = 2
+RECOMMENDATION_JOIN_WEIGHT = 4
+
+
+def normalize_event_category_key(category):
+    normalized = str(category or '').strip().lower()
+    return normalized or 'general'
+
+
+def build_recommended_category_scores(user):
+    category_scores = Counter()
+
+    liked_categories = EventLike.objects.filter(user=user).values_list('event__category', flat=True)
+    joined_categories = Participation.objects.filter(
+        user=user,
+        status=Participation.Statuses.JOINED,
+    ).values_list('event__category', flat=True)
+
+    for category in liked_categories:
+        category_scores[normalize_event_category_key(category)] += RECOMMENDATION_LIKE_WEIGHT
+
+    for category in joined_categories:
+        category_scores[normalize_event_category_key(category)] += RECOMMENDATION_JOIN_WEIGHT
+
+    return category_scores
+
+
+def apply_recommendation_diversity(events, *, limit=RECOMMENDED_EVENTS_LIMIT):
+    selected_events = []
+    per_category_counts = Counter()
+
+    for event in events:
+        category_key = normalize_event_category_key(event.category)
+        if per_category_counts[category_key] >= RECOMMENDED_CATEGORY_CAP:
+            continue
+
+        selected_events.append(event)
+        per_category_counts[category_key] += 1
+        if len(selected_events) >= limit:
+            break
+
+    return selected_events
 
 
 def touch_user_presence(user, now=None, force=False):
@@ -1096,15 +1142,7 @@ class RecommendedEventsAPIView(APIView):
         if current_user is None:
             return auth_required_response(request)
 
-        liked_categories = EventLike.objects.filter(user=current_user).values_list(
-            'event__category',
-            flat=True,
-        )
-        joined_categories = Participation.objects.filter(
-            user=current_user,
-            status=Participation.Statuses.JOINED,
-        ).values_list('event__category', flat=True)
-        preferred_categories = list(set(liked_categories) | set(joined_categories))
+        category_scores = build_recommended_category_scores(current_user)
 
         events = exclude_ended_events(
             Event.objects.select_related('creator').filter(
@@ -1118,30 +1156,38 @@ class RecommendedEventsAPIView(APIView):
             ),
         )
 
-        score_annotation = Value(1, output_field=IntegerField())
-        if preferred_categories:
+        score_annotation = Value(0, output_field=IntegerField())
+        if category_scores:
             score_annotation = Case(
-                When(category__in=preferred_categories, then=Value(10)),
-                default=Value(1),
+                *[
+                    When(category__iexact=category, then=Value(score))
+                    for category, score in sorted(category_scores.items())
+                ],
+                default=Value(0),
                 output_field=IntegerField(),
             )
 
-        events = events.annotate(
-            joined_count=Count(
-                'participations',
-                filter=Q(participations__status=Participation.Statuses.JOINED),
-            ),
-            waitlist_count=Count(
-                'participations',
-                filter=Q(participations__status=Participation.Statuses.WAITLISTED),
-            ),
-            score=score_annotation,
-        ).order_by('-score', '-joined_count', '-created_at', '-id')[:10]
+        ranked_events = list(
+            events.annotate(
+                joined_count=Count(
+                    'participations',
+                    filter=Q(participations__status=Participation.Statuses.JOINED),
+                ),
+                waitlist_count=Count(
+                    'participations',
+                    filter=Q(participations__status=Participation.Statuses.WAITLISTED),
+                ),
+                score=score_annotation,
+            ).order_by('-score', '-joined_count', '-created_at', '-id')[
+                :RECOMMENDED_EVENTS_CANDIDATE_POOL
+            ]
+        )
+        recommended_events = apply_recommendation_diversity(ranked_events)
 
         return Response(
             {
                 'results': EventSerializer(
-                    events,
+                    recommended_events,
                     many=True,
                     context={'current_user': current_user},
                 ).data,

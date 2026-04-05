@@ -26,9 +26,7 @@ function StudentsPage({
   const { t } = useI18n()
   const searchActive = searchValue.trim().length > 0
   const [summaryNow, setSummaryNow] = useState(() => Date.now())
-  const [recommendedEvents, setRecommendedEvents] = useState([])
-  const [recommendedLoading, setRecommendedLoading] = useState(false)
-  const [recommendedError, setRecommendedError] = useState('')
+  const [recommendedEventIds, setRecommendedEventIds] = useState([])
   const [recommendedRequestKey, setRecommendedRequestKey] = useState(0)
 
   useEffect(() => {
@@ -40,69 +38,70 @@ function StudentsPage({
     let isMounted = true
 
     async function loadRecommended() {
-      setRecommendedLoading(true)
-      setRecommendedError('')
-
       try {
         const fetched = await fetchRecommendedEvents()
         if (!isMounted) {
           return
         }
-        setRecommendedEvents(fetched)
+        setRecommendedEventIds(fetched.map((event) => event.id))
       } catch (error) {
         if (!isMounted) {
           return
         }
         console.error('Failed to load recommended events:', error)
-        setRecommendedEvents([])
-        setRecommendedError(error.message || t('students.recommendationsLoadError'))
-      } finally {
-        if (isMounted) {
-          setRecommendedLoading(false)
-        }
+        setRecommendedEventIds([])
       }
     }
 
     if (currentUser) {
       loadRecommended()
     } else {
-      setRecommendedEvents([])
-      setRecommendedError('')
-      setRecommendedLoading(false)
+      setRecommendedEventIds([])
     }
 
     return () => {
       isMounted = false
     }
-  }, [currentUser, recommendedRequestKey, t])
+  }, [currentUser, recommendedRequestKey])
 
-  async function handleRecommendedLike(event) {
+  async function handleStudentEventLike(event) {
     if (typeof onToggleEventLike !== 'function') {
       return null
     }
 
     const result = await onToggleEventLike(event)
-    if (result?.event) {
-      setRecommendedEvents((currentEvents) =>
-        currentEvents.map((currentEvent) =>
-          currentEvent.id === result.event.id ? result.event : currentEvent,
-        ),
-      )
-    }
+    setRecommendedRequestKey((currentKey) => currentKey + 1)
     return result
   }
 
+  const recommendedRankById = useMemo(
+    () => new Map(recommendedEventIds.map((eventId, index) => [eventId, index])),
+    [recommendedEventIds],
+  )
+
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
-    if (!query) {
-      return events
-    }
+    const baseEvents = query
+      ? events.filter((event) => {
+          const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
+          return haystack.includes(query)
+        })
+      : events
 
-    return events.filter((event) => {
-      const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
-      return haystack.includes(query)
-    })
-  }, [events, searchValue])
+    return baseEvents
+      .map((event, index) => ({
+        event,
+        index,
+        recommendedRank: recommendedRankById.get(event.id) ?? Number.MAX_SAFE_INTEGER,
+      }))
+      .sort((left, right) => {
+        if (left.recommendedRank !== right.recommendedRank) {
+          return left.recommendedRank - right.recommendedRank
+        }
+        return left.index - right.index
+      })
+      .map(({ event }) => event)
+  }, [events, recommendedRankById, searchValue])
 
   const summaryCards = useMemo(() => {
     const now = summaryNow
@@ -168,47 +167,6 @@ function StudentsPage({
             ))}
       </div>
 
-      <div className="students-events-page__recommendations">
-        <h2>{t('students.recommendationsTitle')}</h2>
-        {recommendedLoading ? (
-          <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
-            {Array.from({ length: 3 }, (_, index) => (
-              <div key={`rec-sk-${index}`} className="students-events-skeleton-card" />
-            ))}
-          </div>
-        ) : recommendedEvents.length > 0 ? (
-          <div className="students-events-grid">
-            {recommendedEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant="student"
-                currentUser={currentUser}
-                onToggleLike={handleRecommendedLike}
-              />
-            ))}
-          </div>
-        ) : recommendedError ? (
-          <div
-            className="students-events-page__recommendations-state students-events-page__recommendations-state--error"
-            role="alert"
-          >
-            <span>{recommendedError}</span>
-            <button
-              type="button"
-              className="students-events-empty__action"
-              onClick={() => setRecommendedRequestKey((currentKey) => currentKey + 1)}
-            >
-              {t('common.retry')}
-            </button>
-          </div>
-        ) : (
-          <div className="students-events-page__recommendations-state" aria-live="polite">
-            {t('students.noRecommendations')}
-          </div>
-        )}
-      </div>
-
       <div data-tour="students-catalog">
         {eventsLoading ? (
           <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
@@ -219,15 +177,15 @@ function StudentsPage({
         ) : filteredEvents.length ? (
           <div className="students-events-grid">
           {filteredEvents.map((event) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              variant="student"
-              currentUser={currentUser}
-              onToggleLike={onToggleEventLike}
-              tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
-            />
-          ))}
+              <EventCard
+                key={event.id}
+                event={event}
+                variant="student"
+                currentUser={currentUser}
+                onToggleLike={handleStudentEventLike}
+                tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
+              />
+            ))}
           </div>
         ) : events.length === 0 ? (
           <div className="students-events-empty">

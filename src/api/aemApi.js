@@ -322,6 +322,23 @@ export function getDefaultRouteForRole(role) {
   return '/students'
 }
 
+export async function warmUpBackend() {
+  try {
+    const controller = new AbortController()
+    const timeoutId = window.setTimeout(() => controller.abort(), 5000)
+
+    const response = await fetch(`${API_BASE_URL}/api/health/`, {
+      method: 'GET',
+      signal: controller.signal,
+    })
+
+    window.clearTimeout(timeoutId)
+    return response.ok
+  } catch {
+    return false
+  }
+}
+
 async function apiRequest(path, options = {}) {
   const method = String(options.method ?? 'GET').toUpperCase()
   const canRetry = method === 'GET' || method === 'HEAD'

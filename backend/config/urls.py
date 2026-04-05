@@ -17,6 +17,7 @@ from accounts.views import (
     EventParticipantListAPIView,
     EventParticipateAPIView,
     EventTokenCheckInAPIView,
+    HealthCheckAPIView,
     MyParticipationListAPIView,
     MyNotificationListAPIView,
     NotificationReadAllAPIView,
@@ -25,6 +26,7 @@ from accounts.views import (
 )
 
 urlpatterns = [
+    path('api/health/', HealthCheckAPIView.as_view(), name='health-check'),
     path('api/auth/', include('accounts.urls')),
     path('api/events/', EventListCreateAPIView.as_view(), name='events-list-create'),
     path('api/events/recommended/', RecommendedEventsAPIView.as_view(), name='events-recommended'),

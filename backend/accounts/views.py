@@ -245,6 +245,15 @@ def parse_boolean_query(value):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class HealthCheckAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class SignUpAPIView(APIView):
     authentication_classes = []
     permission_classes = []

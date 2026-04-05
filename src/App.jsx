@@ -20,6 +20,7 @@ import {
   unlikeEvent,
   updateCurrentUserProfile,
   updateEvent,
+  warmUpBackend,
 } from './api/aemApi'
 import AdminPage from './pages/AdminPage'
 import AdminUsersPage from './pages/AdminUsersPage'
@@ -184,6 +185,9 @@ function App() {
         }
       }
     }
+
+    // Warm up the backend to reduce initial response delays
+    warmUpBackend()
 
     loadCurrentUser()
 

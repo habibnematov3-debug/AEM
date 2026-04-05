@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getDefaultRouteForRole } from '../api/aemApi'
+import { getDefaultRouteForRole, warmUpBackend } from '../api/aemApi'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
@@ -79,6 +79,11 @@ function AuthPage({ onSignIn, onSignUp }) {
 
   const passwordsMatch =
     signUpData.confirmPassword.length > 0 && signUpData.password === signUpData.confirmPassword
+
+  useEffect(() => {
+    // Warm up the backend when auth page loads to reduce registration delays
+    warmUpBackend()
+  }, [])
 
   function switchMode(nextMode) {
     setMode(nextMode)

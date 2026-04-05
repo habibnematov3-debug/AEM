@@ -28,6 +28,7 @@ function StudentsPage({
   const [summaryNow, setSummaryNow] = useState(() => Date.now())
   const [recommendedEvents, setRecommendedEvents] = useState([])
   const [recommendedLoading, setRecommendedLoading] = useState(false)
+  const [recommendedError, setRecommendedError] = useState('')
 
   useEffect(() => {
     const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
@@ -35,23 +36,60 @@ function StudentsPage({
   }, [])
 
   useEffect(() => {
+    let isMounted = true
+
     async function loadRecommended() {
       setRecommendedLoading(true)
+      setRecommendedError('')
+
       try {
         const fetched = await fetchRecommendedEvents()
+        if (!isMounted) {
+          return
+        }
         setRecommendedEvents(fetched)
       } catch (error) {
+        if (!isMounted) {
+          return
+        }
         console.error('Failed to load recommended events:', error)
         setRecommendedEvents([])
+        setRecommendedError(error.message || t('students.recommendationsLoadError'))
       } finally {
-        setRecommendedLoading(false)
+        if (isMounted) {
+          setRecommendedLoading(false)
+        }
       }
     }
 
     if (currentUser) {
       loadRecommended()
+    } else {
+      setRecommendedEvents([])
+      setRecommendedError('')
+      setRecommendedLoading(false)
     }
-  }, [currentUser])
+
+    return () => {
+      isMounted = false
+    }
+  }, [currentUser, t])
+
+  async function handleRecommendedLike(event) {
+    if (typeof onToggleEventLike !== 'function') {
+      return null
+    }
+
+    const result = await onToggleEventLike(event)
+    if (result?.event) {
+      setRecommendedEvents((currentEvents) =>
+        currentEvents.map((currentEvent) =>
+          currentEvent.id === result.event.id ? result.event : currentEvent,
+        ),
+      )
+    }
+    return result
+  }
 
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
@@ -145,12 +183,21 @@ function StudentsPage({
                 event={event}
                 variant="student"
                 currentUser={currentUser}
-                onToggleLike={onToggleEventLike}
+                onToggleLike={handleRecommendedLike}
               />
             ))}
           </div>
+        ) : recommendedError ? (
+          <div
+            className="students-events-page__recommendations-state students-events-page__recommendations-state--error"
+            role="alert"
+          >
+            {recommendedError}
+          </div>
         ) : (
-          <p>{t('students.noRecommendations')}</p>
+          <div className="students-events-page__recommendations-state" aria-live="polite">
+            {t('students.noRecommendations')}
+          </div>
         )}
       </div>
 

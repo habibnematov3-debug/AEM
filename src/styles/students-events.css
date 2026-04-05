@@ -154,6 +154,21 @@
   font-size: 0.95rem;
 }
 
+.students-events-page__recommendations-state {
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: linear-gradient(165deg, var(--surface) 0%, var(--surface-muted) 100%);
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.students-events-page__recommendations-state--error {
+  border-color: color-mix(in srgb, #d24b4b 32%, var(--border));
+  background: color-mix(in srgb, #d24b4b 10%, var(--surface));
+  color: var(--text);
+}
+
 .students-events-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));

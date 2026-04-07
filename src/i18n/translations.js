@@ -110,7 +110,10 @@ const translations = {
       authModeLabel: 'Authentication mode',
       accountCreated: 'Account created successfully. Sign in to continue.',
       welcomeBack: 'Welcome back, {name}. Redirecting...',
+      googleButton: 'Continue with Google',
       googleDivider: 'Or continue with Google',
+      googleLoading: 'Preparing Google sign-in...',
+      googleFallback: 'Use email sign-in if Google is unavailable in this environment.',
       googleUnavailable: 'Google sign-in is not available right now. Please try again later.',
     },
     students: {

@@ -1080,9 +1080,19 @@ translations.uz.students.recommendationsLoadError =
   'Tavsiyalarni hozir yuklab bolmadi. Birozdan keyin yana urinib koring.'
 translations.ru.auth.googleDivider =
   '\u0418\u043b\u0438 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435 \u0447\u0435\u0440\u0435\u0437 Google'
+translations.ru.auth.googleButton =
+  '\u041f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435 \u0447\u0435\u0440\u0435\u0437 Google'
+translations.ru.auth.googleLoading =
+  '\u041f\u043e\u0434\u0433\u043e\u0442\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u043c \u0432\u0445\u043e\u0434 \u0447\u0435\u0440\u0435\u0437 Google...'
+translations.ru.auth.googleFallback =
+  '\u0415\u0441\u043b\u0438 Google-\u0432\u0445\u043e\u0434 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d \u0432 \u044d\u0442\u043e\u0439 \u0441\u0440\u0435\u0434\u0435, \u0432\u043e\u0439\u0434\u0438\u0442\u0435 \u043f\u043e email \u0438 \u043f\u0430\u0440\u043e\u043b\u044e.'
 translations.ru.auth.googleUnavailable =
   '\u0412\u0445\u043e\u0434 \u0447\u0435\u0440\u0435\u0437 Google \u0441\u0435\u0439\u0447\u0430\u0441 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.'
 translations.uz.auth.googleDivider = 'Yoki Google orqali davom eting'
+translations.uz.auth.googleButton = 'Google orqali davom eting'
+translations.uz.auth.googleLoading = 'Google orqali kirish tayyorlanmoqda...'
+translations.uz.auth.googleFallback =
+  'Agar Google orqali kirish bu muhitda mavjud bolmasa, email va parol orqali kiring.'
 translations.uz.auth.googleUnavailable =
   'Google orqali kirish hozircha mavjud emas. Keyinroq yana urinib koring.'
 translations.ru.common.retry = '\u041f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c'

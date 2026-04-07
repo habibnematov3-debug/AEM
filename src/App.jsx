@@ -39,8 +39,6 @@ import StudentsPage from './pages/StudentsPage'
 import './styles/app.css'
 import './styles/pages.css'
 
-const AUTH_ESTABLISH_ERROR_MESSAGE =
-  'Authentication could not be completed. Please sign in again.'
 const ONBOARDING_STORAGE_KEY_PREFIX = 'aem-onboarding-v1'
 
 function getOnboardingStorageKey(user) {
@@ -340,20 +338,6 @@ function App() {
     }
   }, [authReady, currentUser?.role])
 
-  async function fetchVerifiedCurrentUser() {
-    try {
-      return await fetchCurrentUser()
-    } catch (error) {
-      if (error.status === 401) {
-        const authError = new Error(AUTH_ESTABLISH_ERROR_MESSAGE)
-        authError.status = 401
-        throw authError
-      }
-
-      throw error
-    }
-  }
-
   useEffect(() => {
     if (!shouldLoadEventList) {
       setEventsLoading(false)
@@ -395,9 +379,8 @@ function App() {
   async function handleSignIn(credentials) {
     try {
       const result = await signInUser(credentials)
-      const user = await fetchVerifiedCurrentUser()
-      setCurrentUser(user)
-      return { ...result, user }
+      setCurrentUser(result.user)
+      return result
     } catch (error) {
       return {
         ok: false,
@@ -409,9 +392,8 @@ function App() {
   async function handleSignUp(payload) {
     try {
       const result = await signUpUser(payload)
-      const user = await fetchVerifiedCurrentUser()
-      setCurrentUser(user)
-      return { ...result, user }
+      setCurrentUser(result.user)
+      return result
     } catch (error) {
       return {
         ok: false,

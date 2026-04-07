@@ -8,6 +8,7 @@ const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const AUTH_TOKEN_STORAGE_KEY = 'aem-auth-token'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 const API_TIMEOUT_MS = 35000
+const AUTH_API_TIMEOUT_MS = 65000
 const SAFE_REQUEST_RETRIES = 1
 const SAFE_REQUEST_RETRY_DELAY_MS = 1800
 let supabaseClient = null
@@ -340,6 +341,7 @@ export async function warmUpBackend() {
 }
 
 async function apiRequest(path, options = {}) {
+  const { timeoutMs = API_TIMEOUT_MS, ...requestOptions } = options
   const method = String(options.method ?? 'GET').toUpperCase()
   const canRetry = method === 'GET' || method === 'HEAD'
   const maxAttempts = canRetry ? SAFE_REQUEST_RETRIES + 1 : 1
@@ -352,12 +354,12 @@ async function apiRequest(path, options = {}) {
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     const controller = new AbortController()
-    const timeoutId = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS)
+    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs)
     let response
 
     try {
       response = await fetch(`${API_BASE_URL}${path}`, {
-        ...options,
+        ...requestOptions,
         credentials: 'include',
         headers: requestHeaders,
         signal: controller.signal,
@@ -446,6 +448,7 @@ export function getStoredCurrentUser() {
 export async function signInUser(credentials) {
   const payload = await apiRequest('/api/auth/login/', {
     method: 'POST',
+    timeoutMs: AUTH_API_TIMEOUT_MS,
     body: JSON.stringify({
       email: credentials.email,
       password: credentials.password,
@@ -459,7 +462,9 @@ export async function signInUser(credentials) {
 }
 
 export async function fetchCurrentUser() {
-  const payload = await apiRequest('/api/auth/me/')
+  const payload = await apiRequest('/api/auth/me/', {
+    timeoutMs: AUTH_API_TIMEOUT_MS,
+  })
   const user = normalizeUser(payload.user)
   storeCurrentUser(user)
   return user
@@ -468,6 +473,7 @@ export async function fetchCurrentUser() {
 export async function signUpUser(formData) {
   const payload = await apiRequest('/api/auth/signup/', {
     method: 'POST',
+    timeoutMs: AUTH_API_TIMEOUT_MS,
     body: JSON.stringify({
       full_name: formData.fullName,
       email: formData.email,

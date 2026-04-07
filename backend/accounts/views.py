@@ -269,7 +269,7 @@ class SignUpAPIView(APIView):
             {
                 'message': 'Signup successful.',
                 'auth_token': issue_auth_token(user),
-                'user': UserSerializer(user).data,
+                'user': CurrentUserSerializer(user).data,
             },
             status=status.HTTP_201_CREATED,
         )
@@ -293,7 +293,7 @@ class LoginAPIView(APIView):
             {
                 'message': 'Login successful.',
                 'auth_token': issue_auth_token(user),
-                'user': UserSerializer(user).data,
+                'user': CurrentUserSerializer(user).data,
             },
             status=status.HTTP_200_OK,
         )

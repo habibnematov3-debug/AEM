@@ -106,6 +106,7 @@ function AuthPage({ onSignIn, onSignUp }) {
     event.preventDefault()
     setIsSubmitting(true)
     setFeedback({ type: '', message: '' })
+    await warmUpBackend()
 
     const result = await onSignIn({
       ...signInData,
@@ -152,6 +153,7 @@ function AuthPage({ onSignIn, onSignUp }) {
 
     setIsSubmitting(true)
     setFeedback({ type: '', message: '' })
+    await warmUpBackend()
 
     const result = await onSignUp(normalizedData)
     if (!result.ok) {

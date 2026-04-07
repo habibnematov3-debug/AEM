@@ -1,4 +1,6 @@
+import json
 from datetime import time, timedelta
+from unittest.mock import patch
 
 from django.db import connection
 from django.test import Client, TestCase
@@ -6,7 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .auth_tokens import issue_auth_token
-from .models import AEMUser, Event, EventLike, Participation
+from .models import AEMUser, Event, EventLike, Participation, UserSettings
 from .participation_ops import calculate_no_show_count
 
 
@@ -18,7 +20,7 @@ class AttendanceMetricsTests(TestCase):
 
 
 class UnmanagedModelTablesMixin:
-    required_models = (AEMUser, Event, Participation, EventLike)
+    required_models = (AEMUser, UserSettings, Event, Participation, EventLike)
 
     @classmethod
     def setUpClass(cls):
@@ -196,3 +198,66 @@ class RecommendedEventsAPIViewTests(UnmanagedModelTablesMixin, TestCase):
             ],
         )
         self.assertEqual(music_count, 3)
+
+
+class GoogleAuthAPIViewTests(UnmanagedModelTablesMixin, TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.now = timezone.now()
+
+    def create_user(self, email, name, *, google_sub=None):
+        return AEMUser.objects.create(
+            full_name=name,
+            email=email,
+            google_sub=google_sub,
+            password_hash='not-used',
+            role=AEMUser.Roles.STUDENT,
+            is_active=True,
+            last_seen_at=self.now,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+
+    @patch('accounts.views.verify_google_id_token')
+    def test_google_auth_creates_user_and_settings(self, mock_verify_google_id_token):
+        mock_verify_google_id_token.return_value = {
+            'sub': 'google-sub-123',
+            'email': 'google.user@example.com',
+            'full_name': 'Google User',
+            'profile_image_url': 'https://example.com/avatar.png',
+        }
+
+        response = self.client.post(
+            reverse('google-auth'),
+            data=json.dumps({'credential': 'token'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        created_user = AEMUser.objects.get(email='google.user@example.com')
+        self.assertEqual(created_user.google_sub, 'google-sub-123')
+        self.assertTrue(created_user.password_hash)
+        settings_row = UserSettings.objects.get(user=created_user)
+        self.assertEqual(settings_row.profile_image_url, 'https://example.com/avatar.png')
+        self.assertEqual(response.json()['user']['email'], 'google.user@example.com')
+
+    @patch('accounts.views.verify_google_id_token')
+    def test_google_auth_links_existing_email_account(self, mock_verify_google_id_token):
+        existing_user = self.create_user('existing@example.com', 'Existing Student')
+        mock_verify_google_id_token.return_value = {
+            'sub': 'google-linked-999',
+            'email': 'existing@example.com',
+            'full_name': 'Existing Student',
+            'profile_image_url': None,
+        }
+
+        response = self.client.post(
+            reverse('google-auth'),
+            data=json.dumps({'credential': 'token'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        existing_user.refresh_from_db()
+        self.assertEqual(existing_user.google_sub, 'google-linked-999')
+        self.assertTrue(UserSettings.objects.filter(user=existing_user).exists())

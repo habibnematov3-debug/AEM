@@ -169,6 +169,11 @@ REST_FRAMEWORK = {
 }
 
 AEM_AUTH_TOKEN_MAX_AGE_SECONDS = int(get_str_env('AEM_AUTH_TOKEN_MAX_AGE_SECONDS', '1209600'))
+AEM_GOOGLE_CLIENT_IDS = tuple(
+    client_id.strip()
+    for client_id in get_list_env('AEM_GOOGLE_CLIENT_IDS', [])
+    if client_id.strip()
+)
 AEM_OWNER_EMAILS = tuple(
     email.strip().lower()
     for email in get_list_env('AEM_OWNER_EMAILS', [])

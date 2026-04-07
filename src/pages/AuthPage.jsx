@@ -1,12 +1,46 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getDefaultRouteForRole, warmUpBackend } from '../api/aemApi'
+import { getDefaultRouteForRole, getGoogleClientId, warmUpBackend } from '../api/aemApi'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
 const initialSignIn = { email: '', password: '' }
 const initialSignUp = { fullName: '', email: '', password: '', confirmPassword: '' }
+const GOOGLE_SCRIPT_ID = 'google-identity-services'
+
+function loadGoogleIdentityScript() {
+  if (typeof window === 'undefined') {
+    return Promise.reject(new Error('Google sign-in is unavailable.'))
+  }
+
+  if (window.google?.accounts?.id) {
+    return Promise.resolve(window.google)
+  }
+
+  const existingScript = document.getElementById(GOOGLE_SCRIPT_ID)
+  if (existingScript) {
+    return new Promise((resolve, reject) => {
+      existingScript.addEventListener('load', () => resolve(window.google), { once: true })
+      existingScript.addEventListener(
+        'error',
+        () => reject(new Error('Google sign-in could not be loaded.')),
+        { once: true },
+      )
+    })
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script')
+    script.id = GOOGLE_SCRIPT_ID
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = () => resolve(window.google)
+    script.onerror = () => reject(new Error('Google sign-in could not be loaded.'))
+    document.head.appendChild(script)
+  })
+}
 
 function estimatePasswordStrength(password) {
   let score = 0
@@ -20,9 +54,11 @@ function estimatePasswordStrength(password) {
   return 'strong'
 }
 
-function AuthPage({ onSignIn, onSignUp }) {
+function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
   const { t } = useI18n()
   const navigate = useNavigate()
+  const googleButtonRef = useRef(null)
+  const googleHandlerRef = useRef(null)
   const [mode, setMode] = useState('signin')
   const [signInData, setSignInData] = useState(initialSignIn)
   const [signUpData, setSignUpData] = useState(initialSignUp)
@@ -31,6 +67,9 @@ function AuthPage({ onSignIn, onSignUp }) {
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const [googleStatus, setGoogleStatus] = useState('idle')
+  const googleClientId = getGoogleClientId()
+  const googleEnabled = Boolean(googleClientId && typeof onGoogleSignIn === 'function')
 
   const content = useMemo(
     () => ({
@@ -84,6 +123,79 @@ function AuthPage({ onSignIn, onSignUp }) {
     // Warm up the backend when auth page loads to reduce registration delays
     warmUpBackend()
   }, [])
+
+  googleHandlerRef.current = async (response) => {
+    if (!response?.credential || typeof onGoogleSignIn !== 'function') {
+      setFeedback({ type: 'error', message: t('auth.googleUnavailable') })
+      return
+    }
+
+    setIsSubmitting(true)
+    setFeedback({ type: '', message: '' })
+    await warmUpBackend()
+
+    const result = await onGoogleSignIn(response.credential)
+    if (!result.ok) {
+      setFeedback({ type: 'error', message: result.message || t('auth.googleUnavailable') })
+      setIsSubmitting(false)
+      return
+    }
+
+    const displayName = result.user.full_name ?? result.user.name ?? 'there'
+    setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
+    window.setTimeout(() => {
+      setIsSubmitting(false)
+      navigate(getDefaultRouteForRole(result.user.role))
+    }, 500)
+  }
+
+  useEffect(() => {
+    if (!googleEnabled || !googleButtonRef.current) {
+      setGoogleStatus('idle')
+      return undefined
+    }
+
+    let cancelled = false
+    setGoogleStatus('loading')
+
+    loadGoogleIdentityScript()
+      .then((googleApi) => {
+        if (cancelled || !googleButtonRef.current || !googleApi?.accounts?.id) {
+          return
+        }
+
+        googleApi.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: (response) => googleHandlerRef.current?.(response),
+          auto_select: false,
+          ux_mode: 'popup',
+          cancel_on_tap_outside: true,
+        })
+
+        googleButtonRef.current.innerHTML = ''
+        googleApi.accounts.id.renderButton(googleButtonRef.current, {
+          theme: 'outline',
+          size: 'large',
+          shape: 'pill',
+          text: mode === 'signup' ? 'signup_with' : 'signin_with',
+          width: Math.min(googleButtonRef.current.offsetWidth || 360, 360),
+          logo_alignment: 'left',
+        })
+        setGoogleStatus('ready')
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setGoogleStatus('error')
+        }
+      })
+
+    return () => {
+      cancelled = true
+      if (googleButtonRef.current) {
+        googleButtonRef.current.innerHTML = ''
+      }
+    }
+  }, [googleClientId, googleEnabled, mode])
 
   function switchMode(nextMode) {
     setMode(nextMode)
@@ -236,6 +348,22 @@ function AuthPage({ onSignIn, onSignUp }) {
               aria-live="polite"
             >
               {feedback.message}
+            </div>
+          ) : null}
+
+          {googleEnabled ? (
+            <div className="auth-social">
+              <div className="auth-social__divider">
+                <span>{t('auth.googleDivider')}</span>
+              </div>
+              <div className="auth-social__button-shell">
+                <div ref={googleButtonRef} className="auth-social__google-button" />
+              </div>
+              {googleStatus === 'error' ? (
+                <p className="auth-inline-note auth-inline-note--error">
+                  {t('auth.googleUnavailable')}
+                </p>
+              ) : null}
             </div>
           ) : null}
 

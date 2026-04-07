@@ -13,6 +13,7 @@ class AEMUser(models.Model):
     id = models.BigAutoField(primary_key=True)
     full_name = models.CharField(max_length=150)
     email = models.EmailField(max_length=254, unique=True)
+    google_sub = models.CharField(max_length=255, unique=True, blank=True, null=True)
     password_hash = models.CharField(max_length=128)
     role = models.CharField(max_length=20, choices=Roles.choices, default=Roles.STUDENT)
     is_active = models.BooleanField(default=True)
@@ -34,6 +35,9 @@ class AEMUser(models.Model):
 
     def set_password(self, raw_password):
         self.password_hash = make_password(raw_password)
+
+    def set_unusable_password(self):
+        self.password_hash = make_password(None)
 
     def check_password(self, raw_password):
         return check_password(raw_password, self.password_hash)

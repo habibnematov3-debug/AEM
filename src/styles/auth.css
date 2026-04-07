@@ -210,6 +210,46 @@
   border: 1px solid rgba(185, 58, 84, 0.14);
 }
 
+.auth-social {
+  display: grid;
+  gap: 12px;
+}
+
+.auth-social__divider {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.auth-social__divider::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  border-top: 1px solid rgba(29, 100, 182, 0.12);
+}
+
+.auth-social__divider span {
+  position: relative;
+  padding: 0 12px;
+  background: rgba(249, 251, 255, 0.96);
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.auth-social__button-shell {
+  display: flex;
+  justify-content: center;
+}
+
+.auth-social__google-button {
+  width: min(100%, 360px);
+  min-height: 44px;
+}
+
 .auth-form {
   display: grid;
   gap: 18px;
@@ -658,6 +698,14 @@
   color: #f0a4b0;
   background: rgba(185, 58, 84, 0.12);
   border-color: rgba(185, 58, 84, 0.2);
+}
+
+[data-theme='dark'] .auth-social__divider::before {
+  border-top-color: var(--border);
+}
+
+[data-theme='dark'] .auth-social__divider span {
+  background: rgba(19, 28, 41, 0.98);
 }
 
 [data-theme='dark'] .auth-form input {

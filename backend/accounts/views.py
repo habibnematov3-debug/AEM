@@ -14,7 +14,8 @@ from rest_framework.views import APIView
 
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .checkin_tokens import make_checkin_token, parse_checkin_token
-from .models import AEMUser, Event, EventLike, Notification, Participation
+from .google_auth import GoogleTokenVerificationError, verify_google_id_token
+from .models import AEMUser, Event, EventLike, Notification, Participation, UserSettings
 from .notifications import (
     dispatch_due_event_reminders,
     notify_event_moderation,
@@ -134,6 +135,85 @@ def auth_required_response(request):
         {'detail': getattr(request, '_aem_auth_error', 'Authentication required.')},
         status=status.HTTP_401_UNAUTHORIZED,
     )
+
+
+def ensure_user_settings(user, *, profile_image_url=None):
+    now = timezone.now()
+    settings_row, created = UserSettings.objects.get_or_create(
+        user=user,
+        defaults={
+            'notifications_enabled': True,
+            'theme': UserSettings.Themes.LIGHT,
+            'language_code': 'en',
+            'profile_image_url': profile_image_url,
+            'created_at': now,
+            'updated_at': now,
+        },
+    )
+
+    if not created and profile_image_url and not settings_row.profile_image_url:
+        settings_row.profile_image_url = profile_image_url
+        settings_row.updated_at = now
+        settings_row.save(update_fields=['profile_image_url', 'updated_at'])
+
+    return settings_row
+
+
+@transaction.atomic
+def get_or_create_google_user(google_profile):
+    now = timezone.now()
+    google_sub = google_profile['sub']
+    email = google_profile['email']
+    full_name = google_profile['full_name']
+    profile_image_url = google_profile['profile_image_url']
+
+    user = AEMUser.objects.filter(google_sub=google_sub).first()
+    if user is None:
+        existing_user = AEMUser.objects.filter(email__iexact=email).first()
+        if existing_user is not None:
+            if existing_user.google_sub and existing_user.google_sub != google_sub:
+                raise GoogleTokenVerificationError(
+                    'This email is already linked to a different Google account.',
+                )
+            user = existing_user
+            user.google_sub = google_sub
+            user.last_seen_at = now
+            user.updated_at = now
+            user.save(update_fields=['google_sub', 'last_seen_at', 'updated_at'])
+        else:
+            user = AEMUser(
+                full_name=full_name,
+                email=email,
+                google_sub=google_sub,
+                role=AEMUser.Roles.STUDENT,
+                is_active=True,
+                last_seen_at=now,
+                created_at=now,
+                updated_at=now,
+            )
+            user.set_unusable_password()
+            user.save()
+    else:
+        update_fields = []
+        if user.email.strip().lower() != email:
+            conflicting_user = AEMUser.objects.filter(email__iexact=email).exclude(id=user.id).first()
+            if conflicting_user is None:
+                user.email = email
+                update_fields.append('email')
+
+        if user.last_seen_at != now:
+            user.last_seen_at = now
+            update_fields.append('last_seen_at')
+        user.updated_at = now
+        update_fields.append('updated_at')
+        if update_fields:
+            user.save(update_fields=update_fields)
+
+    if not user.is_active:
+        raise GoogleTokenVerificationError('This account is inactive.')
+
+    ensure_user_settings(user, profile_image_url=profile_image_url)
+    return user
 
 
 def is_admin(user):
@@ -292,6 +372,33 @@ class LoginAPIView(APIView):
         return Response(
             {
                 'message': 'Login successful.',
+                'auth_token': issue_auth_token(user),
+                'user': CurrentUserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class GoogleAuthAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        credential = request.data.get('credential')
+
+        try:
+            google_profile = verify_google_id_token(credential)
+            user = get_or_create_google_user(google_profile)
+        except GoogleTokenVerificationError as exc:
+            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        request.session.cycle_key()
+        request.session['user_id'] = user.id
+
+        return Response(
+            {
+                'message': 'Google sign-in successful.',
                 'auth_token': issue_auth_token(user),
                 'user': CurrentUserSerializer(user).data,
             },

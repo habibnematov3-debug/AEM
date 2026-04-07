@@ -4,6 +4,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL ?? ''
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ''
 const SUPABASE_STORAGE_BUCKET = import.meta.env.VITE_SUPABASE_STORAGE_BUCKET ?? 'profile-images'
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''
 const CURRENT_USER_STORAGE_KEY = 'aem-current-user'
 const AUTH_TOKEN_STORAGE_KEY = 'aem-auth-token'
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
@@ -78,6 +79,10 @@ function getSupabaseClient() {
 
 export function isSupabaseUploadConfigured() {
   return Boolean(getSupabaseClient())
+}
+
+export function getGoogleClientId() {
+  return GOOGLE_CLIENT_ID.trim()
 }
 
 function storeCurrentUser(user) {
@@ -452,6 +457,21 @@ export async function signInUser(credentials) {
     body: JSON.stringify({
       email: credentials.email,
       password: credentials.password,
+    }),
+  })
+
+  storeAuthToken(payload.auth_token)
+  const user = normalizeUser(payload.user)
+  storeCurrentUser(user)
+  return { ok: true, user, message: payload.message }
+}
+
+export async function signInWithGoogleCredential(credential) {
+  const payload = await apiRequest('/api/auth/google/', {
+    method: 'POST',
+    timeoutMs: AUTH_API_TIMEOUT_MS,
+    body: JSON.stringify({
+      credential,
     }),
   })
 

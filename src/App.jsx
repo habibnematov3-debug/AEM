@@ -16,6 +16,7 @@ import {
   markNotificationRead,
   moderateAdminEvent,
   signInUser,
+  signInWithGoogleCredential,
   signUpUser,
   unlikeEvent,
   updateCurrentUserProfile,
@@ -389,6 +390,19 @@ function App() {
     }
   }
 
+  async function handleGoogleSignIn(credential) {
+    try {
+      const result = await signInWithGoogleCredential(credential)
+      setCurrentUser(result.user)
+      return result
+    } catch (error) {
+      return {
+        ok: false,
+        message: error.message,
+      }
+    }
+  }
+
   async function handleSignUp(payload) {
     try {
       const result = await signUpUser(payload)
@@ -538,7 +552,13 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={<AuthPage onSignIn={handleSignIn} onSignUp={handleSignUp} />}
+              element={
+                <AuthPage
+                  onSignIn={handleSignIn}
+                  onGoogleSignIn={handleGoogleSignIn}
+                  onSignUp={handleSignUp}
+                />
+              }
             />
             <Route
               path="/students"

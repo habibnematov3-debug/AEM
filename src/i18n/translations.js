@@ -110,6 +110,8 @@ const translations = {
       authModeLabel: 'Authentication mode',
       accountCreated: 'Account created successfully. Sign in to continue.',
       welcomeBack: 'Welcome back, {name}. Redirecting...',
+      googleDivider: 'Or continue with Google',
+      googleUnavailable: 'Google sign-in is not available right now. Please try again later.',
     },
     students: {
       welcome: 'Welcome, {name}',
@@ -1073,6 +1075,13 @@ translations.ru.students.recommendationsLoadError =
   '\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c \u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0430\u0446\u0438\u0438. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u0447\u0443\u0442\u044c \u043f\u043e\u0437\u0436\u0435.'
 translations.uz.students.recommendationsLoadError =
   'Tavsiyalarni hozir yuklab bolmadi. Birozdan keyin yana urinib koring.'
+translations.ru.auth.googleDivider =
+  '\u0418\u043b\u0438 \u043f\u0440\u043e\u0434\u043e\u043b\u0436\u0438\u0442\u0435 \u0447\u0435\u0440\u0435\u0437 Google'
+translations.ru.auth.googleUnavailable =
+  '\u0412\u0445\u043e\u0434 \u0447\u0435\u0440\u0435\u0437 Google \u0441\u0435\u0439\u0447\u0430\u0441 \u043d\u0435\u0434\u043e\u0441\u0442\u0443\u043f\u0435\u043d. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.'
+translations.uz.auth.googleDivider = 'Yoki Google orqali davom eting'
+translations.uz.auth.googleUnavailable =
+  'Google orqali kirish hozircha mavjud emas. Keyinroq yana urinib koring.'
 translations.ru.common.retry = '\u041f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c'
 translations.uz.common.retry = 'Qayta urinish'
 

@@ -11,7 +11,9 @@ GOOGLE_ISSUERS = {'accounts.google.com', 'https://accounts.google.com'}
 
 
 class GoogleTokenVerificationError(Exception):
-    pass
+    def __init__(self, message, *, status_code=400):
+        super().__init__(message)
+        self.status_code = status_code
 
 
 def _is_truthy(value):
@@ -25,7 +27,10 @@ def verify_google_id_token(credential):
         if client_id
     )
     if not allowed_client_ids:
-        raise GoogleTokenVerificationError('Google sign-in is not configured.')
+        raise GoogleTokenVerificationError(
+            'Google sign-in is not configured.',
+            status_code=503,
+        )
 
     normalized_credential = str(credential or '').strip()
     if not normalized_credential:
@@ -37,7 +42,19 @@ def verify_google_id_token(credential):
     try:
         with urlopen(request_url, timeout=8) as response:
             payload = json.loads(response.read().decode('utf-8'))
-    except (HTTPError, URLError, TimeoutError, ValueError) as exc:
+    except HTTPError as exc:
+        if exc.code in {400, 401}:
+            raise GoogleTokenVerificationError('Google sign-in could not be verified.') from exc
+        raise GoogleTokenVerificationError(
+            'Google sign-in is temporarily unavailable.',
+            status_code=503,
+        ) from exc
+    except (URLError, TimeoutError) as exc:
+        raise GoogleTokenVerificationError(
+            'Google sign-in is temporarily unavailable.',
+            status_code=503,
+        ) from exc
+    except ValueError as exc:
         raise GoogleTokenVerificationError('Google sign-in could not be verified.') from exc
 
     audience = str(payload.get('aud', '')).strip()

@@ -3,11 +3,12 @@ from datetime import time, timedelta
 from unittest.mock import patch
 
 from django.db import connection
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from .auth_tokens import issue_auth_token
+from .google_auth import GoogleTokenVerificationError
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
 from .participation_ops import calculate_no_show_count
 
@@ -261,3 +262,41 @@ class GoogleAuthAPIViewTests(UnmanagedModelTablesMixin, TestCase):
         existing_user.refresh_from_db()
         self.assertEqual(existing_user.google_sub, 'google-linked-999')
         self.assertTrue(UserSettings.objects.filter(user=existing_user).exists())
+
+    @patch('accounts.views.verify_google_id_token')
+    def test_google_auth_returns_service_unavailable_when_provider_is_down(self, mock_verify_google_id_token):
+        mock_verify_google_id_token.side_effect = GoogleTokenVerificationError(
+            'Google sign-in is temporarily unavailable.',
+            status_code=503,
+        )
+
+        response = self.client.post(
+            reverse('google-auth'),
+            data=json.dumps({'credential': 'token'}),
+            content_type='application/json',
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(
+            response.json()['detail'],
+            'Google sign-in is temporarily unavailable.',
+        )
+
+
+class AuthProvidersAPIViewTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+
+    @override_settings(AEM_GOOGLE_CLIENT_IDS=())
+    def test_auth_providers_reports_google_disabled(self):
+        response = self.client.get(reverse('auth-providers'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['google']['enabled'])
+
+    @override_settings(AEM_GOOGLE_CLIENT_IDS=('client-id.apps.googleusercontent.com',))
+    def test_auth_providers_reports_google_enabled(self):
+        response = self.client.get(reverse('auth-providers'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['google']['enabled'])

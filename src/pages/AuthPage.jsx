@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-import { getDefaultRouteForRole, getGoogleClientId, warmUpBackend } from '../api/aemApi'
+import {
+  fetchAuthProviders,
+  getDefaultRouteForRole,
+  getGoogleClientId,
+  warmUpBackend,
+} from '../api/aemApi'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/auth.css'
 
@@ -67,9 +72,14 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
   const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedback, setFeedback] = useState({ type: '', message: '' })
+  const [authProvidersStatus, setAuthProvidersStatus] = useState('loading')
+  const [googleBackendEnabled, setGoogleBackendEnabled] = useState(false)
   const [googleStatus, setGoogleStatus] = useState('idle')
   const googleClientId = getGoogleClientId()
-  const googleEnabled = Boolean(googleClientId && typeof onGoogleSignIn === 'function')
+  const googleClientConfigured = Boolean(googleClientId)
+  const googleEnabled = Boolean(
+    googleClientConfigured && googleBackendEnabled && typeof onGoogleSignIn === 'function',
+  )
 
   const content = useMemo(
     () => ({
@@ -120,8 +130,32 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
     signUpData.confirmPassword.length > 0 && signUpData.password === signUpData.confirmPassword
 
   useEffect(() => {
-    // Warm up the backend when auth page loads to reduce registration delays
-    warmUpBackend()
+    let cancelled = false
+
+    async function prepareAuthPage() {
+      await warmUpBackend()
+
+      try {
+        const providers = await fetchAuthProviders()
+        if (cancelled) {
+          return
+        }
+
+        setGoogleBackendEnabled(Boolean(providers.google?.backendEnabled))
+        setAuthProvidersStatus('ready')
+      } catch {
+        if (!cancelled) {
+          setGoogleBackendEnabled(false)
+          setAuthProvidersStatus('error')
+        }
+      }
+    }
+
+    prepareAuthPage()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   googleHandlerRef.current = async (response) => {
@@ -148,6 +182,31 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
       navigate(getDefaultRouteForRole(result.user.role))
     }, 500)
   }
+
+  const googleHelperMessage = useMemo(() => {
+    if (googleStatus === 'error') {
+      return {
+        tone: 'error',
+        text: t('auth.googleUnavailable'),
+      }
+    }
+
+    if (authProvidersStatus === 'loading' || googleStatus === 'loading') {
+      return {
+        tone: 'info',
+        text: t('auth.googlePreparing'),
+      }
+    }
+
+    if (!googleClientConfigured || !googleBackendEnabled || authProvidersStatus === 'error') {
+      return {
+        tone: 'info',
+        text: t('auth.googleFallback'),
+      }
+    }
+
+    return null
+  }, [authProvidersStatus, googleBackendEnabled, googleClientConfigured, googleStatus, t])
 
   useEffect(() => {
     if (!googleEnabled || !googleButtonRef.current) {
@@ -351,21 +410,44 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
             </div>
           ) : null}
 
-          {googleEnabled ? (
-            <div className="auth-social">
-              <div className="auth-social__divider">
-                <span>{t('auth.googleDivider')}</span>
-              </div>
-              <div className="auth-social__button-shell">
+          <div className="auth-social">
+            <div className="auth-social__divider">
+              <span>{t('auth.googleDivider')}</span>
+            </div>
+            <div className="auth-social__button-shell">
+              {googleEnabled && googleStatus === 'ready' ? (
                 <div ref={googleButtonRef} className="auth-social__google-button" />
-              </div>
-              {googleStatus === 'error' ? (
-                <p className="auth-inline-note auth-inline-note--error">
-                  {t('auth.googleUnavailable')}
-                </p>
+              ) : (
+                <button
+                  type="button"
+                  className="auth-social__fallback-button"
+                  disabled
+                  aria-disabled="true"
+                >
+                  {authProvidersStatus === 'loading' || googleStatus === 'loading'
+                    ? t('auth.googleLoading')
+                    : t('auth.googleButton')}
+                </button>
+              )}
+              {googleEnabled && googleStatus !== 'ready' ? (
+                <div
+                  ref={googleButtonRef}
+                  className="auth-social__google-button auth-social__google-button--hidden"
+                />
               ) : null}
             </div>
-          ) : null}
+            {googleHelperMessage ? (
+              <p
+                className={
+                  googleHelperMessage.tone === 'error'
+                    ? 'auth-inline-note auth-inline-note--error'
+                    : 'auth-inline-note'
+                }
+              >
+                {googleHelperMessage.text}
+              </p>
+            ) : null}
+          </div>
 
           {mode === 'signin' ? (
             <form className="auth-form" onSubmit={handleSignInSubmit}>

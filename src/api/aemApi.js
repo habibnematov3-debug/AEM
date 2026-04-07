@@ -502,10 +502,24 @@ export async function signUpUser(formData) {
   })
 
   storeAuthToken(payload.auth_token)
+  const user = normalizeUser(payload.user)
+  storeCurrentUser(user)
   return {
     ok: true,
-    user: normalizeUser(payload.user),
+    user,
     message: payload.message,
+  }
+}
+
+export async function fetchAuthProviders() {
+  const payload = await apiRequest('/api/auth/providers/', {
+    timeoutMs: 10000,
+  })
+
+  return {
+    google: {
+      backendEnabled: Boolean(payload.google?.enabled),
+    },
   }
 }
 

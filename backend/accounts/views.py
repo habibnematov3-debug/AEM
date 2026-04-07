@@ -1,6 +1,7 @@
 from collections import Counter
 from datetime import timedelta
 
+from django.conf import settings
 from django.core import signing
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
@@ -391,7 +392,10 @@ class GoogleAuthAPIView(APIView):
             google_profile = verify_google_id_token(credential)
             user = get_or_create_google_user(google_profile)
         except GoogleTokenVerificationError as exc:
-            return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': str(exc)},
+                status=getattr(exc, 'status_code', status.HTTP_400_BAD_REQUEST),
+            )
 
         request.session.cycle_key()
         request.session['user_id'] = user.id
@@ -401,6 +405,21 @@ class GoogleAuthAPIView(APIView):
                 'message': 'Google sign-in successful.',
                 'auth_token': issue_auth_token(user),
                 'user': CurrentUserSerializer(user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class AuthProvidersAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        return Response(
+            {
+                'google': {
+                    'enabled': bool(getattr(settings, 'AEM_GOOGLE_CLIENT_IDS', ())),
+                },
             },
             status=status.HTTP_200_OK,
         )

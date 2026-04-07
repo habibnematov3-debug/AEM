@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import {
@@ -63,7 +63,6 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
   const { t } = useI18n()
   const navigate = useNavigate()
   const googleButtonRef = useRef(null)
-  const googleHandlerRef = useRef(null)
   const [mode, setMode] = useState('signin')
   const [signInData, setSignInData] = useState(initialSignIn)
   const [signUpData, setSignUpData] = useState(initialSignUp)
@@ -80,6 +79,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
   const googleEnabled = Boolean(
     googleClientConfigured && googleBackendEnabled && typeof onGoogleSignIn === 'function',
   )
+  const googleIsPreparing = googleEnabled && googleStatus !== 'ready' && googleStatus !== 'error'
 
   const content = useMemo(
     () => ({
@@ -158,7 +158,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
     }
   }, [])
 
-  googleHandlerRef.current = async (response) => {
+  const handleGoogleCredential = useEffectEvent(async (response) => {
     if (!response?.credential || typeof onGoogleSignIn !== 'function') {
       setFeedback({ type: 'error', message: t('auth.googleUnavailable') })
       return
@@ -181,7 +181,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
       setIsSubmitting(false)
       navigate(getDefaultRouteForRole(result.user.role))
     }, 500)
-  }
+  })
 
   const googleHelperMessage = useMemo(() => {
     if (googleStatus === 'error') {
@@ -191,7 +191,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
       }
     }
 
-    if (authProvidersStatus === 'loading' || googleStatus === 'loading') {
+    if (authProvidersStatus === 'loading' || googleIsPreparing) {
       return {
         tone: 'info',
         text: t('auth.googlePreparing'),
@@ -206,38 +206,47 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
     }
 
     return null
-  }, [authProvidersStatus, googleBackendEnabled, googleClientConfigured, googleStatus, t])
+  }, [
+    authProvidersStatus,
+    googleBackendEnabled,
+    googleClientConfigured,
+    googleIsPreparing,
+    googleStatus,
+    t,
+  ])
 
   useEffect(() => {
-    if (!googleEnabled || !googleButtonRef.current) {
-      setGoogleStatus('idle')
+    const googleButtonNode = googleButtonRef.current
+
+    if (!googleEnabled || !googleButtonNode) {
       return undefined
     }
 
     let cancelled = false
-    setGoogleStatus('loading')
 
     loadGoogleIdentityScript()
       .then((googleApi) => {
-        if (cancelled || !googleButtonRef.current || !googleApi?.accounts?.id) {
+        if (cancelled || !googleApi?.accounts?.id) {
           return
         }
 
         googleApi.accounts.id.initialize({
           client_id: googleClientId,
-          callback: (response) => googleHandlerRef.current?.(response),
+          callback: (response) => {
+            void handleGoogleCredential(response)
+          },
           auto_select: false,
           ux_mode: 'popup',
           cancel_on_tap_outside: true,
         })
 
-        googleButtonRef.current.innerHTML = ''
-        googleApi.accounts.id.renderButton(googleButtonRef.current, {
+        googleButtonNode.innerHTML = ''
+        googleApi.accounts.id.renderButton(googleButtonNode, {
           theme: 'outline',
           size: 'large',
           shape: 'pill',
           text: mode === 'signup' ? 'signup_with' : 'signin_with',
-          width: Math.min(googleButtonRef.current.offsetWidth || 360, 360),
+          width: Math.min(googleButtonNode.offsetWidth || 360, 360),
           logo_alignment: 'left',
         })
         setGoogleStatus('ready')
@@ -250,9 +259,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
 
     return () => {
       cancelled = true
-      if (googleButtonRef.current) {
-        googleButtonRef.current.innerHTML = ''
-      }
+      googleButtonNode.innerHTML = ''
     }
   }, [googleClientId, googleEnabled, mode])
 
@@ -415,25 +422,27 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
               <span>{t('auth.googleDivider')}</span>
             </div>
             <div className="auth-social__button-shell">
-              {googleEnabled && googleStatus === 'ready' ? (
-                <div ref={googleButtonRef} className="auth-social__google-button" />
-              ) : (
+              {googleEnabled ? (
+                <div
+                  ref={googleButtonRef}
+                  className={
+                    googleStatus === 'ready'
+                      ? 'auth-social__google-button'
+                      : 'auth-social__google-button auth-social__google-button--hidden'
+                  }
+                />
+              ) : null}
+              {!googleEnabled || googleStatus !== 'ready' ? (
                 <button
                   type="button"
                   className="auth-social__fallback-button"
                   disabled
                   aria-disabled="true"
                 >
-                  {authProvidersStatus === 'loading' || googleStatus === 'loading'
+                  {authProvidersStatus === 'loading' || googleIsPreparing
                     ? t('auth.googleLoading')
                     : t('auth.googleButton')}
                 </button>
-              )}
-              {googleEnabled && googleStatus !== 'ready' ? (
-                <div
-                  ref={googleButtonRef}
-                  className="auth-social__google-button auth-social__google-button--hidden"
-                />
               ) : null}
             </div>
             {googleHelperMessage ? (

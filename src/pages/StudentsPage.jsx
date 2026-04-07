@@ -37,6 +37,12 @@ function StudentsPage({
   useEffect(() => {
     let isMounted = true
 
+    if (!currentUser) {
+      return () => {
+        isMounted = false
+      }
+    }
+
     async function loadRecommended() {
       try {
         const fetched = await fetchRecommendedEvents()
@@ -53,11 +59,7 @@ function StudentsPage({
       }
     }
 
-    if (currentUser) {
-      loadRecommended()
-    } else {
-      setRecommendedEventIds([])
-    }
+    loadRecommended()
 
     return () => {
       isMounted = false
@@ -74,10 +76,13 @@ function StudentsPage({
     return result
   }
 
-  const recommendedRankById = useMemo(
-    () => new Map(recommendedEventIds.map((eventId, index) => [eventId, index])),
-    [recommendedEventIds],
-  )
+  const recommendedRankById = useMemo(() => {
+    if (!currentUser) {
+      return new Map()
+    }
+
+    return new Map(recommendedEventIds.map((eventId, index) => [eventId, index]))
+  }, [currentUser, recommendedEventIds])
 
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()

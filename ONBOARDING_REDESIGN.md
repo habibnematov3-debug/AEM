@@ -1,7 +1,7 @@
 # Admin Dashboard Onboarding Redesign
 
 ## Executive Summary
-Redesigned the admin dashboard first step of the guided tour to improve UX clarity, reduce cognitive load, and create a stronger visual connection between the highlight and the tooltip.
+Redesigned the admin dashboard first step of the onboarding tour to improve UX clarity, reduce cognitive load, and create a stronger visual connection between the highlight and the tooltip.
 
 ---
 
@@ -166,17 +166,6 @@ selector: '[data-tour="admin-stats"]'
 + "Use the filter tabs and search to find submissions to review."
 ```
 
-#### Step 5: Guide
-```diff
-- "Guide stays available later"
-- "Use the Guide button whenever you want to replay this onboarding..."
-- "Use this button whenever you want to restart the guide."
-
-+ "Replay This Guide"
-+ "Return to this tour anytime you need a refresher or to show new admins 
-   the platform."
-+ "Click the Guide icon in the header to start over."
-```
 
 ---
 

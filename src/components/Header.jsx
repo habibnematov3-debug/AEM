@@ -11,7 +11,6 @@ function Header({
   showSearch = true,
   searchValue = '',
   onSearchChange = () => {},
-  onOpenGuide = null,
   notifications = [],
   notificationsLoading = false,
   unreadNotificationsCount = 0,
@@ -195,17 +194,6 @@ function Header({
               </NavLink>
             ))}
           </nav>
-
-          {variant === 'students' && currentUser?.id && typeof onOpenGuide === 'function' ? (
-            <button
-              type="button"
-              className="site-header__guide"
-              onClick={onOpenGuide}
-              data-tour="header-guide"
-            >
-              {t('header.guide')}
-            </button>
-          ) : null}
 
           {variant === 'students' && currentUser?.id ? (
             <div className="site-header__notifications" ref={notificationsRef}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import {
   createEvent,
@@ -139,12 +139,10 @@ function App() {
   const [authReady, setAuthReady] = useState(false)
   const [adminPendingCount, setAdminPendingCount] = useState(0)
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false)
-  const [pendingGuideOpen, setPendingGuideOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0)
   const location = useLocation()
-  const navigate = useNavigate()
   const isAuthPage = location.pathname === '/'
   const isProfilePage = location.pathname === '/profile'
   const isStudentsPage = location.pathname === '/students'
@@ -220,7 +218,6 @@ function App() {
     }
 
     setIsOnboardingOpen(false)
-    setPendingGuideOpen(false)
     setNotifications([])
     setUnreadNotificationsCount(0)
   }, [currentUser])
@@ -273,7 +270,7 @@ function App() {
   }, [authReady, currentUser?.id])
 
   useEffect(() => {
-    if (!authReady || !currentUser || pendingGuideOpen || isOnboardingOpen) {
+    if (!authReady || !currentUser || isOnboardingOpen) {
       return
     }
 
@@ -292,21 +289,7 @@ function App() {
     isOnboardingOpen,
     location.pathname,
     onboardingStartPath,
-    pendingGuideOpen,
   ])
-
-  useEffect(() => {
-    if (!pendingGuideOpen || !currentUser) {
-      return
-    }
-
-    if (location.pathname !== onboardingStartPath) {
-      return
-    }
-
-    setIsOnboardingOpen(true)
-    setPendingGuideOpen(false)
-  }, [currentUser, location.pathname, onboardingStartPath, pendingGuideOpen])
 
   useEffect(() => {
     let isMounted = true
@@ -472,27 +455,11 @@ function App() {
     return result
   }
 
-  function handleOpenGuide() {
-    if (!currentUser) {
-      return
-    }
-
-    if (location.pathname !== onboardingStartPath) {
-      setPendingGuideOpen(true)
-      navigate(onboardingStartPath)
-      return
-    }
-
-    setPendingGuideOpen(false)
-    setIsOnboardingOpen(true)
-  }
-
   function handleCloseOnboarding() {
     if (currentUser) {
       markOnboardingSeen(currentUser)
     }
 
-    setPendingGuideOpen(false)
     setIsOnboardingOpen(false)
   }
 
@@ -533,18 +500,17 @@ function App() {
       <div className="app-shell">
         <SkipToMain />
         {!isAuthPage && (
-          <Header
-            variant={isDashboardPage ? 'students' : 'default'}
-            currentUser={currentUser}
-            adminPendingCount={adminPendingCount}
-            showSearch={!isProfilePage}
-            searchValue={studentSearch}
-            onSearchChange={setStudentSearch}
-            onOpenGuide={handleOpenGuide}
-            notifications={notifications}
-            notificationsLoading={notificationsLoading}
-            unreadNotificationsCount={unreadNotificationsCount}
-            onMarkNotificationRead={handleMarkNotificationRead}
+        <Header
+          variant={isDashboardPage ? 'students' : 'default'}
+          currentUser={currentUser}
+          adminPendingCount={adminPendingCount}
+          showSearch={!isProfilePage}
+          searchValue={studentSearch}
+          onSearchChange={setStudentSearch}
+          notifications={notifications}
+          notificationsLoading={notificationsLoading}
+          unreadNotificationsCount={unreadNotificationsCount}
+          onMarkNotificationRead={handleMarkNotificationRead}
             onMarkAllNotificationsRead={handleMarkAllNotificationsRead}
           />
         )}

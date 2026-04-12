@@ -55,7 +55,6 @@ const translations = {
       searchPlaceholder: 'Search events...',
       pendingAdminBadge: '{count} pending events',
       profile: 'Profile',
-      guide: 'Guide',
       notifications: 'Notifications',
       notificationsSubtitle: 'Recent updates and reminder messages.',
       notificationsLoading: 'Loading notifications...',
@@ -399,12 +398,6 @@ const translations = {
               'My Events is your organizer workspace for creating events, editing them, and later managing participants, waitlists, and check-in.',
             instruction: 'Use this button to create a new event as an organizer.',
           },
-          guide: {
-            title: 'Reopen this tour anytime',
-            description:
-              'Use the Guide button whenever you want a quick refresher after new features are added.',
-            instruction: 'Click Guide later if you want to replay the walkthrough.',
-          },
         },
       },
       admin: {
@@ -432,12 +425,6 @@ const translations = {
             description:
               'New events appear here as Pending. Review titles, descriptions, and details, then Approve to publish or Reject to hide.',
             instruction: 'Use the filter tabs and search to find submissions to review.',
-          },
-          guide: {
-            title: 'Replay This Guide',
-            description:
-              'Return to this tour anytime you need a refresher or to show new admins the platform.',
-            instruction: 'Click the Guide icon in the header to start over.',
           },
         },
       },

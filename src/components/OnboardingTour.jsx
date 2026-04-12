@@ -158,13 +158,6 @@ function buildTourSteps(role, t) {
         description: t('onboarding.admin.steps.moderation.description'),
         instruction: t('onboarding.admin.steps.moderation.instruction'),
       },
-      {
-        route: '/admin',
-        selector: '[data-tour="header-guide"]',
-        title: t('onboarding.admin.steps.guide.title'),
-        description: t('onboarding.admin.steps.guide.description'),
-        instruction: t('onboarding.admin.steps.guide.instruction'),
-      },
     ]
   }
 
@@ -203,13 +196,6 @@ function buildTourSteps(role, t) {
       title: t('onboarding.student.steps.organizer.title'),
       description: t('onboarding.student.steps.organizer.description'),
       instruction: t('onboarding.student.steps.organizer.instruction'),
-    },
-    {
-      route: '/organizer',
-      selector: '[data-tour="header-guide"]',
-      title: t('onboarding.student.steps.guide.title'),
-      description: t('onboarding.student.steps.guide.description'),
-      instruction: t('onboarding.student.steps.guide.instruction'),
     },
   ]
 }

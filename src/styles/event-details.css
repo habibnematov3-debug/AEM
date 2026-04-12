@@ -562,6 +562,7 @@
 .event-details-participants__empty {
   color: var(--muted);
   font-size: 0.88rem;
+  word-break: break-word;
 }
 
 .event-details-item {
@@ -692,5 +693,55 @@
 
   .event-details-item {
     padding: 12px;
+  }
+}
+
+@media (max-width: 560px) {
+  .event-details-page {
+    gap: 12px;
+  }
+
+  .event-details-card,
+  .event-details-empty {
+    padding: 14px 12px;
+  }
+
+  .event-details-likes {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .event-details-pass {
+    padding: 14px;
+  }
+
+  .event-details-pass__body {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .event-details-pass__qr {
+    padding: 10px;
+  }
+
+  .event-details-participants__count {
+    width: 100%;
+  }
+
+  .event-details-participant {
+    padding: 12px;
+  }
+
+  .event-details-participant__joined {
+    align-self: flex-start;
+  }
+
+  .event-details-participant__status-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .event-details-participant__status-actions > * {
+    width: 100%;
   }
 }

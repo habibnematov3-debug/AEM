@@ -105,6 +105,7 @@
 .profile-page__copy {
   display: grid;
   gap: 6px;
+  min-width: 0;
 }
 
 .profile-page__eyebrow,
@@ -442,9 +443,27 @@
     line-height: 1.03;
   }
 
+  .profile-page__copy p {
+    word-break: break-word;
+  }
+
+  .profile-page__meta-card {
+    padding: 12px;
+  }
+
   .profile-form__photo-tools {
     display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .profile-form__toggle {
+    align-items: flex-start;
+    min-height: auto;
+    padding: 12px 14px;
+  }
+
+  .profile-form__toggle span {
+    line-height: 1.45;
   }
 
   .profile-form__secondary,

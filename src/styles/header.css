@@ -598,8 +598,8 @@
     padding: 0 12px;
   }
   .site-header__notifications-panel {
-    right: -44px;
-    width: min(340px, calc(100vw - 20px));
+    right: 0;
+    width: min(340px, calc(100vw - 16px));
   }
 
   .site-header__brand--students {

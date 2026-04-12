@@ -221,4 +221,8 @@
     flex-direction: column;
     align-items: flex-start;
   }
+
+  .page-intro > .button {
+    width: 100%;
+  }
 }

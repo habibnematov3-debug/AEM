@@ -204,8 +204,37 @@
     width: 100%;
   }
 
+  .check-in-form .button,
+  .check-in-result-card {
+    width: 100%;
+    max-width: none;
+  }
+
   .check-in-scanner__frame,
   .check-in-scanner__video {
     min-height: 260px;
+  }
+}
+
+@media (max-width: 560px) {
+  .check-in-page {
+    gap: 16px;
+  }
+
+  .check-in-card {
+    gap: 14px;
+  }
+
+  .check-in-scanner__frame,
+  .check-in-scanner__video {
+    min-height: 220px;
+  }
+
+  .check-in-form__field textarea {
+    min-height: 96px;
+  }
+
+  .check-in-result-card__meta div {
+    padding: 12px;
   }
 }

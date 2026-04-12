@@ -1,9 +1,10 @@
 .auth-page {
   position: relative;
   min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
   display: grid;
   align-items: center;
-  padding: 56px 0 28px;
+  padding: max(24px, env(safe-area-inset-top)) 0 calc(28px + env(safe-area-inset-bottom));
   overflow: hidden;
 }
 
@@ -522,7 +523,7 @@
   .auth-page {
     min-height: auto;
     align-items: start;
-    padding: max(4px, env(safe-area-inset-top)) 0 12px;
+    padding: max(4px, env(safe-area-inset-top)) 0 calc(12px + env(safe-area-inset-bottom));
   }
 
   .auth-page::before {

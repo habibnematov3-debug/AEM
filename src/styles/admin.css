@@ -45,6 +45,7 @@
 .admin-page__intro-actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 10px;
 }
 
@@ -395,7 +396,8 @@
 .admin-page__filter,
 .admin-page__approve-button,
 .admin-page__reject-button,
-.admin-page__view-button {
+.admin-page__view-button,
+.admin-page__delete-button {
   min-height: 38px;
   padding: 0 14px;
   border-radius: var(--radius-pill);
@@ -603,6 +605,13 @@
   color: white;
 }
 
+.admin-page__delete-button {
+  border: 1px solid rgba(185, 58, 84, 0.14);
+  background: rgba(185, 58, 84, 0.08);
+  color: #98243d;
+  cursor: pointer;
+}
+
 .admin-page__approve-button {
   background: linear-gradient(180deg, #2a9a63 0%, #1f8052 100%);
 }
@@ -612,12 +621,15 @@
 }
 
 .admin-page__approve-button:hover:not(:disabled),
-.admin-page__reject-button:hover:not(:disabled) {
+.admin-page__reject-button:hover:not(:disabled),
+.admin-page__delete-button:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-page__approve-button:disabled,
-.admin-page__reject-button:disabled {
+.admin-page__reject-button:disabled,
+.admin-page__delete-button:disabled {
   opacity: 0.65;
   cursor: not-allowed;
   transform: none;
@@ -671,6 +683,7 @@
 
   .admin-page__intro-actions {
     justify-content: stretch;
+    flex-direction: column;
   }
 
   .admin-page__manage-users-link {
@@ -703,6 +716,28 @@
     justify-items: stretch;
   }
 
+  .admin-page__filters {
+    width: 100%;
+  }
+
+  .admin-page__filter {
+    flex: 1 1 140px;
+    justify-content: center;
+  }
+
+  .admin-page__bulk-actions {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px;
+    border-radius: var(--radius-lg);
+  }
+
+  .admin-page__bulk-select,
+  .admin-page__delete-selected-button {
+    width: 100%;
+    justify-content: center;
+  }
+
   .admin-page__highlights {
     grid-template-columns: 1fr;
   }
@@ -717,5 +752,47 @@
 
   .admin-page__event-meta {
     grid-template-columns: 1fr;
+  }
+
+  .admin-page__event-content {
+    padding: 14px;
+  }
+
+  .admin-page__event-topline {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .admin-page__event-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-page__approve-button,
+  .admin-page__reject-button,
+  .admin-page__view-button,
+  .admin-page__delete-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .admin-page__panel {
+    padding: 14px 12px;
+  }
+
+  .admin-page__highlight-list li {
+    flex-direction: column;
+  }
+
+  .admin-page__highlight-list li > span {
+    align-self: flex-start;
+  }
+
+  .admin-page__filters,
+  .admin-page__event-actions {
+    grid-template-columns: 1fr;
+    display: grid;
   }
 }

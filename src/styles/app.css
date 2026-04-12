@@ -1,6 +1,7 @@
 .app-shell {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -52,7 +53,7 @@
 .page-shell {
   width: min(1180px, calc(100% - 28px));
   margin: 0 auto;
-  padding: 28px 0 48px;
+  padding: 28px 0 calc(48px + env(safe-area-inset-bottom));
   flex: 1;
 }
 
@@ -81,6 +82,6 @@
 @media (max-width: 640px) {
   .page-shell {
     width: min(100%, calc(100% - 16px));
-    padding: 14px 0 24px;
+    padding: 14px 0 calc(24px + env(safe-area-inset-bottom));
   }
 }

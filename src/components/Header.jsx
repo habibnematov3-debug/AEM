@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 
 import { useI18n } from '../i18n/LanguageContext'
+import { useWebSocket } from '../hooks/useWebSocket'
 import '../styles/header.css'
 
 function Header({
@@ -18,12 +19,20 @@ function Header({
   onMarkAllNotificationsRead = () => {},
 }) {
   const { t } = useI18n()
+  const { isConnected, newNotifications, unreadCount: realTimeUnreadCount, clearNewNotifications } = useWebSocket(currentUser)
   const isAdmin = currentUser?.role === 'admin'
   const adminBadgeLabel = adminPendingCount > 99 ? '99+' : String(adminPendingCount)
+  
+  // Combine existing unread count with real-time updates
+  const totalUnreadCount = unreadNotificationsCount + realTimeUnreadCount
   const notificationBadgeLabel =
-    unreadNotificationsCount > 99 ? '99+' : String(unreadNotificationsCount)
+    totalUnreadCount > 99 ? '99+' : String(totalUnreadCount)
+    
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
   const notificationsRef = useRef(null)
+  
+  // Combine existing notifications with new real-time ones
+  const allNotifications = [...newNotifications, ...notifications]
   const navItems =
     variant === 'students'
       ? [
@@ -83,6 +92,13 @@ function Header({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isNotificationsOpen])
+
+  // Clear new notifications when dropdown is opened
+  useEffect(() => {
+    if (isNotificationsOpen && newNotifications.length > 0) {
+      clearNewNotifications()
+    }
+  }, [isNotificationsOpen, newNotifications.length, clearNewNotifications])
 
   function formatNotificationTimestamp(value) {
     if (!value) {
@@ -243,25 +259,25 @@ function Header({
                     <p className="site-header__notifications-empty">
                       {t('header.notificationsLoading')}
                     </p>
-                  ) : notifications.length ? (
+                  ) : allNotifications.length ? (
                     <div className="site-header__notifications-list">
-                      {notifications.map((notification) => {
+                      {allNotifications.map((notification) => {
                         const notificationContent = (
                           <>
                             <div className="site-header__notifications-item-copy">
                               <strong>{notification.title}</strong>
                               <p>{notification.message}</p>
                             </div>
-                            <span>{formatNotificationTimestamp(notification.createdAt)}</span>
+                            <span>{formatNotificationTimestamp(notification.createdAt || notification.created_at)}</span>
                           </>
                         )
 
-                        return notification.linkUrl ? (
+                        return (notification.linkUrl || notification.link_url) ? (
                           <Link
                             key={notification.id}
-                            to={notification.linkUrl}
+                            to={notification.linkUrl || notification.link_url}
                             className={
-                              notification.readAt
+                              (notification.readAt || notification.read_at)
                                 ? 'site-header__notifications-item'
                                 : 'site-header__notifications-item site-header__notifications-item--unread'
                             }
@@ -277,7 +293,7 @@ function Header({
                             key={notification.id}
                             type="button"
                             className={
-                              notification.readAt
+                              (notification.readAt || notification.read_at)
                                 ? 'site-header__notifications-item'
                                 : 'site-header__notifications-item site-header__notifications-item--unread'
                             }

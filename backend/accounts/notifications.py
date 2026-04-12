@@ -1,5 +1,8 @@
 import logging
 from datetime import datetime, timedelta
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+import json
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -66,7 +69,7 @@ def create_in_app_notification(
         return None
 
     now = timezone.now()
-    return Notification.objects.create(
+    notification = Notification.objects.create(
         user=user,
         event=event,
         notification_type=notification_type,
@@ -76,6 +79,58 @@ def create_in_app_notification(
         created_at=now,
         updated_at=now,
     )
+    
+    # Send real-time notification via WebSocket
+    send_real_time_notification(notification)
+    
+    return notification
+
+
+def send_real_time_notification(notification):
+    """Send notification via WebSocket to user"""
+    try:
+        channel_layer = get_channel_layer()
+        
+        # Prepare notification data for frontend
+        notification_data = {
+            'id': notification.id,
+            'title': notification.title,
+            'message': notification.message,
+            'notification_type': notification.notification_type,
+            'link_url': notification.link_url,
+            'created_at': notification.created_at.isoformat(),
+            'read_at': notification.read_at.isoformat() if notification.read_at else None,
+            'event': {
+                'id': notification.event.id,
+                'title': notification.event.title,
+            } if notification.event else None,
+        }
+        
+        # Send to user's personal channel
+        async_to_sync(channel_layer.group_send)(
+            f"user_{notification.user.id}",
+            {
+                'type': 'notification_message',
+                'notification': notification_data
+            }
+        )
+        
+        # Update unread count
+        unread_count = Notification.objects.filter(
+            user=notification.user,
+            read_at__isnull=True
+        ).count()
+        
+        async_to_sync(channel_layer.group_send)(
+            f"user_{notification.user.id}",
+            {
+                'type': 'unread_count_update',
+                'count': unread_count
+            }
+        )
+        
+    except Exception as e:
+        logger.warning(f'Failed to send real-time notification: {e}')
 
 
 def notify_event_moderation(event, moderation_status):

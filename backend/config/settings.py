@@ -53,6 +53,7 @@ if RENDER_EXTERNAL_HOSTNAME:
 INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
+    'channels',
     'accounts',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -83,6 +84,7 @@ TEMPLATES = [
     },
 ]
 
+ASGI_APPLICATION = 'config.asgi.application'
 WSGI_APPLICATION = 'config.wsgi.application'
 
 
@@ -205,5 +207,15 @@ CSRF_COOKIE_SAMESITE = get_str_env(
     'None' if os.getenv('RENDER') else 'Lax',
 )
 CSRF_COOKIE_SECURE = get_bool_env('AEM_CSRF_COOKIE_SECURE', bool(os.getenv('RENDER')))
+
+# Channel layers for WebSocket support
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer' if DEBUG else 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [('127.0.0.1', 6379)] if not DEBUG else [],
+        },
+    },
+}
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True

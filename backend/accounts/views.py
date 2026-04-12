@@ -1,5 +1,7 @@
 from collections import Counter
 from datetime import timedelta
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
 from django.conf import settings
 from django.core import signing
@@ -1160,6 +1162,9 @@ class NotificationReadAPIView(APIView):
             notification.read_at = timezone.now()
             notification.updated_at = notification.read_at
             notification.save(update_fields=['read_at', 'updated_at'])
+            
+            # Send real-time unread count update
+            send_unread_count_update(current_user.id)
 
         return Response(
             {
@@ -1189,6 +1194,9 @@ class NotificationReadAllAPIView(APIView):
             read_at=now,
             updated_at=now,
         )
+        
+        # Send real-time unread count update
+        send_unread_count_update(current_user.id)
 
         return Response(
             {
@@ -1560,3 +1568,29 @@ class AdminUserUpdateAPIView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+def send_unread_count_update(user_id):
+    """Send unread count update via WebSocket"""
+    try:
+        channel_layer = get_channel_layer()
+        
+        # Get current unread count
+        unread_count = Notification.objects.filter(
+            user_id=user_id,
+            read_at__isnull=True
+        ).count()
+        
+        # Send to user's personal channel
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}",
+            {
+                'type': 'unread_count_update',
+                'count': unread_count
+            }
+        )
+    except Exception as e:
+        # Log error but don't fail the request
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f'Failed to send unread count update: {e}')

@@ -358,7 +358,7 @@
 }
 
 .auth-password-rules__item::before {
-  content: '\25cb';
+  content: '○';
   font-size: 10px;
 }
 
@@ -367,7 +367,7 @@
 }
 
 .auth-password-rules__item--valid::before {
-  content: '\25cf';
+  content: '●';
 }
 
 /* Submit */
@@ -419,23 +419,3 @@
 }
 
 .auth-card__footer-link:hover { color: var(--accent, #c2410c); }
-
-@media (max-width: 640px) {
-  .auth-layout--single {
-    padding: 20px 14px;
-  }
-
-  .auth-card--standalone {
-    padding: 28px 20px;
-    border-radius: 16px;
-  }
-
-  .auth-card__header {
-    flex-direction: column;
-  }
-
-  .auth-switcher {
-    width: 100%;
-    justify-content: space-between;
-  }
-}

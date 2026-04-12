@@ -1,3 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #f8f6f1;
+  --bg-alt: #ffffff;
+  --surface: #ffffff;
+  --border: #e8e4dc;
+  --border-subtle: #f0ede7;
+  --text: #1c1917;
+  --text-2: #6b7280;
+  --text-3: #9ca3af;
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-light: #fff7ed;
+  --blue: #1d4ed8;
+  --blue-light: #eff6ff;
+  --green: #15803d;
+  --green-light: #f0fdf4;
+  --red: #dc2626;
+  --red-light: #fef2f2;
+  --amber: #d97706;
+  --amber-light: #fffbeb;
+  --navy: #0f172a;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.07);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,.1);
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --ease: 0.2s ease;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -409,99 +443,4 @@
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .site-header__profile:hover {
-    transform: none;
-  }
-}
-
-@media (max-width: 980px) {
-  .site-header__inner,
-  .site-header__inner--students {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-
-  .site-header__inner--students {
-    height: auto;
-    flex-wrap: wrap;
-    row-gap: 12px;
-  }
-
-  .site-header__search,
-  .site-header__search-spacer {
-    order: 3;
-    flex: 1 1 100%;
-    max-width: none;
-  }
-
-  .site-header__actions {
-    width: 100%;
-    margin-left: 0;
-    justify-content: space-between;
-  }
-
-  .site-header__nav {
-    flex: 1 1 auto;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    scrollbar-width: none;
-  }
-
-  .site-header__nav::-webkit-scrollbar {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .site-header__inner,
-  .site-header__inner--students {
-    padding-left: 16px;
-    padding-right: 16px;
-    gap: 12px;
-  }
-
-  .site-header__search {
-    height: 44px;
-    padding: 0 12px;
-  }
-
-  .site-header__link {
-    padding: 6px 10px;
-    font-size: 12.5px;
-  }
-
-  .site-header__profile,
-  .site-header__notifications-toggle {
-    width: 40px;
-    height: 40px;
-  }
-
-  .site-header__notifications-panel {
-    width: min(360px, calc(100vw - 32px));
-  }
-}
-
-@media (max-width: 460px) {
-  .site-header__actions {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  .site-header__nav {
-    order: 2;
-    flex-basis: 100%;
-  }
-
-  .site-header__notifications-panel {
-    right: 0;
-    width: min(340px, calc(100vw - 16px));
-  }
-
-  .site-header__brand-logo {
-    height: 28px;
-  }
 }

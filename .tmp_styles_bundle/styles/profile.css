@@ -330,7 +330,7 @@
 }
 
 .profile-card__list li::before {
-  content: '\2022';
+  content: '•';
   color: var(--accent, #c2410c);
   flex-shrink: 0;
   margin-top: 1px;

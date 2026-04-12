@@ -21,7 +21,7 @@
   margin-bottom: 20px;
 }
 
-.event-details-back::before { content: '\2190'; }
+.event-details-back::before { content: '←'; }
 .event-details-back:hover { color: var(--text, #1c1917); }
 
 /* Card */

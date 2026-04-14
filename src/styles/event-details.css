@@ -542,6 +542,70 @@
     font-size: 17.5px; 
   }
   .event-details-cover { height: 220px; }
+  
+  /* Mobile participants improvements */
+  .event-details-participants {
+    gap: 20px;
+    padding-top: 12px;
+  }
+  
+  .event-details-participants__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .event-details-participants__top h2 {
+    font-size: 20px;
+  }
+  
+  .event-details-participants__top p {
+    font-size: 14px;
+  }
+  
+  .event-details-participants__tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .event-details-participants__scan {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .event-details-participants__empty {
+    padding: 32px 20px;
+  }
+  
+  .event-details-participant {
+    padding: 16px;
+    gap: 14px;
+    align-items: center;
+  }
+  
+  .event-details-participant__identity {
+    flex: 1;
+  }
+  
+  .event-details-participant__identity strong {
+    font-size: 14px;
+  }
+  
+  .event-details-participant__identity span {
+    font-size: 13px;
+  }
+  
+  .event-details-participant__avatar,
+  .event-details-participant__image {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .event-details-participant__checkin,
+  .event-participant__waitlist {
+    font-size: 13px;
+    padding: 8px 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -559,5 +623,69 @@
   .event-details-item strong { 
     font-size: 18.4px; 
     line-height: 1.3;
+  }
+  
+  /* Mobile participants improvements */
+  .event-details-participants {
+    gap: 16px;
+    padding-top: 10px;
+  }
+  
+  .event-details-participants__top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .event-details-participants__top h2 {
+    font-size: 18px;
+  }
+  
+  .event-details-participants__top p {
+    font-size: 13px;
+  }
+  
+  .event-details-participants__tools {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .event-details-participants__scan {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .event-details-participants__empty {
+    padding: 24px 16px;
+  }
+  
+  .event-details-participant {
+    padding: 14px;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  .event-details-participant__identity {
+    flex: 1;
+  }
+  
+  .event-details-participant__identity strong {
+    font-size: 13px;
+  }
+  
+  .event-details-participant__identity span {
+    font-size: 12px;
+  }
+  
+  .event-details-participant__avatar,
+  .event-details-participant__image {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .event-details-participant__checkin,
+  .event-details-participant__waitlist {
+    font-size: 12px;
+    padding: 6px 12px;
   }
 }

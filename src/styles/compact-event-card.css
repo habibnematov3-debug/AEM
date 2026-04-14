@@ -27,6 +27,14 @@
   gap: 10px;
 }
 
+/* Desktop spacious layout */
+@media (min-width: 768px) {
+  .compact-event-card__content {
+    padding: 24px;
+    gap: 16px;
+  }
+}
+
 /* Thumbnail */
 .compact-event-card__thumbnail {
   flex-shrink: 0;
@@ -35,6 +43,15 @@
   border-radius: var(--r-sm, 8px);
   overflow: hidden;
   background: var(--border-subtle, #f0ede7);
+}
+
+/* Desktop larger thumbnail */
+@media (min-width: 768px) {
+  .compact-event-card__thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--r-md, 12px);
+  }
 }
 
 .compact-event-card__image {
@@ -71,6 +88,14 @@
   overflow: hidden;
 }
 
+/* Desktop larger text */
+@media (min-width: 768px) {
+  .compact-event-card__title {
+    font-size: 16px;
+    line-height: 1.4;
+  }
+}
+
 /* Badges */
 .compact-event-card__badges {
   display: flex;
@@ -89,6 +114,14 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1;
+}
+
+/* Desktop larger badges */
+@media (min-width: 768px) {
+  .compact-event-card__badge {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
 }
 
 /* Badge colors */
@@ -186,6 +219,24 @@
   opacity: 0.7;
 }
 
+/* Desktop larger details */
+@media (min-width: 768px) {
+  .compact-event-card__details {
+    gap: 4px;
+  }
+  
+  .compact-event-card__detail {
+    gap: 6px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+  
+  .compact-event-card__icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 /* Actions */
 .compact-event-card__actions {
   display: flex;
@@ -210,6 +261,20 @@
   transition: all 0.18s ease;
   text-decoration: none;
   white-space: nowrap;
+}
+
+/* Desktop larger action buttons */
+@media (min-width: 768px) {
+  .compact-event-card__actions {
+    gap: 8px;
+    margin-top: 8px;
+  }
+  
+  .compact-event-card__action-button {
+    padding: 8px 16px;
+    font-size: 12px;
+    border-radius: var(--r-md, 8px);
+  }
 }
 
 .compact-event-card__action-button:hover {
@@ -289,6 +354,20 @@
   flex-shrink: 0;
 }
 
+/* Desktop larger like button */
+@media (min-width: 768px) {
+  .compact-event-card__like-button {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--r-md, 8px);
+  }
+  
+  .compact-event-card__heart-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
 .compact-event-card__likes-container {
   display: flex;
   align-items: center;
@@ -300,6 +379,13 @@
   font-size: 10px;
   color: var(--text-2, #6b7280);
   font-weight: 500;
+}
+
+/* Desktop larger likes count */
+@media (min-width: 768px) {
+  .compact-event-card__likes-count {
+    font-size: 12px;
+  }
 }
 
 @media (max-width: 640px) {

@@ -144,20 +144,66 @@
 @media (max-width: 900px) {
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
 
 @media (max-width: 640px) {
   .students-events-page {
-    padding: 24px 16px 48px;
+    padding: 20px 16px 40px;
   }
+  
+  .students-events-page__intro {
+    margin-bottom: 20px;
+  }
+  
   .students-events-page__intro h1 {
-    font-size: 28px;
+    font-size: 24px;
+    margin-bottom: 6px;
   }
+  
+  .students-events-page__intro p {
+    font-size: 14px;
+  }
+  
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
   }
+  
+  .students-events-page__summary-card {
+    padding: 12px 16px;
+  }
+  
+  .students-events-page__summary-card strong {
+    font-size: 20px;
+  }
+  
   .students-events-grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .students-events-page {
+    padding: 16px 12px 32px;
+  }
+  
+  .students-events-page__summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .students-events-page__summary-card {
+    padding: 14px 16px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .students-events-page__summary-card strong {
+    font-size: 18px;
   }
 }

@@ -29,7 +29,9 @@ function Header({
     totalUnreadCount > 99 ? '99+' : String(totalUnreadCount)
     
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const notificationsRef = useRef(null)
+  const mobileMenuRef = useRef(null)
   
   // Combine existing notifications with new real-time ones
   const allNotifications = [...newNotifications, ...notifications]
@@ -92,6 +94,31 @@ function Header({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isNotificationsOpen])
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      return
+    }
+
+    function handlePointerDown(event) {
+      if (!mobileMenuRef.current?.contains(event.target)) {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsMobileMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMobileMenuOpen])
 
   // Clear new notifications when dropdown is opened
   useEffect(() => {
@@ -186,6 +213,25 @@ function Header({
         ) : variant === 'students' ? <div className="site-header__search-spacer" /> : null}
 
         <div className="site-header__actions">
+          {/* Mobile menu button */}
+          <button
+            type="button"
+            className="site-header__mobile-menu-toggle"
+            onClick={() => setIsMobileMenuOpen((current) => !current)}
+            aria-label={t('header.menu')}
+            aria-expanded={isMobileMenuOpen}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M3 12h18M3 6h18M3 18h18"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+
+          {/* Desktop navigation */}
           <nav className="site-header__nav" aria-label="Main navigation">
             {navItems.map((item) => (
               <NavLink
@@ -331,6 +377,37 @@ function Header({
                 <span>{profileInitial}</span>
               )}
             </NavLink>
+          ) : null}
+
+          {/* Mobile menu drawer */}
+          {isMobileMenuOpen ? (
+            <div className="site-header__mobile-menu" ref={mobileMenuRef}>
+              <nav className="site-header__mobile-nav" aria-label="Mobile navigation">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    data-tour={getTourMarker(item.to)}
+                    className={
+                      isNavItemActive(item.to)
+                        ? 'site-header__mobile-link site-header__mobile-link--active'
+                        : 'site-header__mobile-link'
+                    }
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <span>{item.label}</span>
+                    {item.badge ? (
+                      <span
+                        className="site-header__badge"
+                        aria-label={t('header.pendingAdminBadge', { count: adminPendingCount })}
+                      >
+                        {item.badge}
+                      </span>
+                    ) : null}
+                  </NavLink>
+                ))}
+              </nav>
+            </div>
           ) : null}
         </div>
       </div>

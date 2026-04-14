@@ -251,8 +251,46 @@
   animation: slideDown 0.18s ease;
 }
 
+/* Mobile notifications backdrop */
+.site-header__notifications-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 299;
+  animation: fadeIn 0.18s ease;
+}
+
+/* Mobile notifications panel */
+.site-header__notifications-mobile-panel {
+  position: fixed;
+  top: 56px; /* Header height */
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-height: calc(100vh - 56px);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 300;
+  animation: slideUp 0.18s ease;
+}
+
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -278,6 +316,71 @@
   margin: 2px 0 0;
 }
 
+/* Mobile notifications top section */
+.site-header__notifications-mobile-panel .site-header__notifications-top {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-top strong {
+  font-size: 16px;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-top p {
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+/* Mobile notifications list */
+.site-header__notifications-mobile-panel .site-header__notifications-list {
+  padding: 0;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.15s ease;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item:hover {
+  background: var(--bg);
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item:last-child {
+  border-bottom: none;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item-copy strong {
+  font-size: 14px;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item-copy p {
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+  color: var(--text-2);
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-item span {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 8px;
+  display: block;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-empty {
+  padding: 40px 20px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
 .site-header__notifications-action {
   border: none;
   background: none;
@@ -289,6 +392,19 @@
   transition: color var(--ease);
   font-family: var(--font-body);
   white-space: nowrap;
+}
+
+/* Mobile notifications action button */
+.site-header__notifications-mobile-panel .site-header__notifications-action {
+  font-size: 13px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.site-header__notifications-mobile-panel .site-header__notifications-action:hover {
+  background: var(--bg-subtle);
 }
 
 .site-header__notifications-action:hover { color: var(--accent); }

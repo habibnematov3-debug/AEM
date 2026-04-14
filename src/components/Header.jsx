@@ -5,6 +5,23 @@ import { useI18n } from '../i18n/LanguageContext'
 import { useWebSocket } from '../hooks/useWebSocket'
 import '../styles/header.css'
 
+// Mobile detection hook
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    function checkMobile() {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  return isMobile
+}
+
 function Header({
   variant = 'default',
   currentUser,
@@ -22,6 +39,7 @@ function Header({
   const { isConnected, newNotifications, unreadCount: realTimeUnreadCount, clearNewNotifications } = useWebSocket(currentUser)
   const isAdmin = currentUser?.role === 'admin'
   const adminBadgeLabel = adminPendingCount > 99 ? '99+' : String(adminPendingCount)
+  const isMobile = useIsMobile()
   
   // Combine existing unread count with real-time updates
   const totalUnreadCount = unreadNotificationsCount + realTimeUnreadCount
@@ -119,6 +137,32 @@ function Header({
       window.removeEventListener('keydown', handleKeyDown)
     }
   }, [isMobileMenuOpen])
+
+  // Close notifications when clicking outside (for mobile panel)
+  useEffect(() => {
+    if (!isNotificationsOpen || !isMobile) {
+      return
+    }
+
+    function handlePointerDown(event) {
+      if (!notificationsRef.current?.contains(event.target)) {
+        setIsNotificationsOpen(false)
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') {
+        setIsNotificationsOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isNotificationsOpen, isMobile])
 
   // Clear new notifications when dropdown is opened
   useEffect(() => {
@@ -282,80 +326,164 @@ function Header({
               </button>
 
               {isNotificationsOpen ? (
-                <div className="site-header__notifications-panel">
-                  <div className="site-header__notifications-top">
-                    <div>
-                      <strong>{t('header.notifications')}</strong>
-                      <p>{t('header.notificationsSubtitle')}</p>
-                    </div>
-                    {unreadNotificationsCount > 0 ? (
-                      <button
-                        type="button"
-                        className="site-header__notifications-action"
-                        onClick={async () => {
-                          await onMarkAllNotificationsRead()
-                        }}
-                      >
-                        {t('header.markAllRead')}
-                      </button>
-                    ) : null}
-                  </div>
+                <>
+                  {/* Mobile notifications panel */}
+                  {isMobile ? (
+                    <>
+                      <div className="site-header__notifications-backdrop" />
+                      <div className="site-header__notifications-mobile-panel" ref={notificationsRef}>
+                        <div className="site-header__notifications-top">
+                          <div>
+                            <strong>{t('header.notifications')}</strong>
+                            <p>{t('header.notificationsSubtitle')}</p>
+                          </div>
+                          {unreadNotificationsCount > 0 ? (
+                            <button
+                              type="button"
+                              className="site-header__notifications-action"
+                              onClick={async () => {
+                                await onMarkAllNotificationsRead()
+                              }}
+                            >
+                              {t('header.markAllRead')}
+                            </button>
+                          ) : null}
+                        </div>
 
-                  {notificationsLoading ? (
-                    <p className="site-header__notifications-empty">
-                      {t('header.notificationsLoading')}
-                    </p>
-                  ) : allNotifications.length ? (
-                    <div className="site-header__notifications-list">
-                      {allNotifications.map((notification) => {
-                        const notificationContent = (
-                          <>
-                            <div className="site-header__notifications-item-copy">
-                              <strong>{notification.title}</strong>
-                              <p>{notification.message}</p>
-                            </div>
-                            <span>{formatNotificationTimestamp(notification.createdAt || notification.created_at)}</span>
-                          </>
-                        )
+                        <div className="site-header__notifications-list">
+                          {notificationsLoading ? (
+                            <p className="site-header__notifications-empty">
+                              {t('header.notificationsLoading')}
+                            </p>
+                          ) : allNotifications.length ? (
+                            allNotifications.map((notification) => {
+                              const notificationContent = (
+                                <>
+                                  <div className="site-header__notifications-item-copy">
+                                    <strong>{notification.title}</strong>
+                                    <p>{notification.message}</p>
+                                  </div>
+                                  <span>{formatNotificationTimestamp(notification.createdAt || notification.created_at)}</span>
+                                </>
+                              )
 
-                        return (notification.linkUrl || notification.link_url) ? (
-                          <Link
-                            key={notification.id}
-                            to={notification.linkUrl || notification.link_url}
-                            className={
-                              (notification.readAt || notification.read_at)
-                                ? 'site-header__notifications-item'
-                                : 'site-header__notifications-item site-header__notifications-item--unread'
-                            }
-                            onClick={() => {
-                              onMarkNotificationRead(notification.id)
-                              setIsNotificationsOpen(false)
+                              return (notification.linkUrl || notification.link_url) ? (
+                                <Link
+                                  key={notification.id}
+                                  to={notification.linkUrl || notification.link_url}
+                                  className={
+                                    (notification.readAt || notification.read_at)
+                                      ? 'site-header__notifications-item'
+                                      : 'site-header__notifications-item site-header__notifications-item--unread'
+                                  }
+                                  onClick={() => {
+                                    onMarkNotificationRead(notification.id)
+                                    setIsNotificationsOpen(false)
+                                  }}
+                                >
+                                  {notificationContent}
+                                </Link>
+                              ) : (
+                                <button
+                                  key={notification.id}
+                                  type="button"
+                                  className={
+                                    (notification.readAt || notification.read_at)
+                                      ? 'site-header__notifications-item'
+                                      : 'site-header__notifications-item site-header__notifications-item--unread'
+                                  }
+                                  onClick={() => onMarkNotificationRead(notification.id)}
+                                >
+                                  {notificationContent}
+                                </button>
+                              )
+                            })
+                          ) : (
+                            <p className="site-header__notifications-empty">
+                              {t('header.notificationsEmpty')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    /* Desktop notifications panel */
+                    <div className="site-header__notifications-panel">
+                      <div className="site-header__notifications-top">
+                        <div>
+                          <strong>{t('header.notifications')}</strong>
+                          <p>{t('header.notificationsSubtitle')}</p>
+                        </div>
+                        {unreadNotificationsCount > 0 ? (
+                          <button
+                            type="button"
+                            className="site-header__notifications-action"
+                            onClick={async () => {
+                              await onMarkAllNotificationsRead()
                             }}
                           >
-                            {notificationContent}
-                          </Link>
-                        ) : (
-                          <button
-                            key={notification.id}
-                            type="button"
-                            className={
-                              (notification.readAt || notification.read_at)
-                                ? 'site-header__notifications-item'
-                                : 'site-header__notifications-item site-header__notifications-item--unread'
-                            }
-                            onClick={() => onMarkNotificationRead(notification.id)}
-                          >
-                            {notificationContent}
+                            {t('header.markAllRead')}
                           </button>
-                        )
-                      })}
+                        ) : null}
+                      </div>
+
+                      {notificationsLoading ? (
+                        <p className="site-header__notifications-empty">
+                          {t('header.notificationsLoading')}
+                        </p>
+                      ) : allNotifications.length ? (
+                        <div className="site-header__notifications-list">
+                          {allNotifications.map((notification) => {
+                            const notificationContent = (
+                              <>
+                                <div className="site-header__notifications-item-copy">
+                                  <strong>{notification.title}</strong>
+                                  <p>{notification.message}</p>
+                                </div>
+                                <span>{formatNotificationTimestamp(notification.createdAt || notification.created_at)}</span>
+                              </>
+                            )
+
+                            return (notification.linkUrl || notification.link_url) ? (
+                              <Link
+                                key={notification.id}
+                                to={notification.linkUrl || notification.link_url}
+                                className={
+                                  (notification.readAt || notification.read_at)
+                                    ? 'site-header__notifications-item'
+                                    : 'site-header__notifications-item site-header__notifications-item--unread'
+                                }
+                                onClick={() => {
+                                  onMarkNotificationRead(notification.id)
+                                  setIsNotificationsOpen(false)
+                                }}
+                              >
+                                {notificationContent}
+                              </Link>
+                            ) : (
+                              <button
+                                key={notification.id}
+                                type="button"
+                                className={
+                                  (notification.readAt || notification.read_at)
+                                    ? 'site-header__notifications-item'
+                                    : 'site-header__notifications-item site-header__notifications-item--unread'
+                                }
+                                onClick={() => onMarkNotificationRead(notification.id)}
+                              >
+                                {notificationContent}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      ) : (
+                        <p className="site-header__notifications-empty">
+                          {t('header.notificationsEmpty')}
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="site-header__notifications-empty">
-                      {t('header.notificationsEmpty')}
-                    </p>
                   )}
-                </div>
+                </>
               ) : null}
             </div>
           ) : null}

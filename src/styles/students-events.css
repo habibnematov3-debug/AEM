@@ -40,7 +40,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .students-events-page__summary-card {
@@ -155,23 +155,23 @@
 @media (max-width: 900px) {
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 16px;
+    gap: 8px;
+    margin-bottom: 10px;
   }
 }
 
 @media (max-width: 640px) {
   .students-events-page {
-    padding: 20px 16px 40px;
+    padding: 16px 12px 32px;
   }
   
   .students-events-page__intro {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
   }
   
   .students-events-page__intro h1 {
     font-size: 24px;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
   
   .students-events-page__intro p {
@@ -180,8 +180,8 @@
   
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 6px;
+    margin-bottom: 8px;
   }
   
   .students-events-page__summary-card {

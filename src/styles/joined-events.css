@@ -1,11 +1,11 @@
 .joined-events-page {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 32px 24px 64px;
+  padding: 24px 16px 48px;
   font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
 }
 
 .joined-events-page__intro {
@@ -149,5 +149,5 @@
 }
 
 @media (max-width: 640px) {
-  .joined-events-page { padding: 20px 16px 48px; }
+  .joined-events-page { padding: 16px 12px 32px; }
 }

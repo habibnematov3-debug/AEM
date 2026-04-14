@@ -318,7 +318,7 @@
 }
 
 .event-details-item span {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--text-3, #9ca3af);
   text-transform: uppercase;
@@ -326,7 +326,7 @@
 }
 
 .event-details-item strong {
-  font-size: 16.2px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text, #1c1917);
 }
@@ -544,10 +544,10 @@
     gap: 8px;
   }
   .event-details-item span { 
-    font-size: 14px; 
+    font-size: 12px; 
   }
   .event-details-item strong { 
-    font-size: 17.5px; 
+    font-size: 15px; 
   }
   .event-details-cover { height: 220px; }
   

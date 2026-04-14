@@ -364,8 +364,21 @@ class LoginAPIView(APIView):
     permission_classes = []
 
     def post(self, request):
+        print(f"🔍 Login Request Debug:")
+        print(f"  Headers: {dict(request.headers)}")
+        print(f"  Data: {request.data}")
+        print(f"  Method: {request.method}")
+        print(f"  Content-Type: {request.content_type}")
+        
         serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            print(f"🔍 Serializer Validation Error: {e}")
+            print(f"🔍 Serializer Errors: {serializer.errors}")
+            raise
+        
         user = serializer.validated_data['user']
         touch_user_presence(user, force=True)
 

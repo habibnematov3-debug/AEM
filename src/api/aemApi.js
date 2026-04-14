@@ -451,6 +451,15 @@ export function getStoredCurrentUser() {
 }
 
 export async function signInUser(credentials) {
+  console.log('🔍 Login Request Debug:', {
+    url: `${API_BASE_URL}/api/auth/login/`,
+    method: 'POST',
+    payload: {
+      email: credentials.email,
+      password: credentials.password,
+    },
+  })
+
   const payload = await apiRequest('/api/auth/login/', {
     method: 'POST',
     timeoutMs: AUTH_API_TIMEOUT_MS,
@@ -459,6 +468,13 @@ export async function signInUser(credentials) {
       password: credentials.password,
     }),
   })
+
+  console.log('🔍 Login Response Debug:', payload)
+  
+  if (!payload.auth_token || !payload.user) {
+    console.error('🔍 Login Error - Invalid Response:', payload)
+    throw new Error(payload.detail || payload.message || 'Login failed. Please check your credentials.')
+  }
 
   storeAuthToken(payload.auth_token)
   const user = normalizeUser(payload.user)

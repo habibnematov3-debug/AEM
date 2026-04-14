@@ -286,23 +286,29 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
     setFeedback({ type: '', message: '' })
     await warmUpBackend()
 
-    const result = await onSignIn({
-      ...signInData,
-      email: normalizeEmail(signInData.email),
-    })
+    try {
+      const result = await onSignIn({
+        ...signInData,
+        email: normalizeEmail(signInData.email),
+      })
 
-    if (!result.ok) {
-      setFeedback({ type: 'error', message: result.message })
+      if (!result.ok) {
+        setFeedback({ type: 'error', message: result.message })
+        setIsSubmitting(false)
+        return
+      }
+
+      const displayName = result.user.full_name ?? result.user.name ?? 'there'
+      setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
+      window.setTimeout(() => {
+        setIsSubmitting(false)
+        navigate(getDefaultRouteForRole(result.user.role))
+      }, 500)
+    } catch (error) {
+      console.error('🔍 Login Submit Error:', error)
+      setFeedback({ type: 'error', message: error.message || 'Login failed. Please try again.' })
       setIsSubmitting(false)
-      return
     }
-
-    const displayName = result.user.full_name ?? result.user.name ?? 'there'
-    setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
-    window.setTimeout(() => {
-      setIsSubmitting(false)
-      navigate(getDefaultRouteForRole(result.user.role))
-    }, 500)
   }
 
   async function handleSignUpSubmit(event) {

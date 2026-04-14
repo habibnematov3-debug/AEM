@@ -23,16 +23,16 @@
 .compact-event-card__content {
   display: flex;
   align-items: flex-start;
-  padding: 8px;
-  gap: 8px;
+  padding: 12px;
+  gap: 10px;
 }
 
 /* Thumbnail */
 .compact-event-card__thumbnail {
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-sm, 6px);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm, 8px);
   overflow: hidden;
   background: var(--border-subtle, #f0ede7);
 }
@@ -55,15 +55,15 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
 }
 
 .compact-event-card__title {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text, #1c1917);
   margin: 0;
-  line-height: 1.2;
+  line-height: 1.3;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -82,9 +82,9 @@
 .compact-event-card__badge {
   display: inline-flex;
   align-items: center;
-  padding: 1px 4px;
+  padding: 2px 6px;
   border-radius: 100px;
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -141,13 +141,13 @@
 }
 
 .compact-event-card__joined-date {
-  font-size: 8px;
+  font-size: 10px;
   color: var(--text-2, #6b7280);
   font-weight: 500;
 }
 
 .compact-event-card__owner-badge {
-  font-size: 8px;
+  font-size: 9px;
   color: var(--accent, #c2410c);
   font-weight: 600;
   text-transform: uppercase;
@@ -157,8 +157,8 @@
 .compact-event-card__likes {
   display: flex;
   align-items: center;
-  gap: 2px;
-  font-size: 8px;
+  gap: 3px;
+  font-size: 10px;
   color: var(--text-2, #6b7280);
   font-weight: 500;
 }
@@ -167,21 +167,21 @@
 .compact-event-card__details {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .compact-event-card__detail {
   display: flex;
   align-items: center;
-  gap: 3px;
-  font-size: 9px;
+  gap: 4px;
+  font-size: 11px;
   color: var(--text-2, #6b7280);
-  line-height: 1.1;
+  line-height: 1.2;
 }
 
 .compact-event-card__icon {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   flex-shrink: 0;
   opacity: 0.7;
 }
@@ -190,17 +190,17 @@
 .compact-event-card__actions {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 2px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .compact-event-card__action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 5px;
-  border-radius: var(--r-sm, 4px);
-  font-size: 8px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm, 6px);
+  font-size: 10px;
   font-weight: 500;
   font-family: var(--font-body, 'DM Sans', system-ui, sans-serif);
   border: 1px solid var(--border, #e8e4dc);
@@ -250,9 +250,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: var(--r-sm, 4px);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--r-sm, 6px);
   background: var(--bg-subtle, #f8f6f1);
   border: 1px solid var(--border, #e8e4dc);
   color: var(--text-2, #6b7280);
@@ -284,9 +284,22 @@
 }
 
 .compact-event-card__heart-icon {
-  width: 9px;
-  height: 9px;
+  width: 12px;
+  height: 12px;
   flex-shrink: 0;
+}
+
+.compact-event-card__likes-container {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+}
+
+.compact-event-card__likes-count {
+  font-size: 10px;
+  color: var(--text-2, #6b7280);
+  font-weight: 500;
 }
 
 /* Footer */
@@ -315,22 +328,73 @@
 
 /* Variant-specific styles */
 .compact-event-card--student {
-  border-left: 3px solid var(--accent, #c2410c);
+  border-left: none;
 }
 
 .compact-event-card--joined {
-  border-left: 3px solid var(--green, #15803d);
+  border-left: none;
 }
 
 .compact-event-card--admin {
-  border-left: 3px solid var(--blue, #2563eb);
+  border-left: none;
 }
 
 /* Mobile optimizations */
 @media (max-width: 640px) {
   .compact-event-card__content {
-    padding: 6px;
-    gap: 6px;
+    padding: 10px;
+    gap: 8px;
+  }
+  
+  .compact-event-card__thumbnail {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .compact-event-card__title {
+    font-size: 12px;
+  }
+  
+  .compact-event-card__badge {
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+  
+  .compact-event-card__detail {
+    font-size: 10px;
+    gap: 3px;
+  }
+  
+  .compact-event-card__icon {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .compact-event-card__actions {
+    gap: 3px;
+    margin-top: 3px;
+  }
+  
+  .compact-event-card__action-button {
+    padding: 3px 6px;
+    font-size: 9px;
+  }
+  
+  .compact-event-card__like-button {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .compact-event-card__heart-icon {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .compact-event-card__content {
+    padding: 8px;
+    gap: 8px;
   }
   
   .compact-event-card__thumbnail {
@@ -339,93 +403,42 @@
   }
   
   .compact-event-card__title {
-    font-size: 10px;
+    font-size: 11px;
   }
   
   .compact-event-card__badge {
-    padding: 1px 3px;
-    font-size: 7px;
-  }
-  
-  .compact-event-card__detail {
+    padding: 2px 4px;
     font-size: 8px;
-    gap: 2px;
-  }
-  
-  .compact-event-card__icon {
-    width: 8px;
-    height: 8px;
-  }
-  
-  .compact-event-card__actions {
-    gap: 2px;
-    margin-top: 1px;
-  }
-  
-  .compact-event-card__action-button {
-    padding: 1px 3px;
-    font-size: 7px;
-  }
-  
-  .compact-event-card__like-button {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .compact-event-card__heart-icon {
-    width: 8px;
-    height: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .compact-event-card__content {
-    padding: 5px;
-    gap: 5px;
-  }
-  
-  .compact-event-card__thumbnail {
-    width: 28px;
-    height: 28px;
-  }
-  
-  .compact-event-card__title {
-    font-size: 9px;
-  }
-  
-  .compact-event-card__badge {
-    padding: 1px 2px;
-    font-size: 6px;
   }
   
   .compact-event-card__detail {
-    font-size: 7px;
-    gap: 2px;
+    font-size: 9px;
+    gap: 3px;
   }
   
   .compact-event-card__icon {
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
   }
   
   .compact-event-card__actions {
-    gap: 1px;
+    gap: 2px;
     flex-wrap: wrap;
   }
   
   .compact-event-card__action-button {
-    padding: 1px 2px;
-    font-size: 6px;
+    padding: 2px 4px;
+    font-size: 8px;
   }
   
   .compact-event-card__like-button {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
   }
   
   .compact-event-card__heart-icon {
-    width: 7px;
-    height: 7px;
+    width: 9px;
+    height: 9px;
   }
 }
 
@@ -467,18 +480,18 @@
 .compact-events-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 @media (min-width: 641px) {
   .compact-events-list {
-    gap: 6px;
+    gap: 10px;
   }
 }
 
 @media (min-width: 981px) {
   .compact-events-list {
-    gap: 8px;
+    gap: 12px;
   }
 }
 

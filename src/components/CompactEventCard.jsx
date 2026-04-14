@@ -137,17 +137,6 @@ function CompactEventCard({
                 <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
                   {statusText}
                 </span>
-                {hasLikesCount && (
-                  <span className="compact-event-card__likes">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
-                      <path
-                        d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                    {event.likesCount}
-                  </span>
-                )}
               </div>
 
               {/* Details */}
@@ -175,23 +164,26 @@ function CompactEventCard({
 
               {/* Interactive like button */}
               {hasLikesCount && canToggleLike && (
-                <button
-                  type="button"
-                  className={`compact-event-card__like-button ${
-                    event.isLiked ? 'compact-event-card__like-button--liked' : ''
-                  }`}
-                  onClick={handleLikeToggle}
-                  disabled={isLikeLoading || isLikePending}
-                  aria-pressed={event.isLiked}
-                  aria-label={`${event.isLiked ? t('eventDetails.likedAction') : t('eventDetails.likeAction')}: ${event.title}`}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
-                    <path
-                      d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                </button>
+                <div className="compact-event-card__likes-container">
+                  <button
+                    type="button"
+                    className={`compact-event-card__like-button ${
+                      event.isLiked ? 'compact-event-card__like-button--liked' : ''
+                    }`}
+                    onClick={handleLikeToggle}
+                    disabled={isLikeLoading || isLikePending}
+                    aria-pressed={event.isLiked}
+                    aria-label={`${event.isLiked ? t('eventDetails.likedAction') : t('eventDetails.likeAction')}: ${event.title}`}
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
+                      <path
+                        d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </button>
+                  <span className="compact-event-card__likes-count">{event.likesCount}</span>
+                </div>
               )}
             </div>
           </div>

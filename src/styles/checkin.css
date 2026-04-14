@@ -5,8 +5,16 @@
 
 .check-in-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+/* Desktop 2-column layout */
+@media (min-width: 768px) {
+  .check-in-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
 }
 
 .check-in-card {
@@ -16,9 +24,18 @@
 
 .check-in-card__top {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Desktop horizontal layout */
+@media (min-width: 768px) {
+  .check-in-card__top {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 14px;
+  }
 }
 
 .check-in-card__top h2,
@@ -36,6 +53,15 @@
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--muted-strong);
+  width: 100%;
+  justify-content: center;
+}
+
+/* Desktop button width */
+@media (min-width: 768px) {
+  .check-in-card__button {
+    width: auto;
+  }
 }
 
 .check-in-scanner {
@@ -88,12 +114,12 @@
 
 .check-in-form {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .check-in-form__field {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .check-in-form__field span {
@@ -191,17 +217,15 @@
   font-weight: 700;
 }
 
-@media (max-width: 900px) {
-  .check-in-grid {
-    grid-template-columns: 1fr;
+/* Tablet and mobile adjustments */
+@media (max-width: 767px) {
+  .check-in-page {
+    gap: 20px;
+    padding: 16px;
   }
 
-  .check-in-card__top {
-    flex-direction: column;
-  }
-
-  .check-in-card__top .button {
-    width: 100%;
+  .check-in-card {
+    gap: 18px;
   }
 
   .check-in-form .button,
@@ -212,29 +236,40 @@
 
   .check-in-scanner__frame,
   .check-in-scanner__video {
-    min-height: 260px;
+    min-height: 240px;
+  }
+
+  .check-in-form__field textarea {
+    min-height: 100px;
+  }
+
+  .check-in-result-card__meta div {
+    padding: 16px;
+    gap: 8px;
   }
 }
 
-@media (max-width: 560px) {
+/* Small mobile adjustments */
+@media (max-width: 480px) {
   .check-in-page {
     gap: 16px;
+    padding: 12px;
   }
 
   .check-in-card {
-    gap: 14px;
+    gap: 16px;
   }
 
   .check-in-scanner__frame,
   .check-in-scanner__video {
-    min-height: 220px;
+    min-height: 200px;
   }
 
   .check-in-form__field textarea {
-    min-height: 96px;
+    min-height: 90px;
   }
 
   .check-in-result-card__meta div {
-    padding: 12px;
+    padding: 14px;
   }
 }

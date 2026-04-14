@@ -318,7 +318,7 @@
 }
 
 .event-details-item span {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-3, #9ca3af);
   text-transform: uppercase;
@@ -326,7 +326,7 @@
 }
 
 .event-details-item strong {
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text, #1c1917);
 }
@@ -536,10 +536,10 @@
     gap: 8px;
   }
   .event-details-item span { 
-    font-size: 12px; 
+    font-size: 13px; 
   }
   .event-details-item strong { 
-    font-size: 15px; 
+    font-size: 16px; 
   }
   .event-details-cover { height: 220px; }
 }
@@ -554,10 +554,10 @@
     gap: 10px;
   }
   .event-details-item span { 
-    font-size: 13px; 
+    font-size: 14px; 
   }
   .event-details-item strong { 
-    font-size: 16px; 
+    font-size: 17px; 
     line-height: 1.3;
   }
 }

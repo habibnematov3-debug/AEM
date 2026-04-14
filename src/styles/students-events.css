@@ -186,6 +186,24 @@
   }
 }
 
+/* Mobile events list */
+.mobile-events-list {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 640px) {
+  .mobile-events-list {
+    display: flex;
+  }
+  
+  .students-events-grid {
+    display: none;
+  }
+}
+
 @media (max-width: 480px) {
   .students-events-page {
     padding: 16px 12px 32px;
@@ -205,5 +223,10 @@
   
   .students-events-page__summary-card strong {
     font-size: 18px;
+  }
+  
+  .mobile-events-list {
+    gap: 10px;
+    margin-bottom: 16px;
   }
 }

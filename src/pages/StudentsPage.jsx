@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import EventCard from '../components/EventCard'
+import MobileEventCard from '../components/MobileEventCard'
+import CategoryChips from '../components/CategoryChips'
 import { useI18n } from '../i18n/LanguageContext'
 import { fetchRecommendedEvents } from '../api/aemApi'
 import '../styles/students-events.css'
+import '../styles/category-chips.css'
+import '../styles/mobile-event-card.css'
 
 function getEventStartTimestamp(event) {
   if (!event?.eventDate) {
@@ -28,6 +32,7 @@ function StudentsPage({
   const [summaryNow, setSummaryNow] = useState(() => Date.now())
   const [recommendedEventIds, setRecommendedEventIds] = useState([])
   const [recommendedRequestKey, setRecommendedRequestKey] = useState(0)
+  const [selectedCategory, setSelectedCategory] = useState('all')
 
   useEffect(() => {
     const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
@@ -86,12 +91,22 @@ function StudentsPage({
 
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
-    const baseEvents = query
-      ? events.filter((event) => {
-          const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
-          return haystack.includes(query)
-        })
-      : events
+    let baseEvents = events
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      baseEvents = baseEvents.filter((event) => 
+        event.category?.toLowerCase() === selectedCategory.toLowerCase()
+      )
+    }
+
+    // Filter by search
+    if (query) {
+      baseEvents = baseEvents.filter((event) => {
+        const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
+        return haystack.includes(query)
+      })
+    }
 
     return baseEvents
       .map((event, index) => ({
@@ -106,7 +121,7 @@ function StudentsPage({
         return left.index - right.index
       })
       .map(({ event }) => event)
-  }, [events, recommendedRankById, searchValue])
+  }, [events, recommendedRankById, searchValue, selectedCategory])
 
   const summaryCards = useMemo(() => {
     const now = summaryNow
@@ -172,6 +187,12 @@ function StudentsPage({
             ))}
       </div>
 
+      {/* Category chips */}
+      <CategoryChips 
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+      />
+
       <div data-tour="students-catalog">
         {eventsLoading ? (
           <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
@@ -180,18 +201,33 @@ function StudentsPage({
             ))}
           </div>
         ) : filteredEvents.length ? (
-          <div className="students-events-grid">
-          {filteredEvents.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                variant="student"
-                currentUser={currentUser}
-                onToggleLike={handleStudentEventLike}
-                tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
-              />
-            ))}
-          </div>
+          <>
+            {/* Mobile event cards */}
+            <div className="mobile-events-list">
+              {filteredEvents.map((event) => (
+                <MobileEventCard
+                  key={event.id}
+                  event={event}
+                  currentUser={currentUser}
+                  onToggleLike={handleStudentEventLike}
+                />
+              ))}
+            </div>
+            
+            {/* Desktop event cards */}
+            <div className="students-events-grid">
+              {filteredEvents.map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  variant="student"
+                  currentUser={currentUser}
+                  onToggleLike={handleStudentEventLike}
+                  tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
+                />
+              ))}
+            </div>
+          </>
         ) : events.length === 0 ? (
           <div className="students-events-empty">
             <h2>{t('students.emptyNoEventsTitle')}</h2>

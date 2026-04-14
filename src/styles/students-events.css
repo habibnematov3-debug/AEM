@@ -40,7 +40,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
-  margin-bottom: 32px;
+  margin-bottom: 20px;
 }
 
 .students-events-page__summary-card {
@@ -145,6 +145,7 @@
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
+    margin-bottom: 16px;
   }
 }
 
@@ -169,7 +170,7 @@
   .students-events-page__summary {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    margin-bottom: 24px;
+    margin-bottom: 16px;
   }
   
   .students-events-page__summary-card {
@@ -186,23 +187,6 @@
   }
 }
 
-/* Mobile events list */
-.mobile-events-list {
-  display: none;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-@media (max-width: 640px) {
-  .mobile-events-list {
-    display: flex;
-  }
-  
-  .students-events-grid {
-    display: none;
-  }
-}
 
 @media (max-width: 480px) {
   .students-events-page {
@@ -223,10 +207,5 @@
   
   .students-events-page__summary-card strong {
     font-size: 18px;
-  }
-  
-  .mobile-events-list {
-    gap: 10px;
-    margin-bottom: 16px;
   }
 }

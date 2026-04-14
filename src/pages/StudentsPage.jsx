@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import EventCard from '../components/EventCard'
+import CompactEventCard from '../components/CompactEventCard'
 import { useI18n } from '../i18n/LanguageContext'
 import { fetchRecommendedEvents } from '../api/aemApi'
 import '../styles/students-events.css'
+import '../styles/compact-event-card.css'
 
 function getEventStartTimestamp(event) {
   if (!event?.eventDate) {
@@ -180,9 +181,9 @@ function StudentsPage({
             ))}
           </div>
         ) : filteredEvents.length ? (
-          <div className="students-events-grid">
+          <div className="compact-events-list">
             {filteredEvents.map((event) => (
-              <EventCard
+              <CompactEventCard
                 key={event.id}
                 event={event}
                 variant="student"

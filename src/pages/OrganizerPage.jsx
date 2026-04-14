@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 
 import CreateEventForm from '../components/CreateEventForm'
-import EventCard from '../components/EventCard'
+import CompactEventCard from '../components/CompactEventCard'
 import { useI18n } from '../i18n/LanguageContext'
 import Modal from '../components/Modal'
 import '../styles/organizer-events.css'
+import '../styles/compact-event-card.css'
 
 function getEventLifecycle(event) {
   if (!event?.eventDate) {
@@ -268,12 +269,12 @@ function OrganizerPage({
           ))}
         </div>
       ) : userEvents.length ? (
-        <div className="organizer-events-grid">
+        <div className="compact-events-list">
           {userEvents.map((event) => (
-            <EventCard
+            <CompactEventCard
               key={event.id}
               event={event}
-              variant="organizer-minimal"
+              variant="admin"
               onEdit={handleEdit}
               onDelete={handleRequestDelete}
             />

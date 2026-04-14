@@ -88,6 +88,17 @@
   gap: 20px;
 }
 
+/* Override for compact cards */
+.students-events-grid .compact-events-list {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .students-events-grid {
+    display: none;
+  }
+}
+
 .students-events-grid--skeleton {
   pointer-events: none;
 }

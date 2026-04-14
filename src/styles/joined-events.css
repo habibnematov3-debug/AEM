@@ -114,6 +114,17 @@
   gap: 20px;
 }
 
+/* Override for compact cards */
+.joined-events-grid .compact-events-list {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .joined-events-grid {
+    display: none;
+  }
+}
+
 /* Empty */
 .joined-events-page__empty {
   text-align: center;
@@ -139,5 +150,4 @@
 
 @media (max-width: 640px) {
   .joined-events-page { padding: 20px 16px 48px; }
-  .joined-events-grid { grid-template-columns: 1fr; }
 }

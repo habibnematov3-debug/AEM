@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { cancelParticipation, fetchMyParticipations } from '../api/aemApi'
-import EventCard from '../components/EventCard'
+import CompactEventCard from '../components/CompactEventCard'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/joined-events.css'
+import '../styles/compact-event-card.css'
 
 function getEventLifecycle(event) {
   if (!event?.eventDate) {
@@ -199,9 +200,9 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
           <p>{t('joinedEventsPage.loadingDescription')}</p>
         </div>
       ) : displayedParticipations.length ? (
-        <div className="joined-events-grid">
+        <div className="compact-events-list">
           {displayedParticipations.map((participation) => (
-            <EventCard
+            <CompactEventCard
               key={participation.id}
               event={{
                 ...participation.event,

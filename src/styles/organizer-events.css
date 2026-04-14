@@ -348,6 +348,17 @@
   gap: 20px;
 }
 
+/* Override for compact cards */
+.organizer-events-grid .compact-events-list {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .organizer-events-grid {
+    display: none;
+  }
+}
+
 .organizer-events-grid--skeleton { pointer-events: none; }
 
 .organizer-events-skeleton-card {

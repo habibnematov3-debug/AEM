@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { useI18n } from '../i18n/LanguageContext'
 import { getLanguageLocale } from '../i18n/translations'
+import { getCategoryColor, getCategoryLabel } from '../constants/eventCategories'
 import '../styles/compact-event-card.css'
 
 function formatEventDate(eventDate, fallback, languageCode) {
@@ -35,23 +36,6 @@ function formatTimestampDate(timestamp, fallback, languageCode) {
     month: 'short',
     day: 'numeric',
   })
-}
-
-function getCategoryColor(category) {
-  const normalizedCategory = String(category || '').trim().toLowerCase()
-  const colors = {
-    general: 'blue',
-    academic: 'indigo',
-    culture: 'teal',
-    music: 'pink',
-    sports: 'orange',
-    opening: 'green',
-    workshop: 'purple',
-    networking: 'amber',
-    career: 'sky',
-  }
-
-  return colors[normalizedCategory] || 'slate'
 }
 
 function getStatusColor(status) {
@@ -377,7 +361,7 @@ function CompactEventCard({
             <div className="compact-event-card__badges">
               {event.category && (
                 <span className={`compact-event-card__badge compact-event-card__badge--${getCategoryColor(event.category)}`}>
-                  {event.category}
+                  {getCategoryLabel(event.category)}
                 </span>
               )}
               <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
@@ -469,7 +453,7 @@ function CompactEventCard({
             <div className="compact-event-card__badges">
               {event.category && (
                 <span className={`compact-event-card__badge compact-event-card__badge--${getCategoryColor(event.category)}`}>
-                  {event.category}
+                  {getCategoryLabel(event.category)}
                 </span>
               )}
               <span className={`compact-event-card__badge compact-event-card__badge--${getStatusColor(event.status)}`}>

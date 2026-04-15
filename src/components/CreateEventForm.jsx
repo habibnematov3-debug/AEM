@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 
 import { isSupabaseUploadConfigured, uploadEventImageToSupabase } from '../api/aemApi'
 import { useI18n } from '../i18n/LanguageContext'
+import SearchableCategorySelect from './SearchableCategorySelect'
+import '../styles/searchable-category-select.css'
 
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
 
@@ -35,6 +37,9 @@ function validateEventForm(formData, t) {
   }
   if (!formData.location.trim()) {
     nextErrors.location = t('eventForm.errors.location')
+  }
+  if (!formData.category || formData.category.trim() === '') {
+    nextErrors.category = t('eventForm.errors.category')
   }
 
   if (formData.date && formData.startTime && formData.endTime) {
@@ -237,6 +242,7 @@ function CreateEventForm({
             value={formData.startTime}
             onChange={(event) => updateField('startTime', event.target.value)}
             disabled={isSubmitting || isUploadingImage}
+            required
           />
           {errors.startTime ? (
             <span className="create-event-form__error">{errors.startTime}</span>
@@ -366,13 +372,12 @@ function CreateEventForm({
             </label>
 
             <label>
-              {t('common.category')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
-              <input
-                type="text"
+              {t('common.category')} *
+              <SearchableCategorySelect
                 value={formData.category}
-                onChange={(event) => updateField('category', event.target.value)}
-                placeholder={t('eventForm.optionalCategory')}
+                onChange={(value) => updateField('category', value)}
                 disabled={isSubmitting || isUploadingImage}
+                error={errors.category}
               />
             </label>
           </>

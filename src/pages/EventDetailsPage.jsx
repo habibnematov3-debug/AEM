@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 
-import {
-  cancelParticipation,
-  checkInParticipant,
-  fetchEventById,
-  fetchEventParticipants,
-  participateInEvent,
-} from '../api/aemApi'
-import EventCheckInPass from '../components/EventCheckInPass'
-import { getLanguageLocale } from '../i18n/translations'
+import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/LanguageContext'
+import { getLanguageLocale } from '../i18n/translations'
+import { formatEventDate } from '../utils/formatEventDate'
+import { formatModerationStatus } from '../utils/formatModerationStatus'
+import { getEventById, participateEvent, cancelParticipation, checkInUser } from '../api/aemApi'
+import { getCategoryLabel } from '../constants/eventCategories'
 import '../styles/event-details.css'
 
 function formatEventDate(eventDate, fallback, languageCode) {
@@ -306,7 +303,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
   const isWaitlisted = Boolean(event.isWaitlisted)
   const hasActiveParticipation = hasJoined || isWaitlisted
   const dateText = formatEventDate(event.eventDate, event.date, languageCode)
-  const categoryText = event.category || t('common.general')
+  const categoryText = getCategoryLabel(event.category)
   const organizerText = event.creatorName || event.organizerName || t('common.unknownOrganizer')
   const statusText = formatModerationStatus(event.moderationStatus, languageCode)
   const canViewParticipants = Boolean(currentUser?.id) && (isCreator || currentUser.role === 'admin')

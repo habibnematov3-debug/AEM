@@ -1,5 +1,5 @@
 from collections import Counter
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core import signing
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
+from django.db.models.functions import TruncDate
 from django.utils.decorators import method_decorator
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -285,6 +286,7 @@ def get_admin_dashboard_stats():
         'pending': event_queryset.filter(moderation_status=Event.ModerationStatuses.PENDING).count(),
         'approved': event_queryset.filter(moderation_status=Event.ModerationStatuses.APPROVED).count(),
         'rejected': event_queryset.filter(moderation_status=Event.ModerationStatuses.REJECTED).count(),
+        'joined': Participation.objects.filter(status=Participation.Statuses.JOINED).count(),
         'upcoming': event_queryset.filter(
             Q(event_date__gt=today)
             | Q(event_date=today, start_time__gt=current_time),
@@ -313,6 +315,44 @@ def get_admin_dashboard_stats():
         )
         .count(),
     }
+
+
+def get_admin_activity_timeline(days=7):
+    timezone_info = timezone.get_current_timezone()
+    today = timezone.localtime().date()
+    start_date = today - timedelta(days=max(days - 1, 0))
+    start_of_window = timezone.make_aware(
+        datetime.combine(start_date, time.min),
+        timezone_info,
+    )
+
+    join_rows = (
+        Participation.objects.filter(joined_at__gte=start_of_window)
+        .annotate(day=TruncDate('joined_at', tzinfo=timezone_info))
+        .values('day')
+        .annotate(total=Count('id'))
+    )
+    checkin_rows = (
+        Participation.objects.filter(checked_in_at__isnull=False, checked_in_at__gte=start_of_window)
+        .annotate(day=TruncDate('checked_in_at', tzinfo=timezone_info))
+        .values('day')
+        .annotate(total=Count('id'))
+    )
+
+    joins_by_day = {row['day']: row['total'] for row in join_rows}
+    checkins_by_day = {row['day']: row['total'] for row in checkin_rows}
+
+    return [
+        {
+            'date': current_date.isoformat(),
+            'joins': joins_by_day.get(current_date, 0),
+            'check_ins': checkins_by_day.get(current_date, 0),
+        }
+        for current_date in (
+            start_date + timedelta(days=offset)
+            for offset in range(days)
+        )
+    ]
 
 
 def parse_boolean_query(value):
@@ -1274,6 +1314,7 @@ class AdminDashboardAPIView(APIView):
         return Response(
             {
                 'stats': get_admin_dashboard_stats(),
+                'activity_timeline': get_admin_activity_timeline(),
                 'recent_events': EventSerializer(
                     recent_events,
                     many=True,

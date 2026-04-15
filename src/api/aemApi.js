@@ -199,12 +199,21 @@ function normalizeAdminStats(rawStats = {}) {
     pending: rawStats.pending ?? 0,
     approved: rawStats.approved ?? 0,
     rejected: rawStats.rejected ?? 0,
+    joined: rawStats.joined ?? 0,
     upcoming: rawStats.upcoming ?? 0,
     inProgress: rawStats.in_progress ?? 0,
     finished: rawStats.finished ?? 0,
     waitlisted: rawStats.waitlisted ?? 0,
     attended: rawStats.attended ?? 0,
     noShows: rawStats.no_shows ?? 0,
+  }
+}
+
+function normalizeDashboardActivityPoint(rawPoint) {
+  return {
+    date: rawPoint.date ?? '',
+    joins: Number(rawPoint.joins ?? 0),
+    checkIns: Number(rawPoint.check_ins ?? 0),
   }
 }
 
@@ -853,6 +862,7 @@ export async function fetchAdminDashboard() {
   const payload = await apiRequest('/api/admin/dashboard/')
   return {
     stats: normalizeAdminStats(payload.stats),
+    activityTimeline: (payload.activity_timeline ?? []).map(normalizeDashboardActivityPoint),
     recentEvents: (payload.recent_events ?? []).map(normalizeEvent),
     recentUsers: (payload.recent_users ?? []).map(normalizeAdminUser),
     recentParticipations: (payload.recent_participations ?? []).map(normalizeParticipationActivity),

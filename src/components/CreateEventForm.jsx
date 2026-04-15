@@ -81,6 +81,26 @@ function normalizeDateForInput(dateValue) {
   return `${year}-${month}-${day}`
 }
 
+function formatTimeForBackend(timeValue) {
+  if (!timeValue) {
+    return ''
+  }
+  
+  // Handle various time formats and convert to HH:mm:ss format
+  const timeRegex = /^(\d{1,2}):(\d{2})(?::(\d{2}))?$/
+  const match = timeValue.match(timeRegex)
+  
+  if (!match) {
+    return ''
+  }
+  
+  const hours = match[1].padStart(2, '0')
+  const minutes = match[2].padStart(2, '0')
+  const seconds = match[3] || '00'
+  
+  return `${hours}:${minutes}:${seconds}`
+}
+
 function buildFormState(initialValues) {
   if (!initialValues) {
     return initialFormState
@@ -184,6 +204,8 @@ function CreateEventForm({
     try {
       const payload = {
         ...formData,
+        startTime: formatTimeForBackend(formData.startTime),
+        endTime: formatTimeForBackend(formData.endTime),
         existingImage,
         capacity:
           formData.capacity === '' || formData.capacity == null

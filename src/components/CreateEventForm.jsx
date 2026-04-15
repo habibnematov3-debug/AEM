@@ -32,14 +32,20 @@ function validateEventForm(formData, t) {
   if (!formData.date) {
     nextErrors.date = t('eventForm.errors.date')
   }
-  if (!formData.startTime) {
+  if (!formData.startTime || formData.startTime.trim() === '') {
     nextErrors.startTime = t('eventForm.errors.startTime')
+  } else if (!/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.test(formData.startTime)) {
+    nextErrors.startTime = t('eventForm.errors.timeFormat')
   }
   if (!formData.location.trim()) {
     nextErrors.location = t('eventForm.errors.location')
   }
   if (!formData.category || formData.category.trim() === '') {
     nextErrors.category = t('eventForm.errors.category')
+  }
+
+  if (formData.endTime && formData.endTime.trim() !== '' && !/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.test(formData.endTime)) {
+    nextErrors.endTime = t('eventForm.errors.timeFormat')
   }
 
   if (formData.date && formData.startTime && formData.endTime) {
@@ -202,10 +208,18 @@ function CreateEventForm({
     setIsSubmitting(true)
 
     try {
+      const formattedStartTime = formatTimeForBackend(formData.startTime)
+      const formattedEndTime = formatTimeForBackend(formData.endTime)
+      
+      console.log('Time formatting debug:', {
+        original: { startTime: formData.startTime, endTime: formData.endTime },
+        formatted: { startTime: formattedStartTime, endTime: formattedEndTime }
+      })
+
       const payload = {
         ...formData,
-        startTime: formatTimeForBackend(formData.startTime),
-        endTime: formatTimeForBackend(formData.endTime),
+        startTime: formattedStartTime,
+        endTime: formattedEndTime,
         existingImage,
         capacity:
           formData.capacity === '' || formData.capacity == null

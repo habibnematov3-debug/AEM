@@ -6,14 +6,29 @@ import { fetchRecommendedEvents } from '../api/aemApi'
 import '../styles/students-events.css'
 import '../styles/compact-event-card.css'
 
-function getEventStartTimestamp(event) {
+function getEventLifecycle(event, now = Date.now()) {
   if (!event?.eventDate) {
-    return Number.NaN
+    return null
   }
 
   const startTime = event.startTime || '00:00'
-  const parsedDate = new Date(`${event.eventDate}T${startTime}`)
-  return parsedDate.getTime()
+  const endTime = event.endTime || startTime
+  const start = new Date(`${event.eventDate}T${startTime}`).getTime()
+  const end = new Date(`${event.eventDate}T${endTime}`).getTime()
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return null
+  }
+
+  if (now < start) {
+    return 'upcoming'
+  }
+
+  if (now > end) {
+    return 'finished'
+  }
+
+  return 'inProgress'
 }
 
 function StudentsPage({
@@ -108,14 +123,18 @@ function StudentsPage({
     return new Map(recommendedEventIds.map((eventId, index) => [eventId, index]))
   }, [currentUser, recommendedEventIds])
 
+  const activeEvents = useMemo(() => {
+    return events.filter(event => getEventLifecycle(event, summaryNow) !== 'finished')
+  }, [events, summaryNow])
+
   const filteredEvents = useMemo(() => {
     const query = searchValue.trim().toLowerCase()
     const baseEvents = query
-      ? events.filter((event) => {
+      ? activeEvents.filter((event) => {
           const haystack = `${event.title} ${event.location} ${event.category}`.toLowerCase()
           return haystack.includes(query)
         })
-      : events
+      : activeEvents
 
     return baseEvents
       .map((event, index) => ({
@@ -133,9 +152,8 @@ function StudentsPage({
   }, [events, recommendedRankById, searchValue])
 
   const summaryCards = useMemo(() => {
-    const now = summaryNow
     const categories = new Set(
-      events
+      activeEvents
         .map((event) => event.category)
         .filter(Boolean),
     )
@@ -144,22 +162,19 @@ function StudentsPage({
       {
         key: 'approved',
         label: t('students.summary.approved'),
-        value: events.length,
+        value: activeEvents.length,
         tone: 'blue',
       },
       {
         key: 'joined',
         label: t('students.summary.joined'),
-        value: events.filter((event) => event.isJoined).length,
+        value: activeEvents.filter((event) => event.isJoined).length,
         tone: 'green',
       },
       {
         key: 'upcoming',
         label: t('students.summary.upcoming'),
-        value: events.filter((event) => {
-          const eventTime = getEventStartTimestamp(event)
-          return Number.isFinite(eventTime) && eventTime >= now
-        }).length,
+        value: activeEvents.filter((event) => getEventLifecycle(event, summaryNow) === 'upcoming').length,
         tone: 'violet',
       },
       {

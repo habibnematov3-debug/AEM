@@ -10,13 +10,15 @@ Migration from Vercel/Render domains to custom domains:
 ### 1. Frontend Configuration
 
 #### `.env`
-- **Changed**: `VITE_API_BASE_URL=http://127.0.0.1:8000` 
+- **Changed**: local untracked frontend env file
+- **Example**: `VITE_API_BASE_URL=http://127.0.0.1:8000`
 - **To**: `VITE_API_BASE_URL=https://api.eventajou.uz`
 
-#### `.env.production` (NEW)
-- Created production environment file
-- Contains: `VITE_API_BASE_URL=https://api.eventajou.uz`
-- Contains: `VITE_GOOGLE_CLIENT_ID=386828522213-jgtupfbeokje7klsr65ioi72f4kml5i2.apps.googleusercontent.com`
+#### Vercel production environment variables
+- Do not commit runtime `.env.production` files
+- Set these values in Vercel project environment variables or in a local untracked `.env.production`
+- `VITE_API_BASE_URL=https://api.eventajou.uz`
+- `VITE_GOOGLE_CLIENT_ID=[your-google-client-id]`
 
 ### 2. Backend Configuration
 
@@ -36,11 +38,10 @@ Migration from Vercel/Render domains to custom domains:
   - `AEM_SESSION_COOKIE_SAMESITE=Lax` -> `AEM_SESSION_COOKIE_SAMESITE=None`
   - `AEM_CSRF_COOKIE_SAMESITE=Lax` -> `AEM_CSRF_COOKIE_SAMESITE=None`
 
-#### `backend/.env.production` (NEW)
-- Created production environment file
-- Contains all production settings for api.eventajou.uz
-- Includes Google Client ID configuration
-- Includes secure cookie settings
+#### Render backend environment variables
+- Do not commit runtime `backend/.env` or `backend/.env.production` files
+- Use `backend/.env.example` as the committed template
+- Set production values in Render environment variables or a local untracked backend env file
 
 ## Deployment Requirements
 

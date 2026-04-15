@@ -46,8 +46,8 @@ MIDDLEWARE = [
 - Secure cookie settings
 - Production logging configuration
 
-### 4. Environment Files Updated
-**`backend/.env.production`:**
+### 4. Production Environment Variables
+**Set these in Render instead of committing `backend/.env.production`:**
 ```bash
 DJANGO_ALLOWED_HOSTS=api.eventajou.uz,eventajou.uz,www.eventajou.uz,aem-backend-i4ky.onrender.com,localhost,127.0.0.1
 ```

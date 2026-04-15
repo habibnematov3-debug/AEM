@@ -375,6 +375,8 @@ function CreateEventForm({
                 disabled={isSubmitting || isUploadingImage}
               />
             </label>
+          </>
+        )}
 
         <div className="create-event-form__actions">
           <button

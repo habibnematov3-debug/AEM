@@ -88,8 +88,9 @@ function normalizeDateForInput(dateValue) {
 }
 
 function formatTimeForBackend(timeValue) {
-  if (!timeValue) {
-    return ''
+  // Return null for empty/undefined values (for optional fields)
+  if (!timeValue || timeValue.trim() === '') {
+    return null
   }
   
   // Handle various time formats and convert to HH:mm:ss format
@@ -97,7 +98,7 @@ function formatTimeForBackend(timeValue) {
   const match = timeValue.match(timeRegex)
   
   if (!match) {
-    return ''
+    return null
   }
   
   const hours = match[1].padStart(2, '0')
@@ -219,7 +220,7 @@ function CreateEventForm({
       const payload = {
         ...formData,
         startTime: formattedStartTime,
-        endTime: formattedEndTime,
+        endTime: formattedEndTime, // Already returns null if empty
         existingImage,
         capacity:
           formData.capacity === '' || formData.capacity == null

@@ -883,3 +883,319 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
               </div>
             </article>
           </div>
+
+          <article className="admin-page__viz-card admin-page__viz-card--timeline">
+            <div className="admin-page__viz-card-top">
+              <h3>{t('adminPage.timelineTitle')}</h3>
+            </div>
+            <TimelineChart
+              data={activityTimeline}
+              languageCode={languageCode}
+              joinsLabel={t('adminPage.timelineJoins')}
+              checkInsLabel={t('adminPage.timelineCheckIns')}
+            />
+          </article>
+
+          <div className="admin-page__visual-grid admin-page__visual-grid--compact">
+            <article className="admin-page__viz-card">
+              <div className="admin-page__viz-card-top">
+                <h3>{t('adminPage.attendanceRateTitle')}</h3>
+              </div>
+              <GaugeChart value={attendanceRate} subtitle={t('adminPage.attendanceRateSubtitle')} />
+            </article>
+
+            <article className="admin-page__viz-card">
+              <div className="admin-page__viz-card-top">
+                <h3>{t('adminPage.lifecycleTitle')}</h3>
+              </div>
+
+              <div className="admin-page__legend">
+                {lifecycleSegments.map((segment) => (
+                  <span key={segment.key} className="admin-page__legend-item">
+                    <span className="admin-page__legend-swatch" style={{ backgroundColor: segment.color }} />
+                    {segment.label}
+                  </span>
+                ))}
+              </div>
+
+              <div className="admin-page__lifecycle-chart">
+                <div className="admin-page__lifecycle-axis">
+                  {lifecycleTicks.map((tick) => (
+                    <span key={tick}>{tick}</span>
+                  ))}
+                </div>
+                <div className="admin-page__lifecycle-plot">
+                  <div className="admin-page__lifecycle-grid">
+                    {lifecycleTicks.map((tick) => (
+                      <span key={tick} />
+                    ))}
+                  </div>
+                  <div className="admin-page__lifecycle-bar">
+                    {lifecycleSegments.map((segment) => (
+                      <span
+                        key={segment.key}
+                        style={{
+                          height: `${(segment.value / lifecycleMax) * 100}%`,
+                          backgroundColor: segment.color,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div className="admin-page__lifecycle-label">{t('common.events')}</div>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div className="admin-page__highlights">
+            <article className="admin-page__highlight-card">
+              <div className="admin-page__highlight-top">
+                <h3>{t('adminPage.recentEventsTitle')}</h3>
+              </div>
+              {recentEvents.length ? (
+                <ul className="admin-page__highlight-list">
+                  {recentEvents.map((event) => (
+                    <li key={event.id}>
+                      <div>
+                        <strong>{event.title}</strong>
+                        <span>{event.creatorName}</span>
+                      </div>
+                      <span>{formatEventDate(event.eventDate, event.date, languageCode)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="admin-page__highlight-empty">{t('adminPage.noRecentEvents')}</p>
+              )}
+            </article>
+
+            <article className="admin-page__highlight-card">
+              <div className="admin-page__highlight-top">
+                <h3>{t('adminPage.recentUsersTitle')}</h3>
+              </div>
+              {recentUsers.length ? (
+                <ul className="admin-page__highlight-list">
+                  {recentUsers.map((user) => (
+                    <li key={user.id}>
+                      <div>
+                        <strong>{user.name}</strong>
+                        <span>{user.email}</span>
+                      </div>
+                      <span>{t(`adminUsersPage.roles.${user.role}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="admin-page__highlight-empty">{t('adminPage.noRecentUsers')}</p>
+              )}
+            </article>
+
+            <article className="admin-page__highlight-card">
+              <div className="admin-page__highlight-top">
+                <h3>{t('adminPage.recentActivityTitle')}</h3>
+              </div>
+              {recentParticipations.length ? (
+                <ul className="admin-page__highlight-list">
+                  {recentParticipations.map((participation) => (
+                    <li key={participation.id}>
+                      <div>
+                        <strong>{participation.userName}</strong>
+                        <span>{participation.eventTitle}</span>
+                      </div>
+                      <span>
+                        {new Date(participation.joinedAt).toLocaleDateString(getLanguageLocale(languageCode))}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="admin-page__highlight-empty">{t('adminPage.noRecentActivity')}</p>
+              )}
+            </article>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="admin-page__panel">
+        <div className="admin-page__panel-top" data-tour="admin-moderation">
+          <div>
+            <p className="admin-page__section-label">{t('adminPage.moderationEyebrow')}</p>
+            <div className="admin-page__panel-heading">
+              <h2>{t('adminPage.moderationTitle')}</h2>
+              {pendingCount > 0 ? (
+                <span className="admin-page__pending-pill">
+                  {t('adminPage.pendingAlert', { count: pendingBadgeLabel })}
+                </span>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="admin-page__controls">
+            <label className="admin-page__search">
+              <span className="sr-only">{t('common.search')}</span>
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={t('adminPage.searchPlaceholder')}
+              />
+            </label>
+
+            <div className="admin-page__filters">
+              {['pending', 'approved', 'rejected', 'all'].map((filterValue) => (
+                <button
+                  key={filterValue}
+                  type="button"
+                  className={
+                    filterValue === statusFilter
+                      ? 'admin-page__filter admin-page__filter--active'
+                      : 'admin-page__filter'
+                  }
+                  onClick={() => setStatusFilter(filterValue)}
+                >
+                  <span>{t(`adminPage.filters.${filterValue}`)}</span>
+                  {filterValue === 'pending' && pendingCount > 0 ? (
+                    <span className="admin-page__filter-badge">{pendingBadgeLabel}</span>
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {events.length ? (
+          <div className="admin-page__bulk-actions">
+            <label className="admin-page__bulk-select">
+              <input
+                type="checkbox"
+                checked={allEventsSelected}
+                onChange={handleToggleSelectAll}
+              />
+              <span>{t('adminPage.selectAll')}</span>
+            </label>
+
+            <button
+              type="button"
+              className="admin-page__delete-selected-button"
+              disabled={selectedCount === 0 || deletingEventId === 'bulk'}
+              onClick={handleBulkDelete}
+            >
+              {deletingEventId === 'bulk'
+                ? t('adminPage.deleting')
+                : t('adminPage.deleteSelected', { count: selectedCount })}
+            </button>
+          </div>
+        ) : null}
+
+        {areEventsLoading ? (
+          <div className="admin-page__empty">
+            <h3>{t('adminPage.loadingTitle')}</h3>
+            <p>{t('adminPage.loadingDescription')}</p>
+          </div>
+        ) : events.length ? (
+          <div className="admin-page__events">
+            {events.map((event) => (
+              <article
+                key={event.id}
+                className={`admin-page__event-card ${selectedEventIds.has(event.id) ? 'admin-page__event-card--selected' : ''}`}
+              >
+                <div className="admin-page__event-media">
+                  <img src={event.image} alt={event.title} />
+                </div>
+
+                <div className="admin-page__event-content">
+                  <div className="admin-page__event-topline">
+                    <label className="admin-page__event-select">
+                      <input
+                        type="checkbox"
+                        checked={selectedEventIds.has(event.id)}
+                        onChange={() => handleToggleEventSelection(event.id)}
+                      />
+                      <span>{t('adminPage.selectEvent')}</span>
+                    </label>
+                    <span className="admin-page__event-category">{event.category}</span>
+                    <span className={`admin-page__event-status admin-page__event-status--${event.moderationStatus}`}>
+                      {t(`adminPage.statuses.${event.moderationStatus}`)}
+                    </span>
+                  </div>
+
+                  <h3>{event.title}</h3>
+                  <p className="admin-page__event-description">{event.description}</p>
+
+                  <dl className="admin-page__event-meta">
+                    <div>
+                      <dt>{t('common.organizer')}</dt>
+                      <dd>{event.creatorName}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('common.date')}</dt>
+                      <dd>{formatEventDate(event.eventDate, event.date, languageCode)}</dd>
+                    </div>
+                    <div>
+                      <dt>{t('common.location')}</dt>
+                      <dd>{event.location}</dd>
+                    </div>
+                  </dl>
+
+                  <div className="admin-page__event-actions">
+                    <Link to={`/events/${event.id}`} className="admin-page__view-button">
+                      {t('eventCard.view')}
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="admin-page__approve-button"
+                      disabled={
+                        moderatingEventId === event.id ||
+                        deletingEventId === event.id ||
+                        event.moderationStatus === 'approved'
+                      }
+                      onClick={() => handleModeration(event.id, 'approved')}
+                    >
+                      {moderatingEventId === event.id
+                        ? t('adminPage.moderating')
+                        : t('adminPage.approve')}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="admin-page__reject-button"
+                      disabled={
+                        moderatingEventId === event.id ||
+                        deletingEventId === event.id ||
+                        event.moderationStatus === 'rejected'
+                      }
+                      onClick={() => handleModeration(event.id, 'rejected')}
+                    >
+                      {moderatingEventId === event.id
+                        ? t('adminPage.moderating')
+                        : t('adminPage.reject')}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="admin-page__delete-button"
+                      disabled={moderatingEventId === event.id || deletingEventId === event.id}
+                      onClick={() => handleDeleteEvent(event.id)}
+                    >
+                      {deletingEventId === event.id
+                        ? t('adminPage.deleting')
+                        : t('adminPage.delete')}
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="admin-page__empty">
+            <h3>{t('adminPage.emptyTitle')}</h3>
+            <p>{t('adminPage.emptyDescription')}</p>
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+export default AdminPage

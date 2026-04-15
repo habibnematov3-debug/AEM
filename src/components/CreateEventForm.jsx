@@ -257,6 +257,57 @@ function CreateEventForm({
           ) : null}
         </label>
 
+        <div className="create-event-form__full create-event-form__image-group">
+          <div className="create-event-form__image-header">
+            <label>Event Cover <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span></label>
+            <div className="create-event-form__image-buttons">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="create-event-form__file-input"
+                onChange={handleImageUpload}
+                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+              />
+              <button
+                type="button"
+                className="create-event-form__upload-button"
+                onClick={openFilePicker}
+                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+              >
+                {isUploadingImage ? t('eventForm.uploading') : t('eventForm.uploadImage')}
+              </button>
+              <button
+                type="button"
+                className="create-event-form__upload-button create-event-form__upload-button--ghost"
+                onClick={() => updateField('imageUrl', '')}
+                disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
+              >
+                {t('eventForm.removeImage')}
+              </button>
+            </div>
+          </div>
+
+          {errors.imageUrl ? (
+            <span className="create-event-form__error">{errors.imageUrl}</span>
+          ) : null}
+
+          <div className="create-event-form__preview">
+            <img
+              src={imagePreview}
+              alt={t('eventForm.previewAlt')}
+              onError={(event) => {
+                event.currentTarget.src = DEFAULT_EVENT_IMAGE
+              }}
+            />
+            <span>
+              {imagePreview === DEFAULT_EVENT_IMAGE
+                ? t('eventForm.defaultPreview')
+                : t('eventForm.currentPreview')}
+            </span>
+          </div>
+        </div>
+
         <div className="create-event-form__full" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '8px' }}>
           <button 
             type="button" 
@@ -266,14 +317,14 @@ function CreateEventForm({
             <svg viewBox="0 0 24 24" width="16" height="16" style={{ transform: showAdvanced ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', fill: 'currentColor' }}>
               <path d="M7 10l5 5 5-5z" />
             </svg>
-            {showAdvanced ? t('eventForm.hideAdvanced', 'Hide advanced settings') : t('eventForm.showAdvanced', 'Show advanced settings (optional)')}
+            {showAdvanced ? 'Hide details' : 'Add more details'}
           </button>
         </div>
 
         {showAdvanced && (
           <>
             <label className="create-event-form__full">
-              {t('eventForm.description')} ({t('common.optional', 'optional')})
+              {t('eventForm.description')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
               <textarea
                 value={formData.description}
                 onChange={(event) => updateField('description', event.target.value)}
@@ -287,7 +338,7 @@ function CreateEventForm({
             </label>
 
             <label>
-              {t('common.endTime')} ({t('common.optional', 'optional')})
+              {t('common.endTime')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
               <input
                 type="time"
                 value={formData.endTime}
@@ -300,7 +351,7 @@ function CreateEventForm({
             </label>
 
             <label>
-              {t('eventForm.capacity')} ({t('common.optional', 'optional')})
+              {t('eventForm.capacity')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
               <input
                 type="number"
                 min="1"
@@ -315,7 +366,7 @@ function CreateEventForm({
             </label>
 
             <label>
-              {t('common.category')} ({t('common.optional', 'optional')})
+              {t('common.category')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
               <input
                 type="text"
                 value={formData.category}
@@ -324,59 +375,6 @@ function CreateEventForm({
                 disabled={isSubmitting || isUploadingImage}
               />
             </label>
-
-            <div className="create-event-form__full create-event-form__image-group">
-              <div className="create-event-form__image-header">
-                <label>{t('eventForm.image', 'Event Image')} ({t('common.optional', 'optional')})</label>
-                <div className="create-event-form__image-buttons">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="create-event-form__file-input"
-                    onChange={handleImageUpload}
-                    disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
-                  />
-                  <button
-                    type="button"
-                    className="create-event-form__upload-button"
-                    onClick={openFilePicker}
-                    disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
-                  >
-                    {isUploadingImage ? t('eventForm.uploading') : t('eventForm.uploadImage')}
-                  </button>
-                  <button
-                    type="button"
-                    className="create-event-form__upload-button create-event-form__upload-button--ghost"
-                    onClick={() => updateField('imageUrl', '')}
-                    disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
-                  >
-                    {t('eventForm.removeImage')}
-                  </button>
-                </div>
-              </div>
-
-              {errors.imageUrl ? (
-                <span className="create-event-form__error">{errors.imageUrl}</span>
-              ) : null}
-
-              <div className="create-event-form__preview">
-                <img
-                  src={imagePreview}
-                  alt={t('eventForm.previewAlt')}
-                  onError={(event) => {
-                    event.currentTarget.src = DEFAULT_EVENT_IMAGE
-                  }}
-                />
-                <span>
-                  {imagePreview === DEFAULT_EVENT_IMAGE
-                    ? t('eventForm.defaultPreview')
-                    : t('eventForm.currentPreview')}
-                </span>
-              </div>
-            </div>
-          </>
-        )}
 
         <div className="create-event-form__actions">
           <button

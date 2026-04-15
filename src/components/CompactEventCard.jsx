@@ -275,37 +275,37 @@ function CompactEventCard({
 
     return (
       <article className="compact-event-card compact-event-card--joined" data-tour={tourMarker || undefined}>
-        <Link to={`/events/${event.id}`} className="compact-event-card__link">
-          <div className="compact-event-card__content">
-            {/* Thumbnail */}
-            <div className="compact-event-card__thumbnail">
-              <img 
-                src={event.image} 
+        <div className="compact-event-card__student-layout">
+          <Link to={`/events/${event.id}`} className="compact-event-card__student-thumb-link" aria-label={`${t('eventCard.view')}: ${event.title}`}>
+            <div className="compact-event-card__student-thumbnail">
+              <img
+                src={event.image}
                 alt={event.title}
                 className="compact-event-card__image"
                 loading="lazy"
               />
             </div>
+          </Link>
 
-            {/* Main content */}
-            <div className="compact-event-card__main">
-              {/* Title */}
+          <div className="compact-event-card__student-main">
+            <div className="compact-event-card__badges">
+              <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
+                {isWaitlisted ? t('eventDetails.waitlisted') : t('eventDetails.joined')}
+              </span>
+              <span className="compact-event-card__joined-date">
+                {isWaitlisted
+                  ? t('joinedEventsPage.waitlistedOn', { date: participationDateText })
+                  : t('joinedEventsPage.joinedOn', { date: participationDateText })}
+              </span>
+            </div>
+
+            <Link
+              to={`/events/${event.id}`}
+              className="compact-event-card__student-content-link"
+              aria-label={`${t('eventCard.view')}: ${event.title}`}
+            >
               <h3 className="compact-event-card__title">{event.title}</h3>
-
-              {/* Badges */}
-              <div className="compact-event-card__badges">
-                <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
-                  {isWaitlisted ? t('eventDetails.waitlisted') : t('eventDetails.joined')}
-                </span>
-                <span className="compact-event-card__joined-date">
-                  {isWaitlisted
-                    ? t('joinedEventsPage.waitlistedOn', { date: participationDateText })
-                    : t('joinedEventsPage.joinedOn', { date: participationDateText })}
-                </span>
-              </div>
-
-              {/* Details */}
-              <div className="compact-event-card__details">
+              <div className="compact-event-card__details compact-event-card__details--inline">
                 <div className="compact-event-card__detail">
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__icon">
                     <path
@@ -326,31 +326,30 @@ function CompactEventCard({
                   <span>{event.location}</span>
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="compact-event-card__actions">
-                <Link
-                  to={`/events/${event.id}`}
-                  className="compact-event-card__action-button compact-event-card__action-button--ghost"
-                >
-                  {t('eventCard.view')}
-                </Link>
-                <button
-                  type="button"
-                  className="compact-event-card__action-button compact-event-card__action-button--danger"
-                  onClick={() => onCancel(event)}
-                  disabled={isCanceling}
-                >
-                  {isCanceling
-                    ? t('joinedEventsPage.cancelling')
-                    : isWaitlisted
-                      ? t('joinedEventsPage.leaveWaitlist')
-                      : t('joinedEventsPage.cancelParticipation')}
-                </button>
-              </div>
-            </div>
+            </Link>
           </div>
-        </Link>
+
+          <div className="compact-event-card__student-actions">
+            <Link
+              to={`/events/${event.id}`}
+              className="compact-event-card__action-button compact-event-card__action-button--ghost"
+            >
+              {t('eventCard.view')}
+            </Link>
+            <button
+              type="button"
+              className="compact-event-card__action-button compact-event-card__action-button--danger"
+              onClick={(e) => { e.preventDefault(); onCancel(event); }}
+              disabled={isCanceling}
+            >
+              {isCanceling
+                ? t('joinedEventsPage.cancelling')
+                : isWaitlisted
+                  ? t('joinedEventsPage.leaveWaitlist')
+                  : t('joinedEventsPage.cancelParticipation')}
+            </button>
+          </div>
+        </div>
       </article>
     )
   }
@@ -362,40 +361,40 @@ function CompactEventCard({
 
     return (
       <article className="compact-event-card compact-event-card--admin" data-tour={tourMarker || undefined}>
-        <Link to={`/events/${event.id}`} className="compact-event-card__link">
-          <div className="compact-event-card__content">
-            {/* Thumbnail */}
-            <div className="compact-event-card__thumbnail">
-              <img 
-                src={event.image} 
+        <div className="compact-event-card__student-layout">
+          <Link to={`/events/${event.id}`} className="compact-event-card__student-thumb-link" aria-label={`${t('eventCard.view')}: ${event.title}`}>
+            <div className="compact-event-card__student-thumbnail">
+              <img
+                src={event.image}
                 alt={event.title}
                 className="compact-event-card__image"
                 loading="lazy"
               />
             </div>
+          </Link>
 
-            {/* Main content */}
-            <div className="compact-event-card__main">
-              {/* Title */}
+          <div className="compact-event-card__student-main">
+            <div className="compact-event-card__badges">
+              {event.category && (
+                <span className={`compact-event-card__badge compact-event-card__badge--${getCategoryColor(event.category)}`}>
+                  {event.category}
+                </span>
+              )}
+              <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
+                {t(`organizerPage.statuses.${moderationStatus}`)}
+              </span>
+              <span className="compact-event-card__owner-badge">
+                {t('eventCard.yourEvent')}
+              </span>
+            </div>
+
+            <Link
+              to={`/events/${event.id}`}
+              className="compact-event-card__student-content-link"
+              aria-label={`${t('eventCard.view')}: ${event.title}`}
+            >
               <h3 className="compact-event-card__title">{event.title}</h3>
-
-              {/* Badges */}
-              <div className="compact-event-card__badges">
-                {event.category && (
-                  <span className={`compact-event-card__badge compact-event-card__badge--${getCategoryColor(event.category)}`}>
-                    {event.category}
-                  </span>
-                )}
-                <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
-                  {t(`organizerPage.statuses.${moderationStatus}`)}
-                </span>
-                <span className="compact-event-card__owner-badge">
-                  {t('eventCard.yourEvent')}
-                </span>
-              </div>
-
-              {/* Details */}
-              <div className="compact-event-card__details">
+              <div className="compact-event-card__details compact-event-card__details--inline">
                 <div className="compact-event-card__detail">
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__icon">
                     <path
@@ -416,33 +415,32 @@ function CompactEventCard({
                   <span>{event.location}</span>
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="compact-event-card__actions">
-                <button
-                  type="button"
-                  className="compact-event-card__action-button"
-                  onClick={() => onEdit(event)}
-                >
-                  {t('eventCard.edit')}
-                </button>
-                <Link
-                  to={`/events/${event.id}`}
-                  className="compact-event-card__action-button compact-event-card__action-button--ghost"
-                >
-                  {t('eventCard.view')}
-                </Link>
-                <button
-                  type="button"
-                  className="compact-event-card__action-button compact-event-card__action-button--danger"
-                  onClick={() => onDelete(event)}
-                >
-                  {t('eventCard.delete')}
-                </button>
-              </div>
-            </div>
+            </Link>
           </div>
-        </Link>
+
+          <div className="compact-event-card__student-actions">
+            <button
+              type="button"
+              className="compact-event-card__action-button"
+              onClick={(e) => { e.preventDefault(); onEdit(event); }}
+            >
+              {t('eventCard.edit')}
+            </button>
+            <Link
+              to={`/events/${event.id}`}
+              className="compact-event-card__action-button compact-event-card__action-button--ghost"
+            >
+              {t('eventCard.view')}
+            </Link>
+            <button
+              type="button"
+              className="compact-event-card__action-button compact-event-card__action-button--danger"
+              onClick={(e) => { e.preventDefault(); onDelete(event); }}
+            >
+              {t('eventCard.delete')}
+            </button>
+          </div>
+        </div>
       </article>
     )
   }

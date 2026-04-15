@@ -91,14 +91,15 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
     })
 
     return [
-      { key: 'total', label: t('joinedEventsPage.summary.total'), value: counts.total },
-      { key: 'upcoming', label: t('joinedEventsPage.summary.upcoming'), value: counts.upcoming },
+      { key: 'total', label: t('joinedEventsPage.summary.total'), value: counts.total, tone: 'blue' },
+      { key: 'upcoming', label: t('joinedEventsPage.summary.upcoming'), value: counts.upcoming, tone: 'green' },
       {
         key: 'inProgress',
         label: t('joinedEventsPage.summary.inProgress'),
         value: counts.inProgress,
+        tone: 'violet',
       },
-      { key: 'finished', label: t('joinedEventsPage.summary.finished'), value: counts.finished },
+      { key: 'finished', label: t('joinedEventsPage.summary.finished'), value: counts.finished, tone: 'amber' },
     ]
   }, [participations, t])
 
@@ -170,7 +171,7 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
 
       <div className="joined-events-page__summary">
         {summaryCards.map((card) => (
-          <article key={card.key} className="joined-events-page__summary-card">
+          <article key={card.key} className={`joined-events-page__summary-card joined-events-page__summary-card--${card.tone}`}>
             <span>{card.label}</span>
             <strong>{card.value}</strong>
           </article>

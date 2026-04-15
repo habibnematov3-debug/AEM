@@ -88,16 +88,17 @@ function OrganizerPage({
     })
 
     return [
-      { key: 'pending', label: t('organizerPage.summary.pending'), value: counts.pending },
-      { key: 'approved', label: t('organizerPage.summary.approved'), value: counts.approved },
-      { key: 'rejected', label: t('organizerPage.summary.rejected'), value: counts.rejected },
-      { key: 'upcoming', label: t('organizerPage.summary.upcoming'), value: counts.upcoming },
+      { key: 'pending', label: t('organizerPage.summary.pending'), value: counts.pending, tone: 'pending' },
+      { key: 'approved', label: t('organizerPage.summary.approved'), value: counts.approved, tone: 'approved' },
+      { key: 'rejected', label: t('organizerPage.summary.rejected'), value: counts.rejected, tone: 'rejected' },
+      { key: 'upcoming', label: t('organizerPage.summary.upcoming'), value: counts.upcoming, tone: 'upcoming' },
       {
         key: 'inProgress',
         label: t('organizerPage.summary.inProgress'),
         value: counts.inProgress,
+        tone: 'inProgress',
       },
-      { key: 'finished', label: t('organizerPage.summary.finished'), value: counts.finished },
+      { key: 'finished', label: t('organizerPage.summary.finished'), value: counts.finished, tone: 'finished' },
     ]
   }, [ownedEvents, t])
 
@@ -232,7 +233,7 @@ function OrganizerPage({
               />
             ))
           : summaryCards.map((card) => (
-              <article key={card.key} className="organizer-events-page__status-card">
+              <article key={card.key} className={`organizer-events-page__status-card organizer-events-page__status-card--${card.tone}`}>
                 <span>{card.label}</span>
                 <strong>{card.value}</strong>
               </article>

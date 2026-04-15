@@ -86,7 +86,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
           return
         }
 
-        setErrorMessage(error.message || 'Could not load the event details.')
+        setErrorMessage(error.message || t('eventDetails.errorTitle'))
         setStatus('error')
       }
     }
@@ -172,7 +172,7 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
     } catch (error) {
       setActionFeedback({
         type: 'error',
-        message: error.message || 'Could not join this event.',
+        message: error.message || t('eventDetails.joinError'),
       })
     } finally {
       setIsJoining(false)

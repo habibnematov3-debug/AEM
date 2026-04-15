@@ -87,16 +87,8 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
       : roleValue === 'organizer'
         ? t('common.organizer')
         : roleValue === 'admin'
-          ? languageCode === 'ru'
-            ? 'Админ'
-            : languageCode === 'uz'
-              ? 'Admin'
-              : 'Admin'
-          : languageCode === 'ru'
-            ? 'Пользователь'
-            : languageCode === 'uz'
-              ? 'Foydalanuvchi'
-              : 'User'
+          ? t('common.admin')
+          : t('common.defaultStudent')
 
   function updateField(field, value) {
     setFormData((current) => ({ ...current, [field]: value }))
@@ -265,7 +257,7 @@ function ProfilePage({ currentUser, onUpdateProfile, onLogout }) {
               {t('common.profileImageUrl')}
               <input
                 type="url"
-                placeholder="https://example.com/avatar.jpg"
+                placeholder={t('profile.photoUrlPlaceholder')}
                 value={formData.profileImageUrl}
                 onChange={(event) => updateField('profileImageUrl', event.target.value)}
                 disabled={isSaving || isUploadingPhoto}

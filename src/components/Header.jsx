@@ -276,7 +276,7 @@ function Header({
           </button>
 
           {/* Desktop navigation */}
-          <nav className="site-header__nav" aria-label="Main navigation">
+          <nav className="site-header__nav" aria-label={t('header.mainNavigation')}>
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
@@ -510,7 +510,7 @@ function Header({
           {/* Mobile menu drawer */}
           {isMobileMenuOpen ? (
             <div className="site-header__mobile-menu" ref={mobileMenuRef}>
-              <nav className="site-header__mobile-nav" aria-label="Mobile navigation">
+              <nav className="site-header__mobile-nav" aria-label={t('header.mobileNavigation')}>
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}

@@ -351,10 +351,12 @@ function EventCard({
         <div>
           <strong>{event.priceLabel || t('common.tbd')}</strong>
           <p>
-            {event.joinedCount} joined
+            {t('eventDetails.joinedInfo', { count: event.joinedCount ?? 0 })}
             {event.capacity ? ` / ${event.capacity}` : ''}
-            {event.waitlistCount ? ` | ${event.waitlistCount} waitlisted` : ''}
-            {event.noShowCount ? ` | ${event.noShowCount} no-show` : ''}
+            {event.waitlistCount
+              ? ` | ${t('eventDetails.waitlistInfo', { count: event.waitlistCount })}`
+              : ''}
+            {event.noShowCount ? ` | ${t('eventDetails.noShowInfo', { count: event.noShowCount })}` : ''}
           </p>
         </div>
       </div>

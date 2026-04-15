@@ -16,7 +16,7 @@ const GOOGLE_SCRIPT_ID = 'google-identity-services'
 
 function loadGoogleIdentityScript() {
   if (typeof window === 'undefined') {
-    return Promise.reject(new Error('Google sign-in is unavailable.'))
+    return Promise.reject(new Error('GOOGLE_SIGNIN_UNAVAILABLE'))
   }
 
   if (window.google?.accounts?.id) {
@@ -29,7 +29,7 @@ function loadGoogleIdentityScript() {
       existingScript.addEventListener('load', () => resolve(window.google), { once: true })
       existingScript.addEventListener(
         'error',
-        () => reject(new Error('Google sign-in could not be loaded.')),
+        () => reject(new Error('GOOGLE_SIGNIN_LOAD_FAILED')),
         { once: true },
       )
     })
@@ -42,7 +42,7 @@ function loadGoogleIdentityScript() {
     script.async = true
     script.defer = true
     script.onload = () => resolve(window.google)
-    script.onerror = () => reject(new Error('Google sign-in could not be loaded.'))
+    script.onerror = () => reject(new Error('GOOGLE_SIGNIN_LOAD_FAILED'))
     document.head.appendChild(script)
   })
 }
@@ -175,7 +175,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
       return
     }
 
-    const displayName = result.user.full_name ?? result.user.name ?? 'there'
+    const displayName = result.user.full_name ?? result.user.name ?? t('auth.fallbackName')
     setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
     window.setTimeout(() => {
       setIsSubmitting(false)
@@ -298,15 +298,15 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
         return
       }
 
-      const displayName = result.user.full_name ?? result.user.name ?? 'there'
+      const displayName = result.user.full_name ?? result.user.name ?? t('auth.fallbackName')
       setFeedback({ type: 'success', message: t('auth.welcomeBack', { name: displayName }) })
       window.setTimeout(() => {
         setIsSubmitting(false)
         navigate(getDefaultRouteForRole(result.user.role))
       }, 500)
     } catch (error) {
-      console.error('🔍 Login Submit Error:', error)
-      setFeedback({ type: 'error', message: error.message || 'Login failed. Please try again.' })
+      console.error('Login submit error:', error)
+      setFeedback({ type: 'error', message: error.message || t('auth.genericSignInError') })
       setIsSubmitting(false)
     }
   }

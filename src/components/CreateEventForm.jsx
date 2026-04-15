@@ -353,7 +353,7 @@ function CreateEventForm({
           <div className="create-event-form__preview">
             <img
               src={imagePreview}
-              alt="Event preview"
+              alt={t('eventForm.previewAlt')}
               onError={(event) => {
                 event.currentTarget.src = DEFAULT_EVENT_IMAGE
               }}

@@ -507,9 +507,11 @@ function CompactEventCard({
               <div className="compact-event-card__meta">
                 <strong>{event.priceLabel || t('common.tbd')}</strong>
                 <span>
-                  {event.joinedCount} joined
+                  {t('eventDetails.joinedInfo', { count: event.joinedCount ?? 0 })}
                   {event.capacity ? ` / ${event.capacity}` : ''}
-                  {event.waitlistCount ? ` | ${event.waitlistCount} waitlisted` : ''}
+                  {event.waitlistCount
+                    ? ` | ${t('eventDetails.waitlistInfo', { count: event.waitlistCount })}`
+                    : ''}
                 </span>
               </div>
             </div>

@@ -201,21 +201,45 @@ def notify_participation_joined(participation):
         message=f'Your seat is confirmed for "{event.title}".',
     )
 
-    if not user_wants_notifications(attendee):
-        return True
+    attendee_email_sent = True
+    if user_wants_notifications(attendee):
+        attendee_email_sent = send_notification_email(
+            subject=f'Participation confirmed: {event.title}',
+            message=(
+                f'Hello {attendee.full_name},\n\n'
+                f'You have successfully joined "{event.title}".\n\n'
+                f'Organizer: {event.creator.full_name}\n'
+                f'Location: {event.location}\n'
+                f'Schedule: {format_event_schedule(event)}\n\n'
+                'We look forward to seeing you there.'
+            ),
+            recipient=attendee.email,
+        )
 
-    return send_notification_email(
-        subject=f'Participation confirmed: {event.title}',
-        message=(
-            f'Hello {attendee.full_name},\n\n'
-            f'You have successfully joined "{event.title}".\n\n'
-            f'Organizer: {event.creator.full_name}\n'
-            f'Location: {event.location}\n'
-            f'Schedule: {format_event_schedule(event)}\n\n'
-            'We look forward to seeing you there.'
-        ),
-        recipient=attendee.email,
+    organizer = event.creator
+    create_in_app_notification(
+        user=organizer,
+        event=event,
+        notification_type=Notification.Types.PARTICIPATION_JOINED,
+        title=f'New participant: {event.title}',
+        message=f'{attendee.full_name} joined your event "{event.title}".',
     )
+
+    organizer_email_sent = True
+    if user_wants_notifications(organizer):
+        organizer_email_sent = send_notification_email(
+            subject=f'New participant in your event: {event.title}',
+            message=(
+                f'Hello {organizer.full_name},\n\n'
+                f'{attendee.full_name} ({attendee.email}) has joined your event "{event.title}".\n\n'
+                f'Location: {event.location}\n'
+                f'Schedule: {format_event_schedule(event)}\n\n'
+                'Open AEM to review your attendee list.'
+            ),
+            recipient=organizer.email,
+        )
+
+    return attendee_email_sent and organizer_email_sent
 
 
 def notify_participation_waitlisted(participation):
@@ -229,20 +253,44 @@ def notify_participation_waitlisted(participation):
         message=f'The event is full, so you were placed on the waitlist for "{event.title}".',
     )
 
-    if not user_wants_notifications(attendee):
-        return True
+    attendee_email_sent = True
+    if user_wants_notifications(attendee):
+        attendee_email_sent = send_notification_email(
+            subject=f'Waitlist update: {event.title}',
+            message=(
+                f'Hello {attendee.full_name},\n\n'
+                f'"{event.title}" is currently full, so you were added to the waitlist.\n\n'
+                f'Location: {event.location}\n'
+                f'Schedule: {format_event_schedule(event)}\n\n'
+                'We will notify you if a confirmed seat opens up.'
+            ),
+            recipient=attendee.email,
+        )
 
-    return send_notification_email(
-        subject=f'Waitlist update: {event.title}',
-        message=(
-            f'Hello {attendee.full_name},\n\n'
-            f'"{event.title}" is currently full, so you were added to the waitlist.\n\n'
-            f'Location: {event.location}\n'
-            f'Schedule: {format_event_schedule(event)}\n\n'
-            'We will notify you if a confirmed seat opens up.'
-        ),
-        recipient=attendee.email,
+    organizer = event.creator
+    create_in_app_notification(
+        user=organizer,
+        event=event,
+        notification_type=Notification.Types.PARTICIPATION_WAITLISTED,
+        title=f'New waitlisted attendee: {event.title}',
+        message=f'{attendee.full_name} joined the waitlist for your event "{event.title}".',
     )
+
+    organizer_email_sent = True
+    if user_wants_notifications(organizer):
+        organizer_email_sent = send_notification_email(
+            subject=f'New waitlisted attendee in your event: {event.title}',
+            message=(
+                f'Hello {organizer.full_name},\n\n'
+                f'{attendee.full_name} ({attendee.email}) joined the waitlist for "{event.title}".\n\n'
+                f'Location: {event.location}\n'
+                f'Schedule: {format_event_schedule(event)}\n\n'
+                'Open AEM to review your attendee list and waitlist.'
+            ),
+            recipient=organizer.email,
+        )
+
+    return attendee_email_sent and organizer_email_sent
 
 
 def notify_participation_cancelled(participation):

@@ -23,12 +23,14 @@ function StudentsPage({
   searchValue = '',
   onClearSearch = () => {},
   onToggleEventLike = null,
+  onParticipateEvent = null,
 }) {
   const { t } = useI18n()
   const searchActive = searchValue.trim().length > 0
   const [summaryNow, setSummaryNow] = useState(() => Date.now())
   const [recommendedEventIds, setRecommendedEventIds] = useState([])
   const [recommendedRequestKey, setRecommendedRequestKey] = useState(0)
+  const [participatingEventId, setParticipatingEventId] = useState('')
 
   useEffect(() => {
     const id = window.setInterval(() => setSummaryNow(Date.now()), 60_000)
@@ -77,6 +79,27 @@ function StudentsPage({
     return result
   }
 
+  async function handleParticipateEvent(event) {
+    if (
+      typeof onParticipateEvent !== 'function'
+      || participatingEventId
+      || event.isJoined
+      || event.isWaitlisted
+    ) {
+      return null
+    }
+
+    setParticipatingEventId(event.id)
+
+    try {
+      const result = await onParticipateEvent(event.id)
+      setRecommendedRequestKey((currentKey) => currentKey + 1)
+      return result
+    } finally {
+      setParticipatingEventId('')
+    }
+  }
+
   const recommendedRankById = useMemo(() => {
     if (!currentUser) {
       return new Map()
@@ -122,11 +145,13 @@ function StudentsPage({
         key: 'approved',
         label: t('students.summary.approved'),
         value: events.length,
+        tone: 'blue',
       },
       {
         key: 'joined',
         label: t('students.summary.joined'),
         value: events.filter((event) => event.isJoined).length,
+        tone: 'green',
       },
       {
         key: 'upcoming',
@@ -135,11 +160,13 @@ function StudentsPage({
           const eventTime = getEventStartTimestamp(event)
           return Number.isFinite(eventTime) && eventTime >= now
         }).length,
+        tone: 'violet',
       },
       {
         key: 'categories',
         label: t('students.summary.categories'),
         value: categories.size,
+        tone: 'amber',
       },
     ]
   }, [events, summaryNow, t])
@@ -166,14 +193,18 @@ function StudentsPage({
               />
             ))
           : summaryCards.map((card) => (
-              <article key={card.key} className="students-events-page__summary-card">
+              <article
+                key={card.key}
+                className={`students-events-page__summary-card students-events-page__summary-card--${card.tone}`}
+              >
                 <span>{card.label}</span>
                 <strong>{card.value}</strong>
               </article>
             ))}
       </div>
 
-      <div data-tour="students-catalog">
+      <div className="students-events-page__catalog" data-tour="students-catalog">
+        <p className="students-events-page__catalog-label">{t('common.events')}</p>
         {eventsLoading ? (
           <div className="students-events-grid students-events-grid--skeleton" aria-hidden>
             {Array.from({ length: 6 }, (_, index) => (
@@ -189,6 +220,8 @@ function StudentsPage({
                 variant="student"
                 currentUser={currentUser}
                 onToggleLike={handleStudentEventLike}
+                onParticipate={handleParticipateEvent}
+                isParticipating={participatingEventId === event.id}
                 tourMarker={filteredEvents[0]?.id === event.id ? 'students-first-card' : ''}
               />
             ))}

@@ -15,6 +15,7 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
   moderateAdminEvent,
+  participateInEvent,
   signInUser,
   signInWithGoogleCredential,
   signUpUser,
@@ -455,6 +456,12 @@ function App() {
     return result
   }
 
+  async function handleParticipateInEvent(eventId) {
+    const result = await participateInEvent(eventId)
+    applyEventUpdate(result.event)
+    return result
+  }
+
   function handleCloseOnboarding() {
     if (currentUser) {
       markOnboardingSeen(currentUser)
@@ -536,6 +543,7 @@ function App() {
                   searchValue={studentSearch}
                   onClearSearch={() => setStudentSearch('')}
                   onToggleEventLike={handleToggleEventLike}
+                  onParticipateEvent={handleParticipateInEvent}
                 />
               }
             />

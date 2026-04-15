@@ -38,15 +38,20 @@ function formatTimestampDate(timestamp, fallback, languageCode) {
 }
 
 function getCategoryColor(category) {
+  const normalizedCategory = String(category || '').trim().toLowerCase()
   const colors = {
-    'Opening': 'green',
-    'General': 'purple', 
-    'Sports': 'orange',
-    'Music': 'pink',
-    'Academic': 'indigo',
-    'Culture': 'teal',
-  };
-  return colors[category] || 'blue';
+    general: 'blue',
+    academic: 'indigo',
+    culture: 'teal',
+    music: 'pink',
+    sports: 'orange',
+    opening: 'green',
+    workshop: 'purple',
+    networking: 'amber',
+    career: 'sky',
+  }
+
+  return colors[normalizedCategory] || 'slate'
 }
 
 function getStatusColor(status) {
@@ -71,17 +76,19 @@ function CompactEventCard({
   onEdit = () => {},
   onDelete = () => {},
   onCancel = () => {},
+  onParticipate = null,
   onToggleLike = null,
   isCanceling = false,
+  isParticipating = false,
   isLikePending = false,
   tourMarker = '',
 }) {
-  const { languageCode, t } = useI18n();
-  const [isLikeLoading, setIsLikeLoading] = useState(false);
-  
-  const dateText = formatEventDate(event.eventDate, event.date, languageCode);
-  const categoryColor = getCategoryColor(event.category);
-  const canToggleLike = Boolean(currentUser?.id) && typeof onToggleLike === 'function';
+  const { languageCode, t } = useI18n()
+  const [isLikeLoading, setIsLikeLoading] = useState(false)
+
+  const dateText = formatEventDate(event.eventDate, event.date, languageCode)
+  const categoryColor = getCategoryColor(event.category)
+  const canToggleLike = Boolean(currentUser?.id) && typeof onToggleLike === 'function'
 
   async function handleLikeToggle(clickEvent) {
     clickEvent.preventDefault()
@@ -102,45 +109,89 @@ function CompactEventCard({
     }
   }
 
+  async function handleParticipate(clickEvent) {
+    clickEvent.preventDefault()
+    clickEvent.stopPropagation()
+
+    if (
+      typeof onParticipate !== 'function'
+      || isParticipating
+      || event.isJoined
+      || event.isWaitlisted
+    ) {
+      return
+    }
+
+    try {
+      await onParticipate(event)
+    } catch (error) {
+      console.error('Could not participate in event', error)
+    }
+  }
+
   // Student variant
   if (variant === 'student') {
     const hasLikesCount = typeof event.likesCount === 'number'
-    const statusText = event.isJoined ? t('eventCard.joined') : t('eventCard.opening')
-    const statusColor = getStatusColor(event.isJoined ? 'Joined' : 'Opening')
+    const isCreator = Boolean(currentUser?.id) && currentUser.id === event.creatorId
+    const showParticipationBadge = event.isJoined || event.isWaitlisted
+    const canParticipate = Boolean(currentUser?.id) && typeof onParticipate === 'function' && !isCreator
+    const actionLabel = isParticipating
+      ? t('eventDetails.joining')
+      : event.isWaitlisted
+        ? t('eventDetails.waitlisted')
+        : event.isJoined
+          ? t('eventCard.joined')
+          : isCreator
+            ? t('eventCard.yourEvent')
+            : t('eventCard.join')
+    const actionClassName = event.isWaitlisted
+      ? 'compact-event-card__participation-button compact-event-card__participation-button--waitlisted'
+      : event.isJoined
+        ? 'compact-event-card__participation-button compact-event-card__participation-button--joined'
+        : 'compact-event-card__participation-button'
+    const actionDisabled = !canParticipate || isParticipating || event.isJoined || event.isWaitlisted
 
     return (
       <article className="compact-event-card compact-event-card--student" data-tour={tourMarker || undefined}>
-        <Link to={`/events/${event.id}`} className="compact-event-card__link">
-          <div className="compact-event-card__content">
-            {/* Thumbnail */}
-            <div className="compact-event-card__thumbnail">
-              <img 
-                src={event.image} 
+        <div className="compact-event-card__student-layout">
+          <Link to={`/events/${event.id}`} className="compact-event-card__student-thumb-link" aria-label={`${t('eventCard.view')}: ${event.title}`}>
+            <div className="compact-event-card__student-thumbnail">
+              <img
+                src={event.image}
                 alt={event.title}
                 className="compact-event-card__image"
                 loading="lazy"
               />
             </div>
+          </Link>
 
-            {/* Main content */}
-            <div className="compact-event-card__main">
-              {/* Title */}
-              <h3 className="compact-event-card__title">{event.title}</h3>
-
-              {/* Badges */}
-              <div className="compact-event-card__badges">
-                {event.category && (
-                  <span className={`compact-event-card__badge compact-event-card__badge--${categoryColor}`}>
-                    {event.category}
-                  </span>
-                )}
-                <span className={`compact-event-card__badge compact-event-card__badge--${statusColor}`}>
-                  {statusText}
+          <div className="compact-event-card__student-main">
+            <div className="compact-event-card__badges">
+              {event.category ? (
+                <span className={`compact-event-card__badge compact-event-card__badge--${categoryColor}`}>
+                  {event.category}
                 </span>
-              </div>
+              ) : null}
+              {showParticipationBadge ? (
+                <span
+                  className={
+                    event.isWaitlisted
+                      ? 'compact-event-card__badge compact-event-card__badge--waitlisted'
+                      : 'compact-event-card__badge compact-event-card__badge--joined'
+                  }
+                >
+                  {event.isWaitlisted ? t('eventDetails.waitlisted') : t('eventCard.joined')}
+                </span>
+              ) : null}
+            </div>
 
-              {/* Details */}
-              <div className="compact-event-card__details">
+            <Link
+              to={`/events/${event.id}`}
+              className="compact-event-card__student-content-link"
+              aria-label={`${t('eventCard.view')}: ${event.title}`}
+            >
+              <h3 className="compact-event-card__title">{event.title}</h3>
+              <div className="compact-event-card__details compact-event-card__details--inline">
                 <div className="compact-event-card__detail">
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__icon">
                     <path
@@ -150,7 +201,7 @@ function CompactEventCard({
                   </svg>
                   <span>{dateText}</span>
                 </div>
-                
+
                 <div className="compact-event-card__detail">
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__icon">
                     <path
@@ -161,33 +212,56 @@ function CompactEventCard({
                   <span>{event.location}</span>
                 </div>
               </div>
-
-              {/* Interactive like button */}
-              {hasLikesCount && canToggleLike && (
-                <div className="compact-event-card__likes-container">
-                  <button
-                    type="button"
-                    className={`compact-event-card__like-button ${
-                      event.isLiked ? 'compact-event-card__like-button--liked' : ''
-                    }`}
-                    onClick={handleLikeToggle}
-                    disabled={isLikeLoading || isLikePending}
-                    aria-pressed={event.isLiked}
-                    aria-label={`${event.isLiked ? t('eventDetails.likedAction') : t('eventDetails.likeAction')}: ${event.title}`}
-                  >
-                    <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
-                      <path
-                        d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </button>
-                  <span className="compact-event-card__likes-count">{event.likesCount}</span>
-                </div>
-              )}
-            </div>
+            </Link>
           </div>
-        </Link>
+
+          <div className="compact-event-card__student-actions">
+            {hasLikesCount ? (
+              canToggleLike ? (
+                <button
+                  type="button"
+                  className={
+                    event.isLiked
+                      ? 'compact-event-card__like-pill compact-event-card__like-pill--liked'
+                      : 'compact-event-card__like-pill'
+                  }
+                  onClick={handleLikeToggle}
+                  disabled={isLikeLoading || isLikePending}
+                  aria-pressed={event.isLiked}
+                  aria-label={`${event.isLiked ? t('eventDetails.likedAction') : t('eventDetails.likeAction')}: ${event.title}`}
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
+                    <path
+                      d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span>{event.likesCount}</span>
+                </button>
+              ) : (
+                <span className="compact-event-card__like-pill">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="compact-event-card__heart-icon">
+                    <path
+                      d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span>{event.likesCount}</span>
+                </span>
+              )
+            ) : null}
+
+            <button
+              type="button"
+              className={actionClassName}
+              onClick={handleParticipate}
+              disabled={actionDisabled}
+            >
+              {event.isJoined ? <span className="compact-event-card__checkmark" aria-hidden="true">✓</span> : null}
+              <span>{actionLabel}</span>
+            </button>
+          </div>
+        </div>
       </article>
     )
   }

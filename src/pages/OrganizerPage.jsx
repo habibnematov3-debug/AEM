@@ -241,13 +241,15 @@ function OrganizerPage({
       </div>
 
       {isCreateFormOpen ? (
-        <CreateEventForm
-          mode="create"
-          initialValues={null}
-          currentUserId={currentUser?.id}
-          onCancel={handleCancelForm}
-          onSubmit={handleCreate}
-        />
+        <Modal size="lg" onClose={handleCancelForm} labelledBy="create-event-title">
+          <CreateEventForm
+            mode="create"
+            initialValues={null}
+            currentUserId={currentUser?.id}
+            onCancel={handleCancelForm}
+            onSubmit={handleCreate}
+          />
+        </Modal>
       ) : null}
 
       {editingEvent ? (

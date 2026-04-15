@@ -521,6 +521,27 @@
   .create-event-form { grid-template-columns: 1fr; }
 }
 
+/* Create event form inside modal */
+.modal-shell .create-event-panel {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow: visible;
+  margin-bottom: 0;
+  box-shadow: none;
+}
+
+.modal-shell .create-event-panel__header {
+  padding: 0 0 20px 0;
+  border-bottom: 1px solid var(--border, #e8e4dc);
+}
+
+.modal-shell .create-event-form {
+  grid-template-columns: 1fr;
+  gap: 20px;
+  padding: 0;
+}
+
 @media (max-width: 480px) {
   .organizer-events-page__status-summary { grid-template-columns: 1fr; }
 }

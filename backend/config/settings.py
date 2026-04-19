@@ -43,7 +43,10 @@ load_env_file(BASE_DIR / '.env')
 
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-aem-dev-key')
 DEBUG = get_bool_env('DJANGO_DEBUG', True)
-ALLOWED_HOSTS = get_list_env('DJANGO_ALLOWED_HOSTS', ['127.0.0.1', 'localhost', 'testserver'])
+ALLOWED_HOSTS = get_list_env(
+    'DJANGO_ALLOWED_HOSTS',
+    ['127.0.0.1', 'localhost', 'testserver', 'api.eventajou.uz', 'eventajou.uz', 'www.eventajou.uz'],
+)
 RENDER_EXTERNAL_HOSTNAME = os.getenv('RENDER_EXTERNAL_HOSTNAME')
 
 if RENDER_EXTERNAL_HOSTNAME:
@@ -190,7 +193,12 @@ AEM_OWNER_EMAILS = tuple(
 
 CORS_ALLOWED_ORIGINS = get_list_env(
     'AEM_CORS_ALLOWED_ORIGINS',
-    ['http://localhost:5173', 'http://127.0.0.1:5173'],
+    [
+        'http://localhost:5173',
+        'http://127.0.0.1:5173',
+        'https://eventajou.uz',
+        'https://www.eventajou.uz',
+    ],
 )
 CORS_ALLOWED_ORIGIN_REGEXES = get_list_env(
     'AEM_CORS_ALLOWED_ORIGIN_REGEXES',

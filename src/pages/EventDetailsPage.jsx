@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 
-import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/LanguageContext'
 import { getLanguageLocale } from '../i18n/translations'
 import {

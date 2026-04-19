@@ -64,6 +64,7 @@ export default function MessageComposer({ t, onSent }) {
 
   async function handleSendNow() {
     setError('')
+    let didSendSuccessfully = false
     if (!subject.trim() || !body.trim()) {
       setError(t('adminPage.broadcast.subjectBodyRequired'))
       return
@@ -90,9 +91,7 @@ export default function MessageComposer({ t, onSent }) {
       setBody('')
       setScheduleLocal('')
       setTemplateKey('')
-      if (typeof onSent === 'function') {
-        await onSent()
-      }
+      didSendSuccessfully = true
     } catch (err) {
       if (err.status === 429) {
         setError(t('adminPage.broadcast.rateLimited'))
@@ -103,10 +102,19 @@ export default function MessageComposer({ t, onSent }) {
     } finally {
       setIsSubmitting(false)
     }
+
+    if (didSendSuccessfully && typeof onSent === 'function') {
+      try {
+        await onSent()
+      } catch (refreshError) {
+        console.error('Broadcast sent, but refresh failed:', refreshError)
+      }
+    }
   }
 
   async function handleSchedule() {
     setError('')
+    let didSendSuccessfully = false
     if (!subject.trim() || !body.trim()) {
       setError(t('adminPage.broadcast.subjectBodyRequired'))
       return
@@ -132,9 +140,7 @@ export default function MessageComposer({ t, onSent }) {
       setBody('')
       setScheduleLocal('')
       setTemplateKey('')
-      if (typeof onSent === 'function') {
-        await onSent()
-      }
+      didSendSuccessfully = true
     } catch (err) {
       if (err.status === 429) {
         setError(t('adminPage.broadcast.rateLimited'))
@@ -144,6 +150,14 @@ export default function MessageComposer({ t, onSent }) {
       }
     } finally {
       setIsSubmitting(false)
+    }
+
+    if (didSendSuccessfully && typeof onSent === 'function') {
+      try {
+        await onSent()
+      } catch (refreshError) {
+        console.error('Broadcast scheduled, but refresh failed:', refreshError)
+      }
     }
   }
 

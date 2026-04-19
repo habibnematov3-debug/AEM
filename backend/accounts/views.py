@@ -7,7 +7,7 @@ from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
-from django.db import IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.functions import TruncDate
 from django.utils.decorators import method_decorator
@@ -1663,10 +1663,22 @@ class AdminBroadcastListCreateAPIView(APIView):
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        broadcasts = (
-            BroadcastMessage.objects.select_related('created_by')
-            .order_by('-created_at', '-id')[:50]
-        )
+        try:
+            broadcasts = (
+                BroadcastMessage.objects.select_related('created_by')
+                .order_by('-created_at', '-id')[:50]
+            )
+        except DatabaseError:
+            logger.exception('Failed to load broadcasts list for admin user %s', current_user.id)
+            return Response(
+                {
+                    'detail': (
+                        'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                        'on the target database and retry.'
+                    ),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
         return Response(
             {'results': BroadcastMessageSerializer(broadcasts, many=True).data},
             status=status.HTTP_200_OK,
@@ -1712,7 +1724,7 @@ class AdminBroadcastListCreateAPIView(APIView):
         )
         try:
             broadcast.save()
-        except Exception:
+        except DatabaseError:
             logger.exception('Failed to create broadcast for admin user %s', current_user.id)
             return Response(
                 {'detail': 'Could not create broadcast. Please verify database migration and server logs.'},
@@ -1750,16 +1762,32 @@ class AdminBroadcastDetailAPIView(APIView):
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        broadcast = get_object_or_404(
-            BroadcastMessage.objects.select_related('created_by'),
-            pk=broadcast_id,
-        )
+        try:
+            broadcast = get_object_or_404(
+                BroadcastMessage.objects.select_related('created_by'),
+                pk=broadcast_id,
+            )
 
-        delivery_stats = MessageDelivery.objects.filter(broadcast_message_id=broadcast_id).aggregate(
-            deliveries=Count('id'),
-            read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
-            emails_sent=Count('id', filter=Q(email_sent=True)),
-        )
+            delivery_stats = MessageDelivery.objects.filter(broadcast_message_id=broadcast_id).aggregate(
+                deliveries=Count('id'),
+                read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
+                emails_sent=Count('id', filter=Q(email_sent=True)),
+            )
+        except DatabaseError:
+            logger.exception(
+                'Failed to load broadcast detail %s for admin user %s',
+                broadcast_id,
+                current_user.id,
+            )
+            return Response(
+                {
+                    'detail': (
+                        'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                        'on the target database and retry.'
+                    ),
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(
             {

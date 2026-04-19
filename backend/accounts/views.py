@@ -57,6 +57,13 @@ from .serializers import (
 logger = logging.getLogger(__name__)
 
 
+def _db_error_reason(exc):
+    raw = str(exc or '').strip()
+    if not raw:
+        return 'Unknown database error.'
+    return raw.splitlines()[0][:280]
+
+
 PRESENCE_HEARTBEAT = timedelta(minutes=1)
 RECOMMENDED_EVENTS_LIMIT = 10
 RECOMMENDED_EVENTS_CANDIDATE_POOL = 40
@@ -1669,7 +1676,7 @@ class AdminBroadcastListCreateAPIView(APIView):
                 BroadcastMessage.objects.select_related('created_by')
                 .order_by('-created_at', '-id')[:50]
             )
-        except DatabaseError:
+        except DatabaseError as exc:
             logger.exception('Failed to load broadcasts list for admin user %s', current_user.id)
             if ensure_broadcast_schema():
                 try:
@@ -1677,13 +1684,13 @@ class AdminBroadcastListCreateAPIView(APIView):
                         BroadcastMessage.objects.select_related('created_by')
                         .order_by('-created_at', '-id')[:50]
                     )
-                except DatabaseError:
+                except DatabaseError as retry_exc:
                     logger.exception('Broadcast list query still failing after schema bootstrap')
                     return Response(
                         {
                             'detail': (
                                 'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                                'on the target database and retry.'
+                                f'on the target database and retry. DB reason: {_db_error_reason(retry_exc)}'
                             ),
                         },
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1693,7 +1700,7 @@ class AdminBroadcastListCreateAPIView(APIView):
                     {
                         'detail': (
                             'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                            'on the target database and retry.'
+                            f'on the target database and retry. DB reason: {_db_error_reason(exc)}'
                         ),
                     },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1743,18 +1750,18 @@ class AdminBroadcastListCreateAPIView(APIView):
         )
         try:
             broadcast.save()
-        except DatabaseError:
+        except DatabaseError as exc:
             logger.exception('Failed to create broadcast for admin user %s', current_user.id)
             if ensure_broadcast_schema():
                 try:
                     broadcast.save()
-                except DatabaseError:
+                except DatabaseError as retry_exc:
                     logger.exception('Broadcast create still failing after schema bootstrap')
                     return Response(
                         {
                             'detail': (
                                 'Could not create broadcast. Apply database/migrations/002_admin_broadcast.sql '
-                                'and check server logs.'
+                                f'and check server logs. DB reason: {_db_error_reason(retry_exc)}'
                             ),
                         },
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1764,7 +1771,7 @@ class AdminBroadcastListCreateAPIView(APIView):
                     {
                         'detail': (
                             'Could not create broadcast. Apply database/migrations/002_admin_broadcast.sql '
-                            'and check server logs.'
+                            f'and check server logs. DB reason: {_db_error_reason(exc)}'
                         ),
                     },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1812,7 +1819,7 @@ class AdminBroadcastDetailAPIView(APIView):
                 read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
                 emails_sent=Count('id', filter=Q(email_sent=True)),
             )
-        except DatabaseError:
+        except DatabaseError as exc:
             logger.exception(
                 'Failed to load broadcast detail %s for admin user %s',
                 broadcast_id,
@@ -1830,13 +1837,13 @@ class AdminBroadcastDetailAPIView(APIView):
                         read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
                         emails_sent=Count('id', filter=Q(email_sent=True)),
                     )
-                except DatabaseError:
+                except DatabaseError as retry_exc:
                     logger.exception('Broadcast detail query still failing after schema bootstrap')
                     return Response(
                         {
                             'detail': (
                                 'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                                'on the target database and retry.'
+                                f'on the target database and retry. DB reason: {_db_error_reason(retry_exc)}'
                             ),
                         },
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1846,7 +1853,7 @@ class AdminBroadcastDetailAPIView(APIView):
                     {
                         'detail': (
                             'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                            'on the target database and retry.'
+                            f'on the target database and retry. DB reason: {_db_error_reason(exc)}'
                         ),
                     },
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,

@@ -4,9 +4,13 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { useI18n } from '../i18n/LanguageContext'
 import { getLanguageLocale } from '../i18n/translations'
-import { formatEventDate } from '../utils/formatEventDate'
-import { formatModerationStatus } from '../utils/formatModerationStatus'
-import { getEventById, participateEvent, cancelParticipation, checkInUser } from '../api/aemApi'
+import {
+  cancelParticipation,
+  checkInParticipant,
+  fetchEventById,
+  fetchEventParticipants,
+  participateInEvent,
+} from '../api/aemApi'
 import { getCategoryLabel } from '../constants/eventCategories'
 import '../styles/event-details.css'
 

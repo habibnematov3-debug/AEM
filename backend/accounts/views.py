@@ -229,13 +229,27 @@ def is_admin(user):
 
 
 def can_view_event(user, event):
+    # Approved events are visible to everyone
     if event.moderation_status == Event.ModerationStatuses.APPROVED:
         return True
 
+    # Non-authenticated users can't see non-approved events
     if user is None:
         return False
 
-    return is_admin(user) or event.creator_id == user.id
+    # Admins and creators can see their events regardless of status
+    if is_admin(user) or event.creator_id == user.id:
+        return True
+
+    # Users who joined or are waitlisted can see the event
+    if Participation.objects.filter(
+        user_id=user.id,
+        event_id=event.id,
+        status__in=(Participation.Statuses.JOINED, Participation.Statuses.WAITLISTED),
+    ).exists():
+        return True
+
+    return False
 
 
 def event_schedule_has_ended(event, now=None):
@@ -264,17 +278,21 @@ def student_may_access_public_event(user, event):
     """Approved events past their end are hidden from the catalog; detail stays available for organizer, admin, or joined students."""
     if event.moderation_status != Event.ModerationStatuses.APPROVED:
         return True
-    if not event_schedule_has_ended(event):
-        return True
     if user is None:
         return False
     if is_admin(user) or event.creator_id == user.id:
         return True
-    return Participation.objects.filter(
+    # Allow access if user joined or is waitlisted, regardless of event status
+    if Participation.objects.filter(
         user_id=user.id,
         event_id=event.id,
         status__in=(Participation.Statuses.JOINED, Participation.Statuses.WAITLISTED),
-    ).exists()
+    ).exists():
+        return True
+    # For approved events, allow access even if ended (for viewing past events)
+    if not event_schedule_has_ended(event):
+        return True
+    return False
 
 
 def get_admin_dashboard_stats():

@@ -63,12 +63,14 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
     let isMounted = true
 
     async function loadEvent() {
+      console.log('Loading event with ID:', eventId)
       setStatus('loading')
       setErrorMessage('')
-      setActionFeedback({ type: '', message: '' })
 
       try {
         const fetchedEvent = await fetchEventById(eventId)
+        console.log('Fetched event:', fetchedEvent)
+        
         if (!isMounted) {
           return
         }
@@ -80,13 +82,17 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
           return
         }
 
+        console.error('EventDetailsPage Error:', error)
+        console.error('Error status:', error.status)
+        console.error('Error message:', error.message)
+
         setEvent(null)
         if (error.status === 404) {
           setStatus('not-found')
           return
         }
 
-        setErrorMessage(error.message || t('eventDetails.errorTitle'))
+        setErrorMessage(error.message || error.detail || t('eventDetails.errorTitle'))
         setStatus('error')
       }
     }

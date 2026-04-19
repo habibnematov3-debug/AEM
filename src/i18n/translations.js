@@ -303,6 +303,7 @@ const translations = {
         sentSuccess: 'Broadcast queued successfully.',
         loadError: 'Could not load broadcast history.',
         sendError: 'Could not send this broadcast.',
+        sendFailed: 'Broadcast was created but failed to deliver. Check the error logs.',
         rateLimited: 'Please wait about a minute between sends.',
         historyTitle: 'Recent broadcasts',
         historyEmpty: 'No broadcasts yet.',

@@ -71,7 +71,7 @@ export default function MessageComposer({ t, onSent }) {
 
     setIsSubmitting(true)
     try {
-      await createAdminBroadcast({
+      const result = await createAdminBroadcast({
         subject: subject.trim(),
         body: body.trim(),
         recipientFilter,
@@ -79,6 +79,13 @@ export default function MessageComposer({ t, onSent }) {
         scheduledAt: null,
         templateKey: templateKey || null,
       })
+      
+      if (result.status === 'failed') {
+        setError(t('adminPage.broadcast.sendFailed'))
+        setIsSubmitting(false)
+        return
+      }
+      
       setSubject('')
       setBody('')
       setScheduleLocal('')
@@ -111,7 +118,7 @@ export default function MessageComposer({ t, onSent }) {
 
     setIsSubmitting(true)
     try {
-      await createAdminBroadcast({
+      const result = await createAdminBroadcast({
         subject: subject.trim(),
         body: body.trim(),
         recipientFilter,
@@ -119,6 +126,7 @@ export default function MessageComposer({ t, onSent }) {
         scheduledAt,
         templateKey: templateKey || null,
       })
+      
       setSubject('')
       setBody('')
       setScheduleLocal('')

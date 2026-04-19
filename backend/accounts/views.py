@@ -1,5 +1,6 @@
 from collections import Counter
 from datetime import datetime, time, timedelta
+import logging
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -1709,7 +1710,14 @@ class AdminBroadcastListCreateAPIView(APIView):
         broadcast.save()
 
         if not is_future:
-            execute_broadcast_send(broadcast.id)
+            try:
+                execute_broadcast_send(broadcast.id)
+            except Exception as exc:
+                logger = logging.getLogger(__name__)
+                logger.exception('Failed to send broadcast %s immediately', broadcast.id)
+                broadcast.status = BroadcastMessage.Status.FAILED
+                broadcast.updated_at = timezone.now()
+                broadcast.save(update_fields=['status', 'updated_at'])
             broadcast.refresh_from_db()
 
         cache.set(rate_key, True, timeout=60)

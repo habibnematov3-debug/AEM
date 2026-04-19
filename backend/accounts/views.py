@@ -22,6 +22,7 @@ from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .checkin_tokens import make_checkin_token, parse_checkin_token
 from .google_auth import GoogleTokenVerificationError, verify_google_id_token
 from .broadcast_ops import execute_broadcast_send
+from .broadcast_schema import ensure_broadcast_schema
 from .models import AEMUser, BroadcastMessage, Event, EventLike, MessageDelivery, Notification, Participation, UserSettings
 from .notifications import (
     dispatch_due_event_reminders,
@@ -1670,15 +1671,33 @@ class AdminBroadcastListCreateAPIView(APIView):
             )
         except DatabaseError:
             logger.exception('Failed to load broadcasts list for admin user %s', current_user.id)
-            return Response(
-                {
-                    'detail': (
-                        'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                        'on the target database and retry.'
-                    ),
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            if ensure_broadcast_schema():
+                try:
+                    broadcasts = (
+                        BroadcastMessage.objects.select_related('created_by')
+                        .order_by('-created_at', '-id')[:50]
+                    )
+                except DatabaseError:
+                    logger.exception('Broadcast list query still failing after schema bootstrap')
+                    return Response(
+                        {
+                            'detail': (
+                                'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                                'on the target database and retry.'
+                            ),
+                        },
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+            else:
+                return Response(
+                    {
+                        'detail': (
+                            'Broadcast tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                            'on the target database and retry.'
+                        ),
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
         return Response(
             {'results': BroadcastMessageSerializer(broadcasts, many=True).data},
             status=status.HTTP_200_OK,
@@ -1726,10 +1745,30 @@ class AdminBroadcastListCreateAPIView(APIView):
             broadcast.save()
         except DatabaseError:
             logger.exception('Failed to create broadcast for admin user %s', current_user.id)
-            return Response(
-                {'detail': 'Could not create broadcast. Please verify database migration and server logs.'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            if ensure_broadcast_schema():
+                try:
+                    broadcast.save()
+                except DatabaseError:
+                    logger.exception('Broadcast create still failing after schema bootstrap')
+                    return Response(
+                        {
+                            'detail': (
+                                'Could not create broadcast. Apply database/migrations/002_admin_broadcast.sql '
+                                'and check server logs.'
+                            ),
+                        },
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+            else:
+                return Response(
+                    {
+                        'detail': (
+                            'Could not create broadcast. Apply database/migrations/002_admin_broadcast.sql '
+                            'and check server logs.'
+                        ),
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
         if not is_future:
             try:
@@ -1779,15 +1818,39 @@ class AdminBroadcastDetailAPIView(APIView):
                 broadcast_id,
                 current_user.id,
             )
-            return Response(
-                {
-                    'detail': (
-                        'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
-                        'on the target database and retry.'
-                    ),
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            if ensure_broadcast_schema():
+                try:
+                    broadcast = get_object_or_404(
+                        BroadcastMessage.objects.select_related('created_by'),
+                        pk=broadcast_id,
+                    )
+
+                    delivery_stats = MessageDelivery.objects.filter(broadcast_message_id=broadcast_id).aggregate(
+                        deliveries=Count('id'),
+                        read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
+                        emails_sent=Count('id', filter=Q(email_sent=True)),
+                    )
+                except DatabaseError:
+                    logger.exception('Broadcast detail query still failing after schema bootstrap')
+                    return Response(
+                        {
+                            'detail': (
+                                'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                                'on the target database and retry.'
+                            ),
+                        },
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    )
+            else:
+                return Response(
+                    {
+                        'detail': (
+                            'Broadcast analytics tables are not ready. Apply database/migrations/002_admin_broadcast.sql '
+                            'on the target database and retry.'
+                        ),
+                    },
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                )
 
         return Response(
             {

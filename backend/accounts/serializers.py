@@ -2,9 +2,10 @@ from django.contrib.auth.password_validation import validate_password
 from django.db import transaction
 from datetime import timedelta
 from django.utils import timezone
+from django.utils.html import strip_tags
 from rest_framework import serializers
 
-from .models import AEMUser, Event, EventLike, Notification, Participation, UserSettings
+from .models import AEMUser, BroadcastMessage, Event, EventLike, Notification, Participation, UserSettings
 from .participation_ops import calculate_no_show_count, count_joined_for_event
 
 
@@ -506,6 +507,76 @@ class NotificationSerializer(serializers.ModelSerializer):
             'created_at',
         )
         read_only_fields = fields
+
+
+class BroadcastMessageSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.full_name', read_only=True)
+    created_by_email = serializers.CharField(source='created_by.email', read_only=True)
+
+    class Meta:
+        model = BroadcastMessage
+        fields = (
+            'id',
+            'created_by',
+            'created_by_name',
+            'created_by_email',
+            'subject',
+            'body',
+            'recipient_filter',
+            'priority',
+            'template_key',
+            'scheduled_at',
+            'status',
+            'sent_at',
+            'recipient_count',
+            'email_delivered_count',
+            'created_at',
+            'updated_at',
+        )
+        read_only_fields = (
+            'id',
+            'created_by',
+            'created_by_name',
+            'created_by_email',
+            'subject',
+            'body',
+            'recipient_filter',
+            'priority',
+            'template_key',
+            'scheduled_at',
+            'status',
+            'sent_at',
+            'recipient_count',
+            'email_delivered_count',
+            'created_at',
+            'updated_at',
+        )
+
+
+class AdminBroadcastCreateSerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=200)
+    body = serializers.CharField(max_length=20000)
+    recipient_filter = serializers.ChoiceField(
+        choices=[choice[0] for choice in BroadcastMessage.RecipientFilter.choices],
+    )
+    priority = serializers.ChoiceField(
+        choices=[choice[0] for choice in BroadcastMessage.Priority.choices],
+        default=BroadcastMessage.Priority.NORMAL,
+    )
+    scheduled_at = serializers.DateTimeField(required=False, allow_null=True)
+    template_key = serializers.CharField(max_length=40, required=False, allow_blank=True, allow_null=True)
+
+    def validate_subject(self, value):
+        cleaned = strip_tags(value).strip()
+        if not cleaned:
+            raise serializers.ValidationError('Subject is required.')
+        return cleaned[:200]
+
+    def validate_body(self, value):
+        cleaned = strip_tags(value).strip()
+        if not cleaned:
+            raise serializers.ValidationError('Message body is required.')
+        return cleaned
 
 
 class EventCreateSerializer(serializers.Serializer):

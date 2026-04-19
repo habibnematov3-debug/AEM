@@ -6,6 +6,39 @@ import { getLanguageLocale } from '../i18n/translations'
 import { getCategoryColor, getCategoryLabel } from '../constants/eventCategories'
 import '../styles/compact-event-card.css'
 
+function IconEye({ className }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        fill="currentColor"
+        d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6zm0-4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5C20.27 7.61 17 4.5 12 4.5z"
+      />
+    </svg>
+  )
+}
+
+function IconPencil({ className }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        fill="currentColor"
+        d="M4 17.25V20h2.75L17.81 8.94l-2.75-2.75L4 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 2.75 2.75 1.83-1.83Z"
+      />
+    </svg>
+  )
+}
+
+function IconTrash({ className }) {
+  return (
+    <svg className={className} width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        fill="currentColor"
+        d="M9 3v1H4v2h1v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9Zm0 5h2v9H9V8Zm4 0h2v9h-2V8Z"
+      />
+    </svg>
+  )
+}
+
 function formatEventDate(eventDate, fallback, languageCode) {
   if (!eventDate) {
     return fallback
@@ -313,24 +346,36 @@ function CompactEventCard({
             </Link>
           </div>
 
-          <div className="compact-event-card__student-actions">
+          <div className="compact-event-card__student-actions compact-event-card__student-actions--icon-row">
             <Link
               to={`/events/${event.id}`}
-              className="compact-event-card__action-button compact-event-card__action-button--ghost"
+              className="compact-event-card__action-button compact-event-card__action-button--ghost compact-event-card__action-button--icon-only"
+              title={t('eventCard.view')}
+              aria-label={`${t('eventCard.view')}: ${event.title}`}
             >
-              {t('eventCard.view')}
+              <IconEye className="compact-event-card__action-icon" />
             </Link>
             <button
               type="button"
-              className="compact-event-card__action-button compact-event-card__action-button--danger"
+              className="compact-event-card__action-button compact-event-card__action-button--danger compact-event-card__action-button--icon-only"
               onClick={(e) => { e.preventDefault(); onCancel(event); }}
               disabled={isCanceling}
+              title={
+                isCanceling
+                  ? t('joinedEventsPage.cancelling')
+                  : isWaitlisted
+                    ? t('joinedEventsPage.leaveWaitlist')
+                    : t('joinedEventsPage.cancelParticipation')
+              }
+              aria-label={
+                isCanceling
+                  ? t('joinedEventsPage.cancelling')
+                  : isWaitlisted
+                    ? `${t('joinedEventsPage.leaveWaitlist')}: ${event.title}`
+                    : `${t('joinedEventsPage.cancelParticipation')}: ${event.title}`
+              }
             >
-              {isCanceling
-                ? t('joinedEventsPage.cancelling')
-                : isWaitlisted
-                  ? t('joinedEventsPage.leaveWaitlist')
-                  : t('joinedEventsPage.cancelParticipation')}
+              <IconTrash className="compact-event-card__action-icon" />
             </button>
           </div>
         </div>
@@ -402,26 +447,32 @@ function CompactEventCard({
             </Link>
           </div>
 
-          <div className="compact-event-card__student-actions">
+          <div className="compact-event-card__student-actions compact-event-card__student-actions--icon-row">
             <button
               type="button"
-              className="compact-event-card__action-button"
+              className="compact-event-card__action-button compact-event-card__action-button--icon-only"
               onClick={(e) => { e.preventDefault(); onEdit(event); }}
+              title={t('eventCard.edit')}
+              aria-label={`${t('eventCard.edit')}: ${event.title}`}
             >
-              {t('eventCard.edit')}
+              <IconPencil className="compact-event-card__action-icon" />
             </button>
             <Link
               to={`/events/${event.id}`}
-              className="compact-event-card__action-button compact-event-card__action-button--ghost"
+              className="compact-event-card__action-button compact-event-card__action-button--ghost compact-event-card__action-button--icon-only"
+              title={t('eventCard.view')}
+              aria-label={`${t('eventCard.view')}: ${event.title}`}
             >
-              {t('eventCard.view')}
+              <IconEye className="compact-event-card__action-icon" />
             </Link>
             <button
               type="button"
-              className="compact-event-card__action-button compact-event-card__action-button--danger"
+              className="compact-event-card__action-button compact-event-card__action-button--danger compact-event-card__action-button--icon-only"
               onClick={(e) => { e.preventDefault(); onDelete(event); }}
+              title={t('eventCard.delete')}
+              aria-label={`${t('eventCard.delete')}: ${event.title}`}
             >
-              {t('eventCard.delete')}
+              <IconTrash className="compact-event-card__action-icon" />
             </button>
           </div>
         </div>

@@ -1,15 +1,21 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import {
   deleteAdminEvent,
   deleteAdminEvents,
+  fetchAdminBroadcasts,
+  fetchAdminBroadcastDetail,
   fetchAdminEvents,
   sendAdminReminderBatch,
 } from '../api/aemApi'
+import MessageAnalytics from '../components/admin/MessageAnalytics'
+import MessageComposer from '../components/admin/MessageComposer'
+import MessageHistory from '../components/admin/MessageHistory'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
+import '../styles/admin-broadcast.css'
 
 const DONUT_SIZE = 228
 const DONUT_STROKE = 28
@@ -324,10 +330,80 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [deletingEventId, setDeletingEventId] = useState('')
   const [selectedEventIds, setSelectedEventIds] = useState(new Set())
   const [isSendingReminders, setIsSendingReminders] = useState(false)
+  const [broadcasts, setBroadcasts] = useState([])
+  const [broadcastsLoading, setBroadcastsLoading] = useState(true)
+  const [selectedBroadcastId, setSelectedBroadcastId] = useState('')
+  const [broadcastAnalytics, setBroadcastAnalytics] = useState({
+    broadcast: null,
+    analytics: { deliveries: 0, readReceipts: 0, emailsSent: 0 },
+  })
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState('')
   const pendingCount = stats?.pending ?? 0
   const selectedCount = selectedEventIds.size
   const allEventsSelected = events.length > 0 && events.every((event) => selectedEventIds.has(event.id))
   const pendingBadgeLabel = pendingCount > 99 ? '99+' : String(pendingCount)
+
+  const loadBroadcasts = useCallback(async () => {
+    setBroadcastsLoading(true)
+    setAnalyticsError('')
+    try {
+      const rows = await fetchAdminBroadcasts()
+      setBroadcasts(rows)
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.broadcast.loadError'),
+      })
+    } finally {
+      setBroadcastsLoading(false)
+    }
+  }, [t])
+
+  useEffect(() => {
+    loadBroadcasts()
+  }, [loadBroadcasts])
+
+  useEffect(() => {
+    let isMounted = true
+
+    if (!selectedBroadcastId) {
+      setBroadcastAnalytics({
+        broadcast: null,
+        analytics: { deliveries: 0, readReceipts: 0, emailsSent: 0 },
+      })
+      setAnalyticsLoading(false)
+      setAnalyticsError('')
+      return undefined
+    }
+
+    async function loadAnalytics() {
+      setAnalyticsLoading(true)
+      setAnalyticsError('')
+      try {
+        const detail = await fetchAdminBroadcastDetail(selectedBroadcastId)
+        if (!isMounted) {
+          return
+        }
+        setBroadcastAnalytics(detail)
+      } catch (error) {
+        if (!isMounted) {
+          return
+        }
+        setAnalyticsError(error.message || t('adminPage.broadcast.loadError'))
+      } finally {
+        if (isMounted) {
+          setAnalyticsLoading(false)
+        }
+      }
+    }
+
+    loadAnalytics()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedBroadcastId, t])
 
   useEffect(() => {
     let isMounted = true
@@ -786,6 +862,39 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
           {feedback.message}
         </div>
       ) : null}
+
+      <div className="admin-broadcast" data-tour="admin-broadcast">
+        <div className="admin-broadcast__header">
+          <p className="admin-page__section-label">{t('adminPage.broadcast.sectionEyebrow')}</p>
+          <h2>{t('adminPage.broadcast.sectionTitle')}</h2>
+          <p>{t('adminPage.broadcast.sectionSubtitle')}</p>
+        </div>
+        <div className="admin-broadcast__layout">
+          <MessageComposer
+            t={t}
+            onSent={async () => {
+              setFeedback({ type: 'success', message: t('adminPage.broadcast.sentSuccess') })
+              await loadBroadcasts()
+            }}
+          />
+          <div className="admin-broadcast__side">
+            <MessageHistory
+              t={t}
+              broadcasts={broadcasts}
+              selectedId={selectedBroadcastId}
+              onSelect={(id) => setSelectedBroadcastId(String(id))}
+              isLoading={broadcastsLoading}
+            />
+            <MessageAnalytics
+              t={t}
+              detail={broadcastAnalytics.broadcast}
+              analytics={broadcastAnalytics.analytics}
+              isLoading={analyticsLoading}
+              errorMessage={analyticsError}
+            />
+          </div>
+        </div>
+      </div>
 
       {isDashboardLoading && !stats ? (
         <div className="admin-page__empty admin-page__empty--analytics">

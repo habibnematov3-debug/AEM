@@ -152,6 +152,15 @@
   gap: 10px;
 }
 
+.compact-event-card__student-actions--icon-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .compact-event-card__like-pill,
 .compact-event-card__participation-button,
 .compact-event-card__action-button {
@@ -277,6 +286,35 @@ button.compact-event-card__like-pill {
   border-color: #efc4c4;
 }
 
+.compact-event-card__action-button--icon-only {
+  min-width: 42px;
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.compact-event-card__action-button--icon-only.compact-event-card__action-button--ghost {
+  min-width: 42px;
+}
+
+button.compact-event-card__action-button--icon-only:focus-visible,
+a.compact-event-card__action-button--icon-only:focus-visible {
+  outline: 2px solid rgba(29, 78, 216, 0.45);
+  outline-offset: 2px;
+}
+
+.compact-event-card__action-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
 .compact-event-card__footer {
   margin-top: auto;
 }
@@ -324,6 +362,10 @@ button.compact-event-card__like-pill {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+
+  .compact-event-card__student-actions--icon-row {
+    justify-content: flex-end;
   }
 
   .compact-event-card__participation-button {
@@ -385,6 +427,13 @@ button.compact-event-card__like-pill {
     grid-column: auto;
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .compact-event-card__student-actions--icon-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
   }
 
   .compact-event-card__like-pill,

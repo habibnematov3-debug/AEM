@@ -408,15 +408,15 @@ function CreateEventForm({
               ) : null}
             </label>
 
-            <label>
-              {t('common.category')} *
+            <div className="create-event-form__full">
               <SearchableCategorySelect
+                label={`${t('common.category')} *`}
                 value={formData.category}
                 onChange={(value) => updateField('category', value)}
                 disabled={isSubmitting || isUploadingImage}
                 error={errors.category}
               />
-            </label>
+            </div>
           </>
         )}
 

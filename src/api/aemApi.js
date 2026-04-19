@@ -947,3 +947,63 @@ export async function updateAdminUser(userId, updates) {
     user: normalizeAdminUser(payload.user),
   }
 }
+
+function normalizeBroadcast(raw = {}) {
+  return {
+    id: String(raw.id ?? ''),
+    createdById: raw.created_by != null ? String(raw.created_by) : '',
+    createdByName: raw.created_by_name ?? '',
+    createdByEmail: raw.created_by_email ?? '',
+    subject: raw.subject ?? '',
+    body: raw.body ?? '',
+    recipientFilter: raw.recipient_filter ?? 'all',
+    priority: raw.priority ?? 'normal',
+    templateKey: raw.template_key ?? '',
+    scheduledAt: raw.scheduled_at ?? null,
+    status: raw.status ?? '',
+    sentAt: raw.sent_at ?? null,
+    recipientCount: raw.recipient_count ?? 0,
+    emailDeliveredCount: raw.email_delivered_count ?? 0,
+    createdAt: raw.created_at ?? null,
+    updatedAt: raw.updated_at ?? null,
+  }
+}
+
+export async function fetchAdminBroadcasts() {
+  const payload = await apiRequest('/api/admin/broadcasts/')
+  return (payload.results ?? []).map(normalizeBroadcast)
+}
+
+export async function createAdminBroadcast({
+  subject,
+  body,
+  recipientFilter = 'all',
+  priority = 'normal',
+  scheduledAt = null,
+  templateKey = null,
+} = {}) {
+  const payload = await apiRequest('/api/admin/broadcasts/', {
+    method: 'POST',
+    body: JSON.stringify({
+      subject,
+      body,
+      recipient_filter: recipientFilter,
+      priority,
+      scheduled_at: scheduledAt,
+      template_key: templateKey,
+    }),
+  })
+  return normalizeBroadcast(payload)
+}
+
+export async function fetchAdminBroadcastDetail(broadcastId) {
+  const payload = await apiRequest(`/api/admin/broadcasts/${broadcastId}/`)
+  return {
+    broadcast: normalizeBroadcast(payload.broadcast ?? {}),
+    analytics: {
+      deliveries: payload.analytics?.deliveries ?? 0,
+      readReceipts: payload.analytics?.read_receipts ?? 0,
+      emailsSent: payload.analytics?.emails_sent ?? 0,
+    },
+  }
+}

@@ -5,6 +5,7 @@ from asgiref.sync import async_to_sync
 
 from django.conf import settings
 from django.core import signing
+from django.core.cache import cache
 from django.db import IntegrityError, transaction
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.functions import TruncDate
@@ -19,7 +20,8 @@ from rest_framework.views import APIView
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .checkin_tokens import make_checkin_token, parse_checkin_token
 from .google_auth import GoogleTokenVerificationError, verify_google_id_token
-from .models import AEMUser, Event, EventLike, Notification, Participation, UserSettings
+from .broadcast_ops import execute_broadcast_send
+from .models import AEMUser, BroadcastMessage, Event, EventLike, MessageDelivery, Notification, Participation, UserSettings
 from .notifications import (
     dispatch_due_event_reminders,
     notify_event_moderation,
@@ -30,8 +32,10 @@ from .notifications import (
 )
 from .participation_ops import event_has_open_seat, promote_next_waitlisted
 from .serializers import (
+    AdminBroadcastCreateSerializer,
     AdminUserSerializer,
     AdminUserUpdateSerializer,
+    BroadcastMessageSerializer,
     CurrentUserSerializer,
     EventParticipantSerializer,
     EventCreateSerializer,
@@ -1619,6 +1623,117 @@ class AdminUserUpdateAPIView(APIView):
             {
                 'message': 'User updated successfully.',
                 'user': AdminUserSerializer(updated_user).data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminBroadcastListCreateAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        broadcasts = (
+            BroadcastMessage.objects.select_related('created_by')
+            .order_by('-created_at', '-id')[:50]
+        )
+        return Response(
+            {'results': BroadcastMessageSerializer(broadcasts, many=True).data},
+            status=status.HTTP_200_OK,
+        )
+
+    def post(self, request):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = AdminBroadcastCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        rate_key = f'aem:broadcast_cooldown:{current_user.id}'
+        if cache.get(rate_key):
+            return Response(
+                {'detail': 'Please wait about a minute before sending another broadcast.'},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+        now = timezone.now()
+        scheduled_at = data.get('scheduled_at')
+        is_future = bool(scheduled_at and scheduled_at > now)
+
+        broadcast = BroadcastMessage(
+            created_by=current_user,
+            subject=data['subject'],
+            body=data['body'],
+            recipient_filter=data['recipient_filter'],
+            priority=data['priority'],
+            template_key=data.get('template_key') or None,
+            scheduled_at=scheduled_at if is_future else None,
+            status=(
+                BroadcastMessage.Status.SCHEDULED
+                if is_future
+                else BroadcastMessage.Status.DRAFT
+            ),
+            created_at=now,
+            updated_at=now,
+        )
+        broadcast.save()
+
+        if not is_future:
+            execute_broadcast_send(broadcast.id)
+            broadcast.refresh_from_db()
+
+        cache.set(rate_key, True, timeout=60)
+
+        return Response(
+            BroadcastMessageSerializer(broadcast).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
+class AdminBroadcastDetailAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, broadcast_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        broadcast = get_object_or_404(
+            BroadcastMessage.objects.select_related('created_by'),
+            pk=broadcast_id,
+        )
+
+        delivery_stats = MessageDelivery.objects.filter(broadcast_message_id=broadcast_id).aggregate(
+            deliveries=Count('id'),
+            read_receipts=Count('id', filter=Q(notification__read_at__isnull=False)),
+            emails_sent=Count('id', filter=Q(email_sent=True)),
+        )
+
+        return Response(
+            {
+                'broadcast': BroadcastMessageSerializer(broadcast).data,
+                'analytics': {
+                    'deliveries': delivery_stats['deliveries'] or 0,
+                    'read_receipts': delivery_stats['read_receipts'] or 0,
+                    'emails_sent': delivery_stats['emails_sent'] or 0,
+                },
             },
             status=status.HTTP_200_OK,
         )

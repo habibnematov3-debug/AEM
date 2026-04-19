@@ -1,6 +1,8 @@
 from django.urls import include, path
 
 from accounts.views import (
+    AdminBroadcastDetailAPIView,
+    AdminBroadcastListCreateAPIView,
     AdminReminderDispatchAPIView,
     AdminDashboardAPIView,
     AdminEventListAPIView,
@@ -79,6 +81,12 @@ urlpatterns = [
     path('api/admin/reminders/send/', AdminReminderDispatchAPIView.as_view(), name='admin-reminders-send'),
     path('api/admin/users/', AdminUserListAPIView.as_view(), name='admin-users'),
     path('api/admin/users/<int:user_id>/', AdminUserUpdateAPIView.as_view(), name='admin-users-update'),
+    path('api/admin/broadcasts/', AdminBroadcastListCreateAPIView.as_view(), name='admin-broadcasts'),
+    path(
+        'api/admin/broadcasts/<int:broadcast_id>/',
+        AdminBroadcastDetailAPIView.as_view(),
+        name='admin-broadcast-detail',
+    ),
     path(
         'api/admin/events/<int:event_id>/moderate/',
         AdminEventModerationAPIView.as_view(),

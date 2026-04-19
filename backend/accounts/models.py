@@ -163,6 +163,7 @@ class Notification(models.Model):
         PARTICIPATION_CANCELLED = 'participation_cancelled', 'Participation cancelled'
         WAITLIST_PROMOTED = 'waitlist_promoted', 'Waitlist promoted'
         EVENT_REMINDER = 'event_reminder', 'Event reminder'
+        ADMIN_BROADCAST = 'admin_broadcast', 'Admin broadcast'
 
     id = models.BigAutoField(primary_key=True)
     user = models.ForeignKey(
@@ -189,4 +190,88 @@ class Notification(models.Model):
 
     class Meta:
         db_table = 'notifications'
+        managed = False
+
+
+class BroadcastMessage(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = 'draft', 'Draft'
+        SCHEDULED = 'scheduled', 'Scheduled'
+        SENT = 'sent', 'Sent'
+        FAILED = 'failed', 'Failed'
+
+    class RecipientFilter(models.TextChoices):
+        ALL = 'all', 'All users'
+        STUDENTS = 'students', 'Students'
+        ORGANIZERS = 'organizers', 'Organizers'
+        ADMINS = 'admins', 'Admins'
+
+    class Priority(models.TextChoices):
+        NORMAL = 'normal', 'Normal'
+        HIGH = 'high', 'High'
+
+    id = models.BigAutoField(primary_key=True)
+    created_by = models.ForeignKey(
+        AEMUser,
+        on_delete=models.DO_NOTHING,
+        related_name='broadcast_messages_created',
+        db_column='created_by_id',
+    )
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    recipient_filter = models.CharField(
+        max_length=20,
+        choices=RecipientFilter.choices,
+        default=RecipientFilter.ALL,
+    )
+    priority = models.CharField(
+        max_length=10,
+        choices=Priority.choices,
+        default=Priority.NORMAL,
+    )
+    template_key = models.CharField(max_length=40, blank=True, null=True)
+    scheduled_at = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+    )
+    sent_at = models.DateTimeField(blank=True, null=True)
+    recipient_count = models.PositiveIntegerField(default=0)
+    email_delivered_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'broadcast_messages'
+        managed = False
+
+
+class MessageDelivery(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    broadcast_message = models.ForeignKey(
+        BroadcastMessage,
+        on_delete=models.DO_NOTHING,
+        related_name='deliveries',
+        db_column='broadcast_message_id',
+    )
+    user = models.ForeignKey(
+        AEMUser,
+        on_delete=models.DO_NOTHING,
+        related_name='message_deliveries',
+        db_column='user_id',
+    )
+    notification = models.ForeignKey(
+        Notification,
+        on_delete=models.DO_NOTHING,
+        blank=True,
+        null=True,
+        related_name='broadcast_deliveries',
+        db_column='notification_id',
+    )
+    email_sent = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'message_deliveries'
         managed = False

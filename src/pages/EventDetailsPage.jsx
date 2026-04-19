@@ -11,6 +11,7 @@ import {
   participateInEvent,
 } from '../api/aemApi'
 import { getCategoryLabel } from '../constants/eventCategories'
+import EventCheckInPass from '../components/EventCheckInPass'
 import '../styles/event-details.css'
 
 function formatEventDate(eventDate, fallback, languageCode) {

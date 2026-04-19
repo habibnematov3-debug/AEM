@@ -71,6 +71,31 @@ function formatTimestampDate(timestamp, fallback, languageCode) {
   })
 }
 
+function getEventLifecycle(event, now = Date.now()) {
+  if (!event?.eventDate) {
+    return null
+  }
+
+  const startTime = event.startTime || '00:00'
+  const endTime = event.endTime || startTime
+  const start = new Date(`${event.eventDate}T${startTime}`).getTime()
+  const end = new Date(`${event.eventDate}T${endTime}`).getTime()
+
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return null
+  }
+
+  if (now < start) {
+    return 'upcoming'
+  }
+
+  if (now > end) {
+    return 'finished'
+  }
+
+  return 'inProgress'
+}
+
 function getStatusColor(status) {
   const colors = {
     'Joined': 'green',
@@ -289,6 +314,8 @@ function CompactEventCard({
     const isWaitlisted = participationStatus === 'waitlisted'
     const participationDateText = formatTimestampDate(event.joinedAt, dateText, languageCode)
     const statusColor = getStatusColor(isWaitlisted ? 'Waitlisted' : 'Joined')
+    const eventLifecycle = getEventLifecycle(event)
+    const isEventFinished = eventLifecycle === 'finished'
 
     return (
       <article className="compact-event-card compact-event-card--joined" data-tour={tourMarker || undefined}>
@@ -355,28 +382,53 @@ function CompactEventCard({
             >
               <IconEye className="compact-event-card__action-icon" />
             </Link>
-            <button
-              type="button"
-              className="compact-event-card__action-button compact-event-card__action-button--danger compact-event-card__action-button--icon-only"
-              onClick={(e) => { e.preventDefault(); onCancel(event); }}
-              disabled={isCanceling}
-              title={
-                isCanceling
-                  ? t('joinedEventsPage.cancelling')
-                  : isWaitlisted
-                    ? t('joinedEventsPage.leaveWaitlist')
-                    : t('joinedEventsPage.cancelParticipation')
-              }
-              aria-label={
-                isCanceling
-                  ? t('joinedEventsPage.cancelling')
-                  : isWaitlisted
-                    ? `${t('joinedEventsPage.leaveWaitlist')}: ${event.title}`
-                    : `${t('joinedEventsPage.cancelParticipation')}: ${event.title}`
-              }
-            >
-              <IconTrash className="compact-event-card__action-icon" />
-            </button>
+            {isEventFinished ? (
+              <button
+                type="button"
+                className="compact-event-card__action-button compact-event-card__action-button--danger compact-event-card__action-button--icon-only"
+                onClick={() => { onCancel(event); }}
+                disabled={isCanceling}
+                title={
+                  isCanceling
+                    ? t('joinedEventsPage.cancelling')
+                    : isWaitlisted
+                      ? t('joinedEventsPage.leaveWaitlist')
+                      : t('joinedEventsPage.cancelParticipation')
+                }
+                aria-label={
+                  isCanceling
+                    ? t('joinedEventsPage.cancelling')
+                    : isWaitlisted
+                      ? `${t('joinedEventsPage.leaveWaitlist')}: ${event.title}`
+                      : `${t('joinedEventsPage.cancelParticipation')}: ${event.title}`
+                }
+              >
+                <IconTrash className="compact-event-card__action-icon" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="compact-event-card__action-button compact-event-card__action-button--secondary compact-event-card__action-button--icon-only"
+                onClick={() => { onCancel(event); }}
+                disabled={isCanceling}
+                title={
+                  isCanceling
+                    ? t('joinedEventsPage.cancelling')
+                    : isWaitlisted
+                      ? t('joinedEventsPage.leaveWaitlist')
+                      : t('joinedEventsPage.cancelParticipation')
+                }
+                aria-label={
+                  isCanceling
+                    ? t('joinedEventsPage.cancelling')
+                    : isWaitlisted
+                      ? `${t('joinedEventsPage.leaveWaitlist')}: ${event.title}`
+                      : `${t('joinedEventsPage.cancelParticipation')}: ${event.title}`
+                }
+              >
+                <IconTrash className="compact-event-card__action-icon" />
+              </button>
+            )}
           </div>
         </div>
       </article>

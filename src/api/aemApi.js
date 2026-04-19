@@ -421,10 +421,12 @@ async function apiRequest(path, options = {}) {
         response.status === 401
           ? 'Your sign-in has expired. Please sign in again.'
           : 'Request failed.'
+      const payloadSummary =
+        typeof payload === 'object' && payload !== null ? Object.values(payload).flat().join(' ') : ''
       const message =
-        payload.detail ??
-        payload.message ??
-        (typeof payload === 'object' && payload !== null ? Object.values(payload).flat().join(' ') : '') ??
+        (typeof payload.detail === 'string' && payload.detail.trim()) ||
+        (typeof payload.message === 'string' && payload.message.trim()) ||
+        (typeof payloadSummary === 'string' && payloadSummary.trim()) ||
         defaultErrorMessage
       const error = new Error(message)
       error.status = response.status

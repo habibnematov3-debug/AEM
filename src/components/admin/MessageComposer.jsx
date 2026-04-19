@@ -97,7 +97,8 @@ export default function MessageComposer({ t, onSent }) {
       if (err.status === 429) {
         setError(t('adminPage.broadcast.rateLimited'))
       } else {
-        setError(err.message || t('adminPage.broadcast.sendError'))
+        const apiMessage = typeof err?.message === 'string' ? err.message.trim() : ''
+        setError(apiMessage || t('adminPage.broadcast.sendError'))
       }
     } finally {
       setIsSubmitting(false)
@@ -118,7 +119,7 @@ export default function MessageComposer({ t, onSent }) {
 
     setIsSubmitting(true)
     try {
-      const result = await createAdminBroadcast({
+      await createAdminBroadcast({
         subject: subject.trim(),
         body: body.trim(),
         recipientFilter,
@@ -138,7 +139,8 @@ export default function MessageComposer({ t, onSent }) {
       if (err.status === 429) {
         setError(t('adminPage.broadcast.rateLimited'))
       } else {
-        setError(err.message || t('adminPage.broadcast.sendError'))
+        const apiMessage = typeof err?.message === 'string' ? err.message.trim() : ''
+        setError(apiMessage || t('adminPage.broadcast.sendError'))
       }
     } finally {
       setIsSubmitting(false)

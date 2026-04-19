@@ -53,6 +53,9 @@ from .serializers import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 PRESENCE_HEARTBEAT = timedelta(minutes=1)
 RECOMMENDED_EVENTS_LIMIT = 10
 RECOMMENDED_EVENTS_CANDIDATE_POOL = 40
@@ -1707,13 +1710,19 @@ class AdminBroadcastListCreateAPIView(APIView):
             created_at=now,
             updated_at=now,
         )
-        broadcast.save()
+        try:
+            broadcast.save()
+        except Exception:
+            logger.exception('Failed to create broadcast for admin user %s', current_user.id)
+            return Response(
+                {'detail': 'Could not create broadcast. Please verify database migration and server logs.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         if not is_future:
             try:
                 execute_broadcast_send(broadcast.id)
-            except Exception as exc:
-                logger = logging.getLogger(__name__)
+            except Exception:
                 logger.exception('Failed to send broadcast %s immediately', broadcast.id)
                 broadcast.status = BroadcastMessage.Status.FAILED
                 broadcast.updated_at = timezone.now()

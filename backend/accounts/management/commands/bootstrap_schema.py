@@ -14,6 +14,8 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             with connection.cursor() as cursor:
+                # Ensure optional columns exist before any logic that might trigger queries
+
                 if not core_tables.issubset(existing_tables):
                     schema_path = Path(__file__).resolve().parents[4] / 'database' / 'aem_schema_v1.sql'
                     sql_script = schema_path.read_text(encoding='utf-8')

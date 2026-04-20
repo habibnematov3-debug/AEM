@@ -14,13 +14,16 @@ export function useWebSocket(currentUser) {
       return
     }
 
-    const token = localStorage.getItem('aem_auth_token')
+    const token = localStorage.getItem('aem-auth-token')
     if (!token) {
       console.warn('No auth token found for WebSocket connection')
       return
     }
 
-    const wsUrl = `ws://localhost:8000/ws/notifications/?token=${token}`
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+    const host = apiUrl.replace(/^https?:\/\//, '')
+    const wsUrl = `${protocol}//${host}/ws/notifications/?token=${token}`
     const ws = new WebSocket(wsUrl)
 
     ws.onopen = () => {

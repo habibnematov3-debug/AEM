@@ -12,6 +12,9 @@ def ensure_core_schema() -> bool:
         return False
 
     statements = (
+        'ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL',
+        'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
+        'ALTER TABLE participations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ NULL',
         """
         CREATE TABLE IF NOT EXISTS notifications (
             id BIGSERIAL PRIMARY KEY,
@@ -49,9 +52,6 @@ def ensure_core_schema() -> bool:
         """,
         'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ NULL',
         'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
-        'ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL',
-        'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
-        'ALTER TABLE participations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ NULL',
         (
             'CREATE INDEX IF NOT EXISTS idx_notifications_user_created_at '
             'ON notifications (user_id, created_at DESC)'

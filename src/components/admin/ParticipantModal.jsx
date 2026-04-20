@@ -38,10 +38,10 @@ function ParticipantModal({ isOpen, event, onClose, onRemoveParticipant, isLoadi
       setError('')
       try {
         const response = await fetch(
-          `/api/admin/events/${event.id}/participants/?status=${statusFilter}&q=${encodeURIComponent(searchQuery)}`,
+          `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/admin/events/${event.id}/participants/?status=${statusFilter}&q=${encodeURIComponent(searchQuery)}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem('aem_auth_token') || ''}`,
+              Authorization: `Bearer ${localStorage.getItem('aem-auth-token') || ''}`,
             },
           }
         )
@@ -76,7 +76,7 @@ function ParticipantModal({ isOpen, event, onClose, onRemoveParticipant, isLoadi
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('aem_auth_token') || ''}`,
+            Authorization: `Bearer ${localStorage.getItem('aem-auth-token') || ''}`,
           },
           body: JSON.stringify({ participation_id: participationId }),
         }

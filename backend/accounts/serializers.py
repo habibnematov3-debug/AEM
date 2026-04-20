@@ -1,8 +1,9 @@
 import logging
+from datetime import datetime, time, timedelta
+
 from django.contrib.auth.password_validation import validate_password
 from django.db import DatabaseError
 from django.db import transaction
-from datetime import timedelta
 from django.utils import timezone
 from django.utils.html import strip_tags
 from rest_framework import serializers
@@ -652,6 +653,14 @@ class EventCreateSerializer(serializers.Serializer):
             self.instance.end_time if self.instance is not None else None,
         )
 
+        if end_time is None and start_time is not None:
+            candidate_end = (datetime.combine(time.min, start_time) + timedelta(hours=1)).time()
+            if candidate_end <= start_time:
+                candidate_end = time(23, 59, 59)
+
+            attrs['end_time'] = candidate_end
+            end_time = candidate_end
+
         if start_time is not None and end_time is not None and end_time <= start_time:
             raise serializers.ValidationError(
                 {'end_time': 'End time must be later than start time.'},
@@ -677,7 +686,7 @@ class EventCreateSerializer(serializers.Serializer):
             image_url=sanitize_image_url(validated_data.get('image_url')),
             event_date=validated_data['event_date'],
             start_time=validated_data['start_time'],
-            end_time=validated_data.get('end_time') or validated_data['start_time'],
+            end_time=validated_data['end_time'],
             capacity=validated_data.get('capacity'),
             moderation_status=Event.ModerationStatuses.PENDING,
             created_at=now,

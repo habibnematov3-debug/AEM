@@ -7,7 +7,7 @@ from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core import signing
 from django.core.cache import cache
-from django.db import DatabaseError, IntegrityError, transaction
+from django.db import DatabaseError, IntegrityError, transaction, connection
 from django.db.models import Case, Count, IntegerField, Q, Value, When
 from django.db.models.functions import TruncDate
 from django.utils.decorators import method_decorator

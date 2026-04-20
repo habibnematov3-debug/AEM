@@ -245,7 +245,9 @@
 .create-event-form {
   display: flex;
   flex-direction: column;
-  min-height: min(760px, calc(100dvh - 96px));
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .create-event-panel__body {
@@ -253,6 +255,8 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   padding: 20px 22px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable both-edges;
@@ -668,10 +672,6 @@
     font-size: 32px;
   }
 
-  .create-event-form {
-    min-height: calc(100dvh - 48px);
-  }
-
   .create-event-panel__header {
     padding: 14px 14px;
   }
@@ -711,6 +711,9 @@
   margin-bottom: 0;
   box-shadow: none;
   height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-shell .create-event-panel__header {
@@ -719,6 +722,7 @@
 
 .modal-shell .create-event-form {
   min-height: 0;
+  height: 100%;
 }
 
 @media (max-width: 480px) {

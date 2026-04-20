@@ -33,6 +33,14 @@ def get_list_env(name, default):
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
+def merge_list_env(name, default):
+    merged = list(default)
+    for value in get_list_env(name, []):
+        if value not in merged:
+            merged.append(value)
+    return merged
+
+
 def get_str_env(name, default):
     value = os.getenv(name)
     return value if value is not None else default
@@ -191,7 +199,7 @@ AEM_OWNER_EMAILS = tuple(
     if email.strip()
 )
 
-CORS_ALLOWED_ORIGINS = get_list_env(
+CORS_ALLOWED_ORIGINS = merge_list_env(
     'AEM_CORS_ALLOWED_ORIGINS',
     [
         'http://localhost:5173',
@@ -202,11 +210,15 @@ CORS_ALLOWED_ORIGINS = get_list_env(
 )
 CORS_ALLOWED_ORIGIN_REGEXES = get_list_env(
     'AEM_CORS_ALLOWED_ORIGIN_REGEXES',
-    [r'^https://.*\.vercel\.app$'],
+    [
+        r'^https://.*\.vercel\.app$',
+        r'^http://localhost:\d+$',
+        r'^http://127\.0\.0\.1:\d+$',
+    ],
 )
 CORS_ALLOW_ALL_ORIGINS = get_bool_env('AEM_CORS_ALLOW_ALL_ORIGINS', False)
 CORS_ALLOW_CREDENTIALS = True
-CSRF_TRUSTED_ORIGINS = get_list_env('AEM_CSRF_TRUSTED_ORIGINS', CORS_ALLOWED_ORIGINS)
+CSRF_TRUSTED_ORIGINS = merge_list_env('AEM_CSRF_TRUSTED_ORIGINS', CORS_ALLOWED_ORIGINS)
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
 SESSION_COOKIE_NAME = 'aem_sessionid'

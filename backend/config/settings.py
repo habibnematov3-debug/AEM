@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'channels',
+    'django.contrib.auth',
     'accounts',
     'django.contrib.contenttypes',
     'django.contrib.sessions',

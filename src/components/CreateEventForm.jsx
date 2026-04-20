@@ -39,6 +39,9 @@ function validateEventForm(formData) {
   if (!formData.title.trim()) {
     nextErrors.title = 'Event title is required.'
   }
+  if (!formData.description.trim()) {
+    nextErrors.description = 'Description is required.'
+  }
   if (!formData.date) {
     nextErrors.date = 'Date is required.'
   }
@@ -460,7 +463,7 @@ function CreateEventForm({
           </div>
 
           <label className="create-event-form__full">
-            Description <span className="create-event-form__optional">(Optional)</span>
+            Description <span className="create-event-form__required">*</span>
             <textarea
               value={formData.description}
               onChange={(event) => updateField('description', event.target.value)}

@@ -230,7 +230,7 @@ class EventCreateAPIViewTests(UnmanagedModelTablesMixin, TestCase):
             data=json.dumps(
                 {
                     'title': 'Open Workshop',
-                    'description': '',
+                    'description': 'Hands-on workshop for new organizers.',
                     'category': 'general',
                     'location': 'Main Hall',
                     'event_date': self.today.isoformat(),
@@ -247,13 +247,33 @@ class EventCreateAPIViewTests(UnmanagedModelTablesMixin, TestCase):
         self.assertEqual(payload['event']['start_time'], '10:00:00')
         self.assertEqual(payload['event']['end_time'], '10:00:00')
 
+    def test_create_event_rejects_blank_description(self):
+        response = self.client.post(
+            reverse('events-list-create'),
+            data=json.dumps(
+                {
+                    'title': 'Workshop Without Details',
+                    'description': '   ',
+                    'category': 'general',
+                    'location': 'Main Hall',
+                    'event_date': self.today.isoformat(),
+                    'start_time': '10:00:00',
+                },
+            ),
+            content_type='application/json',
+            **self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['description'], ['Description is required.'])
+
     def test_create_event_rejects_non_later_end_time(self):
         response = self.client.post(
             reverse('events-list-create'),
             data=json.dumps(
                 {
                     'title': 'Broken Workshop',
-                    'description': '',
+                    'description': 'Valid description',
                     'category': 'general',
                     'location': 'Main Hall',
                     'event_date': self.today.isoformat(),
@@ -270,6 +290,24 @@ class EventCreateAPIViewTests(UnmanagedModelTablesMixin, TestCase):
             response.json()['end_time'],
             ['End time must be later than start time.'],
         )
+
+
+class OwnerFlagTests(UnmanagedModelTablesMixin, TestCase):
+    @override_settings(AEM_OWNER_EMAILS=('owner@example.com',))
+    def test_user_is_owner_uses_configured_owner_emails(self):
+        now = timezone.now()
+        user = AEMUser.objects.create(
+            full_name='Owner',
+            email='owner@example.com',
+            password_hash='not-used',
+            role=AEMUser.Roles.ADMIN,
+            is_active=True,
+            last_seen_at=now,
+            created_at=now,
+            updated_at=now,
+        )
+
+        self.assertTrue(user.is_owner)
 
 
 class EventSerializerResilienceTests(UnmanagedModelTablesMixin, TestCase):

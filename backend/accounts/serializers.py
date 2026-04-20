@@ -607,7 +607,7 @@ class AdminBroadcastCreateSerializer(serializers.Serializer):
 
 class EventCreateSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=200)
-    description = serializers.CharField(required=True, allow_blank=True)
+    description = serializers.CharField(required=True, allow_blank=False)
     category = serializers.CharField(max_length=100, required=False, allow_blank=True)
     location = serializers.CharField(max_length=200)
     image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)

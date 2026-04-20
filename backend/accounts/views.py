@@ -443,6 +443,10 @@ def _execute_with_repair(func, *args, **kwargs):
     except DatabaseError as exc:
         logger.warning('Database query failed, attempting schema auto-repair: %s', exc)
         if ensure_core_schema():
+            # Postgres transaction is now aborted. Reset connection state for retry
+            # but only if we are not in a test's atomic block.
+            if not connection.in_atomic_block:
+                connection.close()
             try:
                 return func(*args, **kwargs)
             except DatabaseError as retry_exc:

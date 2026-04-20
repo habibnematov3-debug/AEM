@@ -13,6 +13,7 @@ def ensure_core_schema() -> bool:
 
     statements = (
         'ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL',
+        'ALTER TABLE events ADD COLUMN IF NOT EXISTS capacity INTEGER NULL',
         'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
         'ALTER TABLE participations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ NULL',
         """

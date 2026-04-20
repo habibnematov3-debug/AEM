@@ -23,7 +23,7 @@ from .checkin_tokens import make_checkin_token, parse_checkin_token
 from .google_auth import GoogleTokenVerificationError, verify_google_id_token
 from .broadcast_ops import execute_broadcast_send
 from .broadcast_schema import ensure_broadcast_schema
-from .models import AEMUser, BroadcastMessage, Event, EventLike, MessageDelivery, Notification, Participation, UserSettings
+from .models import AEMUser, AdminAuditLog, BroadcastMessage, Event, EventLike, MessageDelivery, Notification, Participation, UserSettings
 from .notifications import (
     dispatch_due_event_reminders,
     notify_event_moderation,
@@ -399,6 +399,85 @@ def parse_boolean_query(value):
     if normalized in {'false', '0', 'no'}:
         return False
     return None
+
+
+def is_event_active(event):
+    """Check if an event is currently active (upcoming or in-progress)."""
+    now = timezone.localtime()
+    today = now.date()
+    current_time = now.time()
+    
+    return (
+        (event.event_date > today) or
+        (event.event_date == today and event.start_time > current_time) or
+        (event.event_date == today and event.start_time <= current_time and event.end_time >= current_time)
+    )
+
+
+def can_delete_event(event):
+    """
+    Check if an event can be deleted.
+    Returns: (can_delete: bool, reason: str, details: dict)
+    """
+    if is_event_active(event):
+        participant_count = Participation.objects.filter(
+            event=event,
+            status=Participation.Statuses.JOINED
+        ).count()
+        waitlist_count = Participation.objects.filter(
+            event=event,
+            status=Participation.Statuses.WAITLISTED
+        ).count()
+        return False, "active_event", {
+            "participant_count": participant_count,
+            "waitlist_count": waitlist_count,
+            "event_date": event.event_date.isoformat(),
+            "start_time": event.start_time.isoformat(),
+        }
+    
+    return True, "", {}
+
+
+def get_event_deletion_details(event):
+    """Get detailed information about an event for audit logging."""
+    participant_count = Participation.objects.filter(
+        event=event,
+        status=Participation.Statuses.JOINED
+    ).count()
+    waitlist_count = Participation.objects.filter(
+        event=event,
+        status=Participation.Statuses.WAITLISTED
+    ).count()
+    
+    return {
+        "event_id": event.id,
+        "title": event.title,
+        "creator": event.creator.full_name,
+        "creator_email": event.creator.email,
+        "event_date": event.event_date.isoformat(),
+        "start_time": event.start_time.isoformat(),
+        "end_time": event.end_time.isoformat(),
+        "location": event.location,
+        "participant_count": participant_count,
+        "waitlist_count": waitlist_count,
+        "moderation_status": event.moderation_status,
+    }
+
+
+def log_admin_action(admin, action, target_type, target_id, target_details, reason=None):
+    """Log an admin action to the audit trail."""
+    try:
+        AdminAuditLog.objects.create(
+            admin=admin,
+            action=action,
+            target_type=target_type,
+            target_id=target_id,
+            target_details=target_details,
+            reason=reason,
+        )
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to log admin action: {e}")
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1505,11 +1584,51 @@ class AdminEventListAPIView(APIView):
             )
 
         events_to_delete = Event.objects.filter(id__in=event_ids)
-        deleted_count, _ = events_to_delete.delete()
+        
+        # Check for active events
+        blocked_events = []
+        deletable_events = []
+        
+        for event in events_to_delete:
+            can_delete, reason, details = can_delete_event(event)
+            if can_delete:
+                deletable_events.append(event)
+            else:
+                blocked_events.append({
+                    'id': event.id,
+                    'title': event.title,
+                    'reason': reason,
+                    'details': details,
+                })
+        
+        # Return error if any active events
+        if blocked_events:
+            return Response(
+                {
+                    'detail': f'Cannot delete {len(blocked_events)} active event(s). Please delete them when they are finished.',
+                    'blocked_events': blocked_events,
+                    'deletable_count': len(deletable_events),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
+        # Delete all non-active events
+        deleted_count = 0
+        for event in deletable_events:
+            event_details = get_event_deletion_details(event)
+            event.delete()
+            log_admin_action(
+                admin=current_user,
+                action=AdminAuditLog.Actions.EVENT_DELETED,
+                target_type='event',
+                target_id=event.id,
+                target_details=event_details,
+            )
+            deleted_count += 1
 
         return Response(
             {
-                'message': f'{deleted_count} events deleted successfully.',
+                'message': f'{deleted_count} event(s) deleted successfully.',
                 'stats': get_admin_dashboard_stats(),
             },
             status=status.HTTP_200_OK,
@@ -1564,8 +1683,33 @@ class AdminEventDeleteAPIView(APIView):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         event = get_object_or_404(Event, id=event_id)
+        
+        # Check if event can be deleted
+        can_delete, reason, details = can_delete_event(event)
+        if not can_delete:
+            return Response(
+                {
+                    'detail': f'Cannot delete this event. It is currently active.',
+                    'reason': reason,
+                    'details': details,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        
         event_title = event.title
+        event_details = get_event_deletion_details(event)
+        
+        # Delete the event
         event.delete()
+        
+        # Log the action
+        log_admin_action(
+            admin=current_user,
+            action=AdminAuditLog.Actions.EVENT_DELETED,
+            target_type='event',
+            target_id=event_id,
+            target_details=event_details,
+        )
 
         return Response(
             {

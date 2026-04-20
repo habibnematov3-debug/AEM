@@ -275,3 +275,30 @@ class MessageDelivery(models.Model):
     class Meta:
         db_table = 'message_deliveries'
         managed = False
+
+
+class AdminAuditLog(models.Model):
+    class Actions(models.TextChoices):
+        EVENT_DELETED = 'event_deleted', 'Event Deleted'
+        EVENT_APPROVED = 'event_approved', 'Event Approved'
+        EVENT_REJECTED = 'event_rejected', 'Event Rejected'
+        USER_ROLE_CHANGED = 'user_role_changed', 'User Role Changed'
+        USER_STATUS_CHANGED = 'user_status_changed', 'User Status Changed'
+
+    id = models.BigAutoField(primary_key=True)
+    admin = models.ForeignKey(
+        AEMUser,
+        on_delete=models.DO_NOTHING,
+        related_name='admin_actions',
+        db_column='admin_id',
+    )
+    action = models.CharField(max_length=50, choices=Actions.choices)
+    target_type = models.CharField(max_length=50)  # 'event', 'user', etc.
+    target_id = models.BigIntegerField()
+    target_details = models.JSONField(default=dict)  # Store event/user details for audit trail
+    reason = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        db_table = 'admin_audit_logs'
+        managed = False

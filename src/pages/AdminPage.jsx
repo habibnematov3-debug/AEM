@@ -717,7 +717,19 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   }
 
   async function handleDeleteEvent(eventId) {
-    if (!window.confirm(t('adminPage.deleteConfirm'))) {
+    const eventToDelete = events.find((e) => e.id === eventId)
+    if (!eventToDelete) {
+      return
+    }
+
+    // Show enhanced confirmation with event details
+    const confirmMsg = `Are you sure you want to delete this event?\n\n` +
+      `Event: ${eventToDelete.title}\n` +
+      `Date: ${eventToDelete.eventDate}\n` +
+      `Status: ${eventToDelete.moderationStatus}\n\n` +
+      `This action cannot be undone.`
+
+    if (!window.confirm(confirmMsg)) {
       return
     }
 
@@ -739,10 +751,22 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         message: t('adminPage.deleteSuccess'),
       })
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        message: error.message || t('adminPage.deleteError'),
-      })
+      // Check if it's an active event error
+      const payload = error.payload || {}
+      if (payload.reason === 'active_event') {
+        const details = payload.details || {}
+        const participants = details.participant_count || 0
+        const waitlisted = details.waitlist_count || 0
+        setFeedback({
+          type: 'error',
+          message: `Cannot delete active event. It has ${participants} participant(s) and ${waitlisted} waitlisted. Please wait until the event is finished.`,
+        })
+      } else {
+        setFeedback({
+          type: 'error',
+          message: error.message || t('adminPage.deleteError'),
+        })
+      }
     } finally {
       setDeletingEventId('')
     }
@@ -814,10 +838,22 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         message: t('adminPage.deleteSelectedSuccess', { count: selectedCount }),
       })
     } catch (error) {
-      setFeedback({
-        type: 'error',
-        message: error.message || t('adminPage.deleteSelectedError'),
-      })
+      // Check if it's a bulk delete error with blocked events
+      const payload = error.payload || {}
+      if (payload.blocked_events && payload.blocked_events.length > 0) {
+        const blockedCount = payload.blocked_events.length
+        const blockedTitles = payload.blocked_events.slice(0, 3).map((e) => `"${e.title}"`).join(', ')
+        const moreText = blockedCount > 3 ? ` and ${blockedCount - 3} more` : ''
+        setFeedback({
+          type: 'error',
+          message: `Cannot delete ${blockedCount} active event(s): ${blockedTitles}${moreText}. Please wait until they are finished.`,
+        })
+      } else {
+        setFeedback({
+          type: 'error',
+          message: error.message || t('adminPage.deleteSelectedError'),
+        })
+      }
     } finally {
       setDeletingEventId('')
     }

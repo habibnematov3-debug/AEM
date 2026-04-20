@@ -1,0 +1,250 @@
+.rejection-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.rejection-modal__dialog {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rejection-modal__header {
+  padding: 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.rejection-modal__header h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.rejection-modal__subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.rejection-modal__content {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.rejection-modal__instruction {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.rejection-modal__templates {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.rejection-modal__template-button {
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.rejection-modal__template-button:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.rejection-modal__template-button--selected {
+  border-color: #ef5b5b;
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.rejection-modal__template-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rejection-modal__divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.rejection-modal__divider::before,
+.rejection-modal__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.rejection-modal__divider::before {
+  margin-right: 12px;
+}
+
+.rejection-modal__divider::after {
+  margin-left: 12px;
+}
+
+.rejection-modal__custom-button {
+  width: 100%;
+  padding: 12px 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+  margin-bottom: 12px;
+}
+
+.rejection-modal__custom-button:hover {
+  border-color: #d1d5db;
+  background: #f9fafb;
+}
+
+.rejection-modal__custom-button--active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.rejection-modal__textarea-wrapper {
+  position: relative;
+}
+
+.rejection-modal__textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #374151;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+}
+
+.rejection-modal__textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.rejection-modal__textarea:disabled {
+  background: #f9fafb;
+  cursor: not-allowed;
+}
+
+.rejection-modal__char-count {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9ca3af;
+  text-align: right;
+}
+
+.rejection-modal__footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  background: #f9fafb;
+}
+
+.rejection-modal__cancel-button,
+.rejection-modal__confirm-button {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.rejection-modal__cancel-button {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.rejection-modal__cancel-button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.rejection-modal__confirm-button {
+  background: #ef5b5b;
+  color: white;
+}
+
+.rejection-modal__confirm-button:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.rejection-modal__confirm-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .rejection-modal__dialog {
+    max-height: 90vh;
+    border-radius: 8px;
+  }
+
+  .rejection-modal__header,
+  .rejection-modal__content,
+  .rejection-modal__footer {
+    padding: 16px;
+  }
+
+  .rejection-modal__templates {
+    grid-template-columns: 1fr;
+  }
+}

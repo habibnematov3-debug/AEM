@@ -135,6 +135,12 @@ def send_real_time_notification(notification):
 
 def notify_event_moderation(event, moderation_status):
     organizer = event.creator
+    
+    # Build rejection message with reason if available
+    rejection_reason_text = ''
+    if moderation_status == Event.ModerationStatuses.REJECTED and event.rejection_reason:
+        rejection_reason_text = f'\n\nReason: {event.rejection_reason}'
+    
     status_copy = {
         Event.ModerationStatuses.APPROVED: {
             'type': Notification.Types.EVENT_APPROVED,
@@ -155,12 +161,12 @@ def notify_event_moderation(event, moderation_status):
             'type': Notification.Types.EVENT_REJECTED,
             'title': f'Event rejected: {event.title}',
             'message': (
-                f'Your event "{event.title}" was rejected by an administrator. Review it and update it if needed.'
+                f'Your event "{event.title}" was rejected by an administrator. Review it and update it if needed.{rejection_reason_text}'
             ),
             'email_subject': f'Your AEM event was rejected: {event.title}',
             'email_message': (
                 f'Hello {organizer.full_name},\n\n'
-                f'Your event "{event.title}" was rejected by an administrator.\n\n'
+                f'Your event "{event.title}" was rejected by an administrator.{rejection_reason_text}\n\n'
                 f'Location: {event.location}\n'
                 f'Schedule: {format_event_schedule(event)}\n\n'
                 'Please review the event details in AEM and update it if needed.'

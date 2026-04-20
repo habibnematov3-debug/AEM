@@ -506,8 +506,8 @@ function App() {
     return result
   }
 
-  async function handleModerateEvent(eventId, moderationStatus) {
-    const result = await moderateAdminEvent(eventId, moderationStatus)
+  async function handleModerateEvent(eventId, moderationStatus, rejectionReason = '') {
+    const result = await moderateAdminEvent(eventId, moderationStatus, rejectionReason)
     setEvents((currentEvents) =>
       currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
     )

@@ -884,12 +884,19 @@ export async function fetchAdminEvents({ status = '', query = '' } = {}) {
   return (payload.results ?? []).map(normalizeEvent)
 }
 
-export async function moderateAdminEvent(eventId, moderationStatus) {
+export async function moderateAdminEvent(eventId, moderationStatus, rejectionReason = '') {
+  const body = {
+    moderation_status: moderationStatus,
+  }
+  
+  // Include rejection reason if provided
+  if (rejectionReason) {
+    body.rejection_reason = rejectionReason
+  }
+  
   const payload = await apiRequest(`/api/admin/events/${eventId}/moderate/`, {
     method: 'PATCH',
-    body: JSON.stringify({
-      moderation_status: moderationStatus,
-    }),
+    body: JSON.stringify(body),
   })
 
   return {

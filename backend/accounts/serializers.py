@@ -698,11 +698,21 @@ class EventModerationSerializer(serializers.Serializer):
     moderation_status = serializers.ChoiceField(
         choices=[Event.ModerationStatuses.APPROVED, Event.ModerationStatuses.REJECTED],
     )
+    rejection_reason = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=500,
+    )
 
     def update(self, instance, validated_data):
         instance.moderation_status = validated_data['moderation_status']
+        
+        # Store rejection reason if event is being rejected
+        if validated_data['moderation_status'] == Event.ModerationStatuses.REJECTED:
+            instance.rejection_reason = validated_data.get('rejection_reason', '')
+        
         instance.updated_at = timezone.now()
-        instance.save(update_fields=['moderation_status', 'updated_at'])
+        instance.save(update_fields=['moderation_status', 'rejection_reason', 'updated_at'])
         return instance
 
 

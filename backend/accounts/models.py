@@ -93,6 +93,7 @@ class Event(models.Model):
         choices=ModerationStatuses.choices,
         default=ModerationStatuses.PENDING,
     )
+    rejection_reason = models.TextField(blank=True, null=True)
     capacity = models.PositiveIntegerField(blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(default=timezone.now)

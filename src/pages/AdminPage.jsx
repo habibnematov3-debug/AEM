@@ -12,10 +12,12 @@ import {
 import MessageAnalytics from '../components/admin/MessageAnalytics'
 import MessageComposer from '../components/admin/MessageComposer'
 import MessageHistory from '../components/admin/MessageHistory'
+import RejectionModal from '../components/admin/RejectionModal'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
 import '../styles/admin-broadcast.css'
+import '../styles/rejection-modal.css'
 
 const DONUT_SIZE = 228
 const DONUT_STROKE = 28
@@ -339,6 +341,9 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   })
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [analyticsError, setAnalyticsError] = useState('')
+  const [rejectionModalOpen, setRejectionModalOpen] = useState(false)
+  const [rejectionEventId, setRejectionEventId] = useState(null)
+  const [rejectionEventTitle, setRejectionEventTitle] = useState('')
   const pendingCount = stats?.pending ?? 0
   const selectedCount = selectedEventIds.size
   const allEventsSelected = events.length > 0 && events.every((event) => selectedEventIds.has(event.id))
@@ -678,11 +683,23 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const totalStatusCount = statusBreakdown.reduce((sum, segment) => sum + segment.value, 0)
 
   async function handleModeration(eventId, moderationStatus) {
+    // If rejecting, show the rejection modal first
+    if (moderationStatus === 'rejected') {
+      const event = events.find((e) => e.id === eventId)
+      if (event) {
+        setRejectionEventId(eventId)
+        setRejectionEventTitle(event.title)
+        setRejectionModalOpen(true)
+      }
+      return
+    }
+
+    // For approval, proceed directly
     setModeratingEventId(eventId)
     setFeedback({ type: '', message: '' })
 
     try {
-      const result = await onModerateEvent(eventId, moderationStatus)
+      const result = await onModerateEvent(eventId, moderationStatus, '')
       setStats(result.stats)
       setEvents((currentEvents) =>
         currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
@@ -697,15 +714,54 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       })
       setFeedback({
         type: 'success',
-        message:
-          moderationStatus === 'approved'
-            ? t('adminPage.approveSuccess')
-            : t('adminPage.rejectSuccess'),
+        message: t('adminPage.approveSuccess'),
       })
 
       if (statusFilter !== 'all' && statusFilter !== moderationStatus) {
         setEvents((currentEvents) => currentEvents.filter((event) => event.id !== eventId))
       }
+    } catch (error) {
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.moderationError'),
+      })
+    } finally {
+      setModeratingEventId('')
+    }
+  }
+
+  async function handleConfirmRejection(rejectionReason) {
+    setModeratingEventId(rejectionEventId)
+    setFeedback({ type: '', message: '' })
+
+    try {
+      const result = await onModerateEvent(rejectionEventId, 'rejected', rejectionReason)
+      setStats(result.stats)
+      setEvents((currentEvents) =>
+        currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
+      )
+      setRecentEvents((currentEvents) =>
+        currentEvents.map((event) => (event.id === result.event.id ? result.event : event)),
+      )
+      setSelectedEventIds((currentSelected) => {
+        const next = new Set(currentSelected)
+        next.delete(rejectionEventId)
+        return next
+      })
+      setFeedback({
+        type: 'success',
+        message: t('adminPage.rejectSuccess'),
+      })
+
+      if (statusFilter !== 'all' && statusFilter !== 'rejected') {
+        setEvents((currentEvents) =>
+          currentEvents.filter((event) => event.id !== rejectionEventId),
+        )
+      }
+
+      setRejectionModalOpen(false)
+      setRejectionEventId(null)
+      setRejectionEventTitle('')
     } catch (error) {
       setFeedback({
         type: 'error',
@@ -1339,6 +1395,18 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
           </div>
         )}
       </div>
+
+      <RejectionModal
+        isOpen={rejectionModalOpen}
+        eventTitle={rejectionEventTitle}
+        onConfirm={handleConfirmRejection}
+        onCancel={() => {
+          setRejectionModalOpen(false)
+          setRejectionEventId(null)
+          setRejectionEventTitle('')
+        }}
+        isLoading={moderatingEventId === rejectionEventId}
+      />
     </section>
   )
 }

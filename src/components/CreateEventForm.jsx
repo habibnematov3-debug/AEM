@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { isSupabaseUploadConfigured, uploadEventImageToSupabase } from '../api/aemApi'
-import { useI18n } from '../i18n/LanguageContext'
 import SearchableCategorySelect from './SearchableCategorySelect'
 import '../styles/searchable-category-select.css'
 
@@ -23,29 +22,29 @@ function isDataImageUrl(value) {
   return typeof value === 'string' && value.trim().toLowerCase().startsWith('data:image/')
 }
 
-function validateEventForm(formData, t) {
+function validateEventForm(formData) {
   const nextErrors = {}
 
   if (!formData.title.trim()) {
-    nextErrors.title = t('eventForm.errors.title')
+    nextErrors.title = 'Event title is required.'
   }
   if (!formData.date) {
-    nextErrors.date = t('eventForm.errors.date')
+    nextErrors.date = 'Date is required.'
   }
   if (!formData.startTime || formData.startTime.trim() === '') {
-    nextErrors.startTime = t('eventForm.errors.startTime')
+    nextErrors.startTime = 'Start time is required.'
   } else if (!/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.test(formData.startTime)) {
-    nextErrors.startTime = t('eventForm.errors.timeFormat')
+    nextErrors.startTime = 'Please use a valid time format.'
   }
   if (!formData.location.trim()) {
-    nextErrors.location = t('eventForm.errors.location')
+    nextErrors.location = 'Location is required.'
   }
   if (!formData.category || formData.category.trim() === '') {
-    nextErrors.category = t('eventForm.errors.category')
+    nextErrors.category = 'Category is required.'
   }
 
   if (formData.endTime && formData.endTime.trim() !== '' && !/^(\d{1,2}):(\d{2})(?::(\d{2}))?$/.test(formData.endTime)) {
-    nextErrors.endTime = t('eventForm.errors.timeFormat')
+    nextErrors.endTime = 'Please use a valid time format.'
   }
 
   if (formData.date && formData.startTime && formData.endTime) {
@@ -53,14 +52,14 @@ function validateEventForm(formData, t) {
     const end = new Date(`${formData.date}T${formData.endTime}`)
 
     if (end <= start) {
-      nextErrors.endTime = t('eventForm.errors.endTimeOrder')
+      nextErrors.endTime = 'End time must be later than start time.'
     }
   }
 
   if (formData.capacity) {
     const value = Number(formData.capacity)
     if (!Number.isInteger(value) || value < 1) {
-      nextErrors.capacity = t('eventForm.errors.capacity')
+      nextErrors.capacity = 'Capacity must be a whole number greater than 0.'
     }
   }
 
@@ -134,7 +133,6 @@ function CreateEventForm({
   titleId,
   currentUserId,
 }) {
-  const { t } = useI18n()
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -143,15 +141,17 @@ function CreateEventForm({
   const fileInputRef = useRef(null)
 
   const isEditMode = mode === 'edit'
-  const panelEyebrow = isEditMode ? t('eventForm.existingEvent') : t('eventForm.newEvent')
-  const panelTitle = isEditMode ? t('eventForm.editTitle') : t('eventForm.createTitle')
-  const submitLabel = isEditMode ? t('eventForm.editSubmit') : t('eventForm.createSubmit')
-  const closeLabel = isEditMode ? t('eventForm.cancelEdit') : t('eventForm.close')
+  const panelTitle = isEditMode ? 'Edit Event' : 'Create Event'
+  const panelSubtitle = isEditMode
+    ? 'Update the details below'
+    : 'Fill in the details below'
+  const submitLabel = isEditMode ? 'Save Changes' : 'Create Event'
+  const closeLabel = 'Close'
   const existingImage = initialValues?.image ?? ''
   const imagePreview = formData.imageUrl.trim() || existingImage || DEFAULT_EVENT_IMAGE
   const imageHelperText = isSupabaseUploadConfigured()
-    ? t('eventForm.imageHelperConfigured')
-    : t('eventForm.imageHelperFallback')
+    ? 'Upload a clean cover image for better event discoverability.'
+    : 'Image uploads are unavailable until storage is configured.'
 
   useEffect(() => {
     setFormData(buildFormState(initialValues))
@@ -186,7 +186,7 @@ function CreateEventForm({
     } catch (error) {
       setErrors((current) => ({
         ...current,
-        imageUrl: error.message || t('eventForm.errors.uploadImage'),
+        imageUrl: error.message || 'Unable to upload image. Please try again.',
       }))
     } finally {
       setIsUploadingImage(false)
@@ -200,7 +200,7 @@ function CreateEventForm({
       return
     }
 
-    const nextErrors = validateEventForm(formData, t)
+    const nextErrors = validateEventForm(formData)
     if (Object.keys(nextErrors).length) {
       setErrors(nextErrors)
       return
@@ -238,205 +238,222 @@ function CreateEventForm({
 
   return (
     <section className="create-event-panel">
-      <div className="create-event-panel__header">
-        <div>
-          <p className="create-event-panel__eyebrow">{panelEyebrow}</p>
-          <h2 id={titleId}>{panelTitle}</h2>
-        </div>
-        <button type="button" className="create-event-panel__cancel" onClick={onCancel}>
-          {closeLabel}
-        </button>
-      </div>
-
       <form className="create-event-form" onSubmit={handleSubmit}>
-        <label className="create-event-form__full">
-          {t('eventForm.title')} *
-          <input
-            type="text"
-            value={formData.title}
-            onChange={(event) => updateField('title', event.target.value)}
-            placeholder={t('eventForm.enterTitle')}
-            disabled={isSubmitting || isUploadingImage}
-          />
-          {errors.title ? <span className="create-event-form__error">{errors.title}</span> : null}
-        </label>
-
-        <label>
-          {t('common.date')} *
-          <input
-            type="date"
-            value={formData.date}
-            onChange={(event) => updateField('date', event.target.value)}
-            disabled={isSubmitting || isUploadingImage}
-          />
-          {errors.date ? <span className="create-event-form__error">{errors.date}</span> : null}
-        </label>
-
-        <label>
-          {t('common.startTime')} *
-          <input
-            type="time"
-            value={formData.startTime}
-            onChange={(event) => updateField('startTime', event.target.value)}
-            disabled={isSubmitting || isUploadingImage}
-            required
-          />
-          {errors.startTime ? (
-            <span className="create-event-form__error">{errors.startTime}</span>
-          ) : null}
-        </label>
-
-        <label>
-          {t('common.location')} *
-          <input
-            type="text"
-            value={formData.location}
-            onChange={(event) => updateField('location', event.target.value)}
-            placeholder={t('eventForm.enterLocation')}
-            disabled={isSubmitting || isUploadingImage}
-          />
-          {errors.location ? (
-            <span className="create-event-form__error">{errors.location}</span>
-          ) : null}
-        </label>
-
-        <div className="create-event-form__full create-event-form__image-group">
-          <div className="create-event-form__image-header">
-            <label>Event Cover <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span></label>
-            <div className="create-event-form__image-buttons">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="create-event-form__file-input"
-                onChange={handleImageUpload}
-                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
-              />
-              <button
-                type="button"
-                className="create-event-form__upload-button"
-                onClick={openFilePicker}
-                disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
-              >
-                {isUploadingImage ? t('eventForm.uploading') : t('eventForm.uploadImage')}
-              </button>
-              <button
-                type="button"
-                className="create-event-form__upload-button create-event-form__upload-button--ghost"
-                onClick={() => updateField('imageUrl', '')}
-                disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
-              >
-                {t('eventForm.removeImage')}
-              </button>
-            </div>
+        <header className="create-event-panel__header create-event-panel__header--sticky">
+          <div>
+            <h2 id={titleId}>{panelTitle}</h2>
+            <p className="create-event-panel__subtitle">{panelSubtitle}</p>
           </div>
-
-          {errors.imageUrl ? (
-            <span className="create-event-form__error">{errors.imageUrl}</span>
-          ) : null}
-
-          <div className="create-event-form__preview">
-            <img
-              src={imagePreview}
-              alt={t('eventForm.previewAlt')}
-              onError={(event) => {
-                event.currentTarget.src = DEFAULT_EVENT_IMAGE
-              }}
-            />
-            <span>
-              {imagePreview === DEFAULT_EVENT_IMAGE
-                ? t('eventForm.defaultPreview')
-                : t('eventForm.currentPreview')}
-            </span>
-          </div>
-        </div>
-
-        <div className="create-event-form__full" style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', marginTop: '8px' }}>
-          <button 
-            type="button" 
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            style={{ background: 'none', border: 'none', color: 'var(--text-2)', cursor: 'pointer', fontWeight: 600, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', padding: 0 }}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" style={{ transform: showAdvanced ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', fill: 'currentColor' }}>
-              <path d="M7 10l5 5 5-5z" />
-            </svg>
-            {showAdvanced ? 'Hide details' : 'Add more details'}
+          <button type="button" className="create-event-panel__cancel" onClick={onCancel}>
+            {closeLabel}
           </button>
-        </div>
+        </header>
 
-        {showAdvanced && (
-          <>
-            <label className="create-event-form__full">
-              {t('eventForm.description')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
-              <textarea
-                value={formData.description}
-                onChange={(event) => updateField('description', event.target.value)}
-                placeholder={t('eventForm.describeEvent')}
-                rows="4"
+        <div className="create-event-panel__body">
+          <label className="create-event-form__full">
+            Event Title <span className="create-event-form__required">*</span>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(event) => updateField('title', event.target.value)}
+              placeholder="Enter event title"
+              disabled={isSubmitting || isUploadingImage}
+            />
+            {errors.title ? <span className="create-event-form__error">{errors.title}</span> : null}
+          </label>
+
+          <div className="create-event-form__full create-event-form__row">
+            <label>
+              Date <span className="create-event-form__required">*</span>
+              <input
+                type="date"
+                lang="en"
+                value={formData.date}
+                onChange={(event) => updateField('date', event.target.value)}
                 disabled={isSubmitting || isUploadingImage}
               />
-              {errors.description ? (
-                <span className="create-event-form__error">{errors.description}</span>
-              ) : null}
+              {errors.date ? <span className="create-event-form__error">{errors.date}</span> : null}
             </label>
 
             <label>
-              {t('common.endTime')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
+              Start Time <span className="create-event-form__required">*</span>
               <input
                 type="time"
-                value={formData.endTime}
-                onChange={(event) => updateField('endTime', event.target.value)}
+                lang="en"
+                value={formData.startTime}
+                onChange={(event) => updateField('startTime', event.target.value)}
                 disabled={isSubmitting || isUploadingImage}
+                required
               />
-              {errors.endTime ? (
-                <span className="create-event-form__error">{errors.endTime}</span>
+              {errors.startTime ? (
+                <span className="create-event-form__error">{errors.startTime}</span>
               ) : null}
             </label>
+          </div>
 
-            <label>
-              {t('eventForm.capacity')} <span style={{fontWeight: 'normal', color: 'var(--text-3)'}}>(Optional)</span>
-              <input
-                type="number"
-                min="1"
-                value={formData.capacity}
-                onChange={(event) => updateField('capacity', event.target.value)}
-                placeholder={t('eventForm.capacityPlaceholder')}
-                disabled={isSubmitting || isUploadingImage}
-              />
-              {errors.capacity ? (
-                <span className="create-event-form__error">{errors.capacity}</span>
-              ) : null}
-            </label>
+          <label className="create-event-form__full">
+            Location <span className="create-event-form__required">*</span>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(event) => updateField('location', event.target.value)}
+              placeholder="Enter location"
+              disabled={isSubmitting || isUploadingImage}
+            />
+            {errors.location ? (
+              <span className="create-event-form__error">{errors.location}</span>
+            ) : null}
+          </label>
 
-            <div className="create-event-form__full">
-              <SearchableCategorySelect
-                label={`${t('common.category')} *`}
-                value={formData.category}
-                onChange={(value) => updateField('category', value)}
-                disabled={isSubmitting || isUploadingImage}
-                error={errors.category}
-              />
+          <div className="create-event-form__full create-event-form__image-group">
+            <div className="create-event-form__image-header">
+              <label>
+                Cover Image <span className="create-event-form__optional">(Optional)</span>
+              </label>
+              <div className="create-event-form__image-buttons">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="create-event-form__file-input"
+                  onChange={handleImageUpload}
+                  disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+                />
+                <button
+                  type="button"
+                  className="create-event-form__upload-button"
+                  onClick={openFilePicker}
+                  disabled={isSubmitting || isUploadingImage || !isSupabaseUploadConfigured()}
+                >
+                  {isUploadingImage ? 'Uploading...' : 'Upload image'}
+                </button>
+                <button
+                  type="button"
+                  className="create-event-form__upload-button create-event-form__upload-button--ghost"
+                  onClick={() => updateField('imageUrl', '')}
+                  disabled={isSubmitting || isUploadingImage || !formData.imageUrl}
+                >
+                  Remove
+                </button>
+              </div>
             </div>
-          </>
-        )}
 
-        <div className="create-event-form__actions">
+            <p className="create-event-form__helper">{imageHelperText}</p>
+
+            {errors.imageUrl ? (
+              <span className="create-event-form__error">{errors.imageUrl}</span>
+            ) : null}
+
+            <div className="create-event-form__preview" role="status" aria-live="polite">
+              <img
+                src={imagePreview}
+                alt="Event cover preview"
+                onError={(event) => {
+                  event.currentTarget.src = DEFAULT_EVENT_IMAGE
+                }}
+              />
+              <span>
+                {imagePreview === DEFAULT_EVENT_IMAGE
+                  ? 'Default event image preview'
+                  : 'Custom image selected'}
+              </span>
+            </div>
+          </div>
+
+          <label className="create-event-form__full">
+            Description <span className="create-event-form__optional">(Optional)</span>
+            <textarea
+              value={formData.description}
+              onChange={(event) => updateField('description', event.target.value)}
+              placeholder="Describe your event"
+              rows="5"
+              disabled={isSubmitting || isUploadingImage}
+            />
+            {errors.description ? (
+              <span className="create-event-form__error">{errors.description}</span>
+            ) : null}
+          </label>
+
+          <div className="create-event-form__full create-event-form__advanced-toggle-wrap">
+            <button
+              type="button"
+              className="create-event-form__advanced-toggle"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              aria-expanded={showAdvanced}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="16"
+                height="16"
+                className={showAdvanced ? 'is-open' : ''}
+              >
+                <path d="M7 10l5 5 5-5z" />
+              </svg>
+              {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
+            </button>
+          </div>
+
+          {showAdvanced ? (
+            <div className="create-event-form__advanced-grid create-event-form__full">
+              <label>
+                End Time <span className="create-event-form__optional">(Optional)</span>
+                <input
+                  type="time"
+                  lang="en"
+                  value={formData.endTime}
+                  onChange={(event) => updateField('endTime', event.target.value)}
+                  disabled={isSubmitting || isUploadingImage}
+                />
+                {errors.endTime ? (
+                  <span className="create-event-form__error">{errors.endTime}</span>
+                ) : null}
+              </label>
+
+              <label>
+                Capacity <span className="create-event-form__optional">(Optional)</span>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.capacity}
+                  onChange={(event) => updateField('capacity', event.target.value)}
+                  placeholder="Number of seats"
+                  disabled={isSubmitting || isUploadingImage}
+                />
+                {errors.capacity ? (
+                  <span className="create-event-form__error">{errors.capacity}</span>
+                ) : null}
+              </label>
+
+              <div className="create-event-form__full">
+                <SearchableCategorySelect
+                  label="Category *"
+                  value={formData.category}
+                  onChange={(value) => updateField('category', value)}
+                  disabled={isSubmitting || isUploadingImage}
+                  error={errors.category}
+                />
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <footer className="create-event-form__actions create-event-form__actions--sticky">
           <button
             type="button"
             className="create-event-form__secondary"
             onClick={onCancel}
             disabled={isSubmitting || isUploadingImage}
           >
-            {t('common.cancel')}
+            Cancel
           </button>
           <button
             type="submit"
             className="create-event-form__primary"
             disabled={isSubmitting || isUploadingImage}
           >
-            {isSubmitting ? t('common.saving') : submitLabel}
+            {isSubmitting ? 'Saving...' : submitLabel}
           </button>
-        </div>
+        </footer>
       </form>
     </section>
   )

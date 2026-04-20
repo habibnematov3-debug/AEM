@@ -433,6 +433,26 @@ def _build_notifications_payload(current_user, limit):
     }
 
 
+def _execute_with_repair(func, *args, **kwargs):
+    """
+    Выполняет функцию взаимодействия с БД. Если она падает из-за отсутствия колонок/таблиц,
+    пытается исправить схему и повторяет попытку один раз.
+    """
+    try:
+        return func(*args, **kwargs)
+    except DatabaseError as exc:
+        logger.warning('БД запрос не удался, попытка авто-исправления схемы: %s', exc)
+        if ensure_core_schema():
+            try:
+                # Закрываем соединение, чтобы сбросить состояние транзакции/кэша схемы
+                connection.close()
+                return func(*args, **kwargs)
+            except DatabaseError as retry_exc:
+                logger.exception('Запрос к БД все еще не удается после авто-исправления')
+                raise retry_exc
+        raise exc
+
+
 def _build_admin_dashboard_payload(current_user):
     recent_events = Event.objects.select_related('creator').order_by('-created_at', '-id')[:5]
     recent_users = AEMUser.objects.select_related('settings').order_by('-created_at', '-id')[:5]
@@ -700,36 +720,40 @@ class EventListCreateAPIView(APIView):
     def get(self, request):
         current_user = get_session_user(request)
         scope = request.query_params.get('scope')
-        events = Event.objects.select_related('creator')
 
-        if scope == 'organizer':
-            if current_user is None:
+        def _fetch():
+            events = Event.objects.select_related('creator')
+            if scope == 'organizer':
+                if current_user is None:
+                    return None
+                events = events.filter(creator_id=current_user.id)
+            else:
+                events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
+                events = exclude_ended_events(events)
+
+            events = events.annotate(
+                joined_count=Count(
+                    'participations',
+                    filter=Q(participations__status=Participation.Statuses.JOINED),
+                ),
+                waitlist_count=Count(
+                    'participations',
+                    filter=Q(participations__status=Participation.Statuses.WAITLISTED),
+                ),
+            ).order_by('-created_at', '-id')
+            return EventSerializer(
+                events,
+                many=True,
+                context={'current_user': current_user},
+            ).data
+
+        try:
+            data = _execute_with_repair(_fetch)
+            if data is None:
                 return auth_required_response(request)
-            events = events.filter(creator_id=current_user.id)
-        else:
-            events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
-            events = exclude_ended_events(events)
-
-        events = events.annotate(
-            joined_count=Count(
-                'participations',
-                filter=Q(participations__status=Participation.Statuses.JOINED),
-            ),
-            waitlist_count=Count(
-                'participations',
-                filter=Q(participations__status=Participation.Statuses.WAITLISTED),
-            ),
-        ).order_by('-created_at', '-id')
-        return Response(
-            {
-                'results': EventSerializer(
-                    events,
-                    many=True,
-                    context={'current_user': current_user},
-                ).data,
-            },
-            status=status.HTTP_200_OK,
-        )
+            return Response({'results': data}, status=status.HTTP_200_OK)
+        except DatabaseError as exc:
+            return _core_schema_error_response('Events schema is not ready.', exc)
 
     def post(self, request):
         current_user = get_session_user(request)
@@ -738,7 +762,11 @@ class EventListCreateAPIView(APIView):
 
         serializer = EventCreateSerializer(data=request.data, context={'creator': current_user})
         serializer.is_valid(raise_exception=True)
-        event = serializer.save()
+
+        try:
+            event = _execute_with_repair(serializer.save)
+        except DatabaseError as exc:
+            return _core_schema_error_response('Event creation failed due to schema mismatch.', exc)
 
         return Response(
             {
@@ -756,18 +784,25 @@ class EventDetailAPIView(APIView):
 
     def get(self, request, event_id):
         current_user = get_session_user(request)
-        event = get_object_or_404(
-            Event.objects.select_related('creator'),
-            id=event_id,
-        )
-        if not can_view_event(current_user, event):
-            return Response({'detail': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
-        if not student_may_access_public_event(current_user, event):
-            return Response({'detail': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
-        return Response(
-            EventSerializer(event, context={'current_user': current_user}).data,
-            status=status.HTTP_200_OK,
-        )
+
+        def _fetch():
+            event = get_object_or_404(
+                Event.objects.select_related('creator'),
+                id=event_id,
+            )
+            if not can_view_event(current_user, event):
+                return None
+            if not student_may_access_public_event(current_user, event):
+                return None
+            return EventSerializer(event, context={'current_user': current_user}).data
+
+        try:
+            data = _execute_with_repair(_fetch)
+            if data is None:
+                return Response({'detail': 'Event not found.'}, status=status.HTTP_404_NOT_FOUND)
+            return Response(data, status=status.HTTP_200_OK)
+        except DatabaseError as exc:
+            return _core_schema_error_response('Event lookup failed due to schema mismatch.', exc)
 
     def patch(self, request, event_id):
         event = get_object_or_404(
@@ -787,7 +822,11 @@ class EventDetailAPIView(APIView):
 
         serializer = EventCreateSerializer(instance=event, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        updated_event = serializer.save()
+
+        try:
+            updated_event = _execute_with_repair(serializer.save)
+        except DatabaseError as exc:
+            return _core_schema_error_response('Event update failed due to schema mismatch.', exc)
 
         return Response(
             {
@@ -1363,17 +1402,9 @@ class MyNotificationListAPIView(APIView):
                 limit = 20
 
         try:
-            payload = _build_notifications_payload(current_user, limit)
+            payload = _execute_with_repair(_build_notifications_payload, current_user, limit)
         except DatabaseError as exc:
-            logger.exception('Failed to load notifications for user %s', current_user.id)
-            if ensure_core_schema():
-                try:
-                    payload = _build_notifications_payload(current_user, limit)
-                except DatabaseError as retry_exc:
-                    logger.exception('Notification query still failing after core schema bootstrap')
-                    return _core_schema_error_response('Notifications schema is not ready.', retry_exc)
-            else:
-                return _core_schema_error_response('Notifications schema is not ready.', exc)
+            return _core_schema_error_response('Notifications schema is not ready.', exc)
 
         return Response(payload, status=status.HTTP_200_OK)
 
@@ -1488,17 +1519,9 @@ class AdminDashboardAPIView(APIView):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
         try:
-            payload = _build_admin_dashboard_payload(current_user)
+            payload = _execute_with_repair(_build_admin_dashboard_payload, current_user)
         except DatabaseError as exc:
-            logger.exception('Failed to load admin dashboard for user %s', current_user.id)
-            if ensure_core_schema():
-                try:
-                    payload = _build_admin_dashboard_payload(current_user)
-                except DatabaseError as retry_exc:
-                    logger.exception('Admin dashboard query still failing after core schema bootstrap')
-                    return _core_schema_error_response('Admin dashboard schema is not ready.', retry_exc)
-            else:
-                return _core_schema_error_response('Admin dashboard schema is not ready.', exc)
+            return _core_schema_error_response('Admin dashboard schema is not ready.', exc)
 
         return Response(payload, status=status.HTTP_200_OK)
 

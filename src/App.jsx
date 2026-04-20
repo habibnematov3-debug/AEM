@@ -165,6 +165,71 @@ function App() {
   const onboardingStartPath = currentUser ? getDefaultRouteForRole(currentUser.role) : '/students'
 
   useEffect(() => {
+    if (typeof document === 'undefined') {
+      return
+    }
+
+    const pathname = location.pathname
+    const baseTitle = 'AEM | Ajou University Event Manager and Activities Platform'
+    let nextTitle = baseTitle
+    let nextDescription =
+      'AEM helps Ajou University students discover campus events, join activities, track participation, and manage organizer workflows from one modern event management platform.'
+
+    if (pathname === '/students') {
+      nextTitle = 'Student Events Dashboard | AEM Ajou University'
+      nextDescription =
+        'Browse upcoming Ajou University events, discover recommended activities, and join student programs from the AEM dashboard.'
+    } else if (pathname === '/joined-events') {
+      nextTitle = 'My Joined Events | AEM Ajou University'
+      nextDescription =
+        'Track your joined Ajou University events, participation status, and activity history in one place with AEM.'
+    } else if (pathname === '/organizer') {
+      nextTitle = 'Organizer Workspace | AEM Ajou University'
+      nextDescription =
+        'Create, manage, and monitor Ajou University events with organizer tools for registrations, updates, and participant engagement.'
+    } else if (pathname === '/admin') {
+      nextTitle = 'Admin Event Moderation | AEM Ajou University'
+      nextDescription =
+        'Review, moderate, and manage university event operations securely through the AEM administrative dashboard.'
+    } else if (pathname === '/profile') {
+      nextTitle = 'User Profile Settings | AEM Ajou University'
+      nextDescription =
+        'Manage your AEM profile, preferences, and account settings for a personalized Ajou University event experience.'
+    } else if (pathname.startsWith('/events/')) {
+      nextTitle = 'Event Details | AEM Ajou University'
+      nextDescription =
+        'Read complete event details, dates, locations, and participation options for Ajou University activities on AEM.'
+    }
+
+    document.title = nextTitle
+
+    const descriptionNode = document.querySelector('meta[name="description"]')
+    if (descriptionNode) {
+      descriptionNode.setAttribute('content', nextDescription)
+    }
+
+    const ogTitleNode = document.querySelector('meta[property="og:title"]')
+    if (ogTitleNode) {
+      ogTitleNode.setAttribute('content', nextTitle)
+    }
+
+    const ogDescriptionNode = document.querySelector('meta[property="og:description"]')
+    if (ogDescriptionNode) {
+      ogDescriptionNode.setAttribute('content', nextDescription)
+    }
+
+    const twitterTitleNode = document.querySelector('meta[name="twitter:title"]')
+    if (twitterTitleNode) {
+      twitterTitleNode.setAttribute('content', nextTitle)
+    }
+
+    const twitterDescriptionNode = document.querySelector('meta[name="twitter:description"]')
+    if (twitterDescriptionNode) {
+      twitterDescriptionNode.setAttribute('content', nextDescription)
+    }
+  }, [location.pathname])
+
+  useEffect(() => {
     let isMounted = true
 
     async function loadCurrentUser() {

@@ -435,20 +435,18 @@ def _build_notifications_payload(current_user, limit):
 
 def _execute_with_repair(func, *args, **kwargs):
     """
-    Выполняет функцию взаимодействия с БД. Если она падает из-за отсутствия колонок/таблиц,
-    пытается исправить схему и повторяет попытку один раз.
+    Executes a DB function. If it fails due to missing columns/tables,
+    attempts to repair the schema and retries once.
     """
     try:
         return func(*args, **kwargs)
     except DatabaseError as exc:
-        logger.warning('БД запрос не удался, попытка авто-исправления схемы: %s', exc)
+        logger.warning('Database query failed, attempting schema auto-repair: %s', exc)
         if ensure_core_schema():
             try:
-                # Закрываем соединение, чтобы сбросить состояние транзакции/кэша схемы
-                connection.close()
                 return func(*args, **kwargs)
             except DatabaseError as retry_exc:
-                logger.exception('Запрос к БД все еще не удается после авто-исправления')
+                logger.exception('Database query still failing after auto-repair')
                 raise retry_exc
         raise exc
 

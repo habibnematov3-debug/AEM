@@ -254,6 +254,7 @@ function OrganizerPage({
             currentUserId={currentUser?.id}
             onCancel={handleCancelForm}
             onSubmit={handleCreate}
+            titleId="create-event-title"
           />
         </Modal>
       ) : null}

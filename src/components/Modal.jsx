@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 import '../styles/modal.css'
 
@@ -23,7 +24,7 @@ function Modal({ children, onClose, size = 'md', labelledBy }) {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [onClose])
 
-  return (
+  return createPortal(
     <div className="modal-backdrop" role="presentation" onClick={onClose}>
       <div
         className={`modal-shell modal-shell--${size}`}
@@ -34,7 +35,8 @@ function Modal({ children, onClose, size = 'md', labelledBy }) {
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 

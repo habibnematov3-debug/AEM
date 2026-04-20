@@ -305,6 +305,16 @@ function CreateEventForm({
             ) : null}
           </label>
 
+          <div className="create-event-form__full">
+            <SearchableCategorySelect
+              label="Category *"
+              value={formData.category}
+              onChange={(value) => updateField('category', value)}
+              disabled={isSubmitting || isUploadingImage}
+              error={errors.category}
+            />
+          </div>
+
           <div className="create-event-form__full create-event-form__image-group">
             <div className="create-event-form__image-header">
               <label>
@@ -423,16 +433,6 @@ function CreateEventForm({
                   <span className="create-event-form__error">{errors.capacity}</span>
                 ) : null}
               </label>
-
-              <div className="create-event-form__full">
-                <SearchableCategorySelect
-                  label="Category *"
-                  value={formData.category}
-                  onChange={(value) => updateField('category', value)}
-                  disabled={isSubmitting || isUploadingImage}
-                  error={errors.category}
-                />
-              </div>
             </div>
           ) : null}
         </div>

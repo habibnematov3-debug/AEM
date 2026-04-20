@@ -381,7 +381,11 @@ async function apiRequest(path, options = {}) {
     } catch (error) {
       window.clearTimeout(timeoutId)
 
-      if (canRetry && attempt < maxAttempts && (error.name === 'AbortError' || error instanceof TypeError)) {
+      const failedToFetch =
+        error instanceof TypeError ||
+        (typeof error?.message === 'string' && /failed to fetch/i.test(error.message))
+
+      if (canRetry && attempt < maxAttempts && (error.name === 'AbortError' || failedToFetch)) {
         await new Promise((resolve) => window.setTimeout(resolve, SAFE_REQUEST_RETRY_DELAY_MS))
         continue
       }
@@ -394,11 +398,13 @@ async function apiRequest(path, options = {}) {
         throw timeoutError
       }
 
-      if (error instanceof TypeError) {
+      if (failedToFetch) {
         const networkError = new Error(
-          'Could not reach the backend server. Please try again in a moment.',
+          `Could not reach the backend server at ${API_BASE_URL}. Check API URL, CORS allowlist, backend availability, and HTTPS certificates.`,
         )
         networkError.status = 503
+        networkError.code = 'NETWORK_UNREACHABLE'
+        networkError.requestUrl = `${API_BASE_URL}${path}`
         throw networkError
       }
 

@@ -7,8 +7,10 @@ import json
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
+from django.db import DatabaseError
 
 from .models import Event, Notification, Participation, UserSettings
+from .core_schema import ensure_core_schema
 
 
 logger = logging.getLogger(__name__)
@@ -68,22 +70,31 @@ def create_in_app_notification(
     if user is None or not user.is_active:
         return None
 
-    now = timezone.now()
-    notification = Notification.objects.create(
-        user=user,
-        event=event,
-        notification_type=notification_type,
-        title=title,
-        message=message,
-        link_url=link_url or build_event_path(event),
-        created_at=now,
-        updated_at=now,
-    )
-    
-    # Send real-time notification via WebSocket
-    send_real_time_notification(notification)
-    
-    return notification
+    def _create():
+        now = timezone.now()
+        notification = Notification.objects.create(
+            user=user,
+            event=event,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            link_url=link_url or build_event_path(event),
+            created_at=now,
+            updated_at=now,
+        )
+        send_real_time_notification(notification)
+        return notification
+
+    try:
+        return _create()
+    except DatabaseError as exc:
+        logger.warning('Failed to create notification, attempting schema repair: %s', exc)
+        if ensure_core_schema():
+            try:
+                return _create()
+            except DatabaseError:
+                logger.exception('Notification creation still failing after repair')
+        return None
 
 
 def send_real_time_notification(notification):

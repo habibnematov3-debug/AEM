@@ -1721,6 +1721,179 @@ class AdminEventDeleteAPIView(APIView):
 
 
 @method_decorator(csrf_exempt, name='dispatch')
+class AdminEventParticipantsAPIView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request, event_id):
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        event = get_object_or_404(Event, id=event_id)
+        status_filter = request.query_params.get('status', '')  # joined, attended, no_show, waitlisted
+        search_query = request.query_params.get('q', '').strip()
+        
+        # Get all participations for this event
+        participations = Participation.objects.filter(event=event).select_related('user')
+        
+        # Filter by status if provided
+        if status_filter == 'joined':
+            participations = participations.filter(status=Participation.Statuses.JOINED)
+        elif status_filter == 'waitlisted':
+            participations = participations.filter(status=Participation.Statuses.WAITLISTED)
+        elif status_filter == 'attended':
+            now = timezone.localtime()
+            participations = participations.filter(
+                status=Participation.Statuses.JOINED,
+                checked_in_at__isnull=False,
+            )
+        elif status_filter == 'no_show':
+            now = timezone.localtime()
+            today = now.date()
+            current_time = now.time()
+            participations = participations.filter(
+                status=Participation.Statuses.JOINED,
+                checked_in_at__isnull=True,
+            ).filter(
+                Q(event__event_date__lt=today) |
+                Q(event__event_date=today, event__end_time__lt=current_time),
+            )
+        
+        # Search by name or email
+        if search_query:
+            participations = participations.filter(
+                Q(user__full_name__icontains=search_query) |
+                Q(user__email__icontains=search_query)
+            )
+        
+        participations = participations.order_by('-joined_at')
+        
+        # Build participant list with status
+        participant_list = []
+        for p in participations:
+            if p.checked_in_at:
+                p_status = 'attended'
+            elif p.status == Participation.Statuses.WAITLISTED:
+                p_status = 'waitlisted'
+            elif p.status == Participation.Statuses.JOINED:
+                # Check if event is finished
+                now = timezone.localtime()
+                if p.event.event_date < now.date() or (
+                    p.event.event_date == now.date() and p.event.end_time < now.time()
+                ):
+                    p_status = 'no_show'
+                else:
+                    p_status = 'joined'
+            else:
+                p_status = 'cancelled'
+            
+            participant_list.append({
+                'id': p.id,
+                'user_id': p.user.id,
+                'name': p.user.full_name,
+                'email': p.user.email,
+                'status': p_status,
+                'joined_at': p.joined_at.isoformat(),
+                'checked_in_at': p.checked_in_at.isoformat() if p.checked_in_at else None,
+            })
+        
+        # Calculate summary
+        total = Participation.objects.filter(event=event).count()
+        joined = Participation.objects.filter(
+            event=event,
+            status=Participation.Statuses.JOINED,
+        ).count()
+        waitlisted = Participation.objects.filter(
+            event=event,
+            status=Participation.Statuses.WAITLISTED,
+        ).count()
+        attended = Participation.objects.filter(
+            event=event,
+            checked_in_at__isnull=False,
+        ).count()
+        
+        now = timezone.localtime()
+        today = now.date()
+        current_time = now.time()
+        no_shows = Participation.objects.filter(
+            event=event,
+            status=Participation.Statuses.JOINED,
+            checked_in_at__isnull=True,
+        ).filter(
+            Q(event__event_date__lt=today) |
+            Q(event__event_date=today, event__end_time__lt=current_time),
+        ).count()
+        
+        return Response(
+            {
+                'event': {
+                    'id': event.id,
+                    'title': event.title,
+                    'date': event.event_date.isoformat(),
+                    'time': f"{event.start_time.isoformat()} - {event.end_time.isoformat()}",
+                },
+                'summary': {
+                    'total': total,
+                    'joined': joined,
+                    'attended': attended,
+                    'waitlisted': waitlisted,
+                    'no_shows': no_shows,
+                },
+                'participants': participant_list,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def delete(self, request, event_id):
+        """Remove a participant from an event"""
+        current_user = get_session_user(request)
+        if current_user is None:
+            return auth_required_response(request)
+
+        if not is_admin(current_user):
+            return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
+
+        participation_id = request.data.get('participation_id')
+        if not participation_id:
+            return Response(
+                {'detail': 'participation_id is required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        participation = get_object_or_404(Participation, id=participation_id, event_id=event_id)
+        user = participation.user
+        event = participation.event
+        
+        participation.delete()
+        
+        # Log the action
+        log_admin_action(
+            admin=current_user,
+            action='participant_removed',
+            target_type='participation',
+            target_id=participation_id,
+            target_details={
+                'event_id': event.id,
+                'event_title': event.title,
+                'user_id': user.id,
+                'user_name': user.full_name,
+                'user_email': user.email,
+            },
+        )
+
+        return Response(
+            {
+                'message': f'{user.full_name} has been removed from the event.',
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+@method_decorator(csrf_exempt, name='dispatch')
 class AdminUserListAPIView(APIView):
     authentication_classes = []
     permission_classes = []

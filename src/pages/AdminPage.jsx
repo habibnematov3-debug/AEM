@@ -13,11 +13,13 @@ import MessageAnalytics from '../components/admin/MessageAnalytics'
 import MessageComposer from '../components/admin/MessageComposer'
 import MessageHistory from '../components/admin/MessageHistory'
 import RejectionModal from '../components/admin/RejectionModal'
+import ParticipantModal from '../components/admin/ParticipantModal'
 import { getLanguageLocale } from '../i18n/translations'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/admin.css'
 import '../styles/admin-broadcast.css'
 import '../styles/rejection-modal.css'
+import '../styles/participant-modal.css'
 
 const DONUT_SIZE = 228
 const DONUT_STROKE = 28
@@ -344,6 +346,8 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   const [rejectionModalOpen, setRejectionModalOpen] = useState(false)
   const [rejectionEventId, setRejectionEventId] = useState(null)
   const [rejectionEventTitle, setRejectionEventTitle] = useState('')
+  const [participantModalOpen, setParticipantModalOpen] = useState(false)
+  const [participantModalEvent, setParticipantModalEvent] = useState(null)
   const pendingCount = stats?.pending ?? 0
   const selectedCount = selectedEventIds.size
   const allEventsSelected = events.length > 0 && events.every((event) => selectedEventIds.has(event.id))
@@ -826,6 +830,11 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
     } finally {
       setDeletingEventId('')
     }
+  }
+
+  function handleOpenParticipantModal(event) {
+    setParticipantModalEvent(event)
+    setParticipantModalOpen(true)
   }
 
   async function handleSendReminders() {
@@ -1375,6 +1384,14 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
 
                     <button
                       type="button"
+                      className="admin-page__participants-button"
+                      onClick={() => handleOpenParticipantModal(event)}
+                    >
+                      👥 Participants
+                    </button>
+
+                    <button
+                      type="button"
                       className="admin-page__delete-button"
                       disabled={moderatingEventId === event.id || deletingEventId === event.id}
                       onClick={() => handleDeleteEvent(event.id)}
@@ -1406,6 +1423,18 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
           setRejectionEventTitle('')
         }}
         isLoading={moderatingEventId === rejectionEventId}
+      />
+
+      <ParticipantModal
+        isOpen={participantModalOpen}
+        event={participantModalEvent}
+        onClose={() => {
+          setParticipantModalOpen(false)
+          setParticipantModalEvent(null)
+        }}
+        onRemoveParticipant={() => {
+          // Optionally refresh event data after removing participant
+        }}
       />
     </section>
   )

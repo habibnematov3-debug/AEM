@@ -884,6 +884,12 @@
   border-color: rgba(209, 139, 31, 0.28);
 }
 
+.admin-page__participants-button {
+  background: rgba(51, 197, 161, 0.12);
+  color: #33c5a1;
+  border-color: rgba(51, 197, 161, 0.24);
+}
+
 .admin-page__delete-button {
   background: rgba(239, 91, 91, 0.12);
   color: #ffd0d0;
@@ -893,6 +899,7 @@
 .admin-page__delete-selected-button:hover:not(:disabled),
 .admin-page__approve-button:hover:not(:disabled),
 .admin-page__reject-button:hover:not(:disabled),
+.admin-page__participants-button:hover:not(:disabled),
 .admin-page__delete-button:hover:not(:disabled),
 .admin-page__view-button:hover {
   transform: translateY(-1px);
@@ -901,6 +908,7 @@
 
 .admin-page__approve-button:disabled,
 .admin-page__reject-button:disabled,
+.admin-page__participants-button:disabled,
 .admin-page__delete-button:disabled,
 .admin-page__delete-selected-button:disabled {
   opacity: 0.45;

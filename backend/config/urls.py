@@ -8,6 +8,7 @@ from accounts.views import (
     AdminEventListAPIView,
     AdminEventModerationAPIView,
     AdminEventDeleteAPIView,
+    AdminEventParticipantsAPIView,
     AdminUserListAPIView,
     AdminUserUpdateAPIView,
     EventCancelParticipationAPIView,
@@ -96,5 +97,10 @@ urlpatterns = [
         'api/admin/events/<int:event_id>/delete/',
         AdminEventDeleteAPIView.as_view(),
         name='admin-events-delete',
+    ),
+    path(
+        'api/admin/events/<int:event_id>/participants/',
+        AdminEventParticipantsAPIView.as_view(),
+        name='admin-events-participants',
     ),
 ]

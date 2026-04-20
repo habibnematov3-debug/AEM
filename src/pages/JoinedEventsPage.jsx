@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { cancelParticipation, fetchMyParticipations } from '../api/aemApi'
 import CompactEventCard from '../components/CompactEventCard'
+import PageSEO from '../components/PageSEO'
 import { useI18n } from '../i18n/LanguageContext'
 import '../styles/joined-events.css'
 import '../styles/compact-event-card.css'
@@ -149,6 +150,11 @@ function JoinedEventsPage({ currentUser, searchValue = '' }) {
 
   return (
     <section className="joined-events-page">
+      <PageSEO
+        title={t('joinedEventsPage.title')}
+        description={t('joinedEventsPage.subtitle')}
+        path="/joined-events"
+      />
       <div className="joined-events-page__intro" data-tour="joined-intro">
         <p className="joined-events-page__eyebrow">
           {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}

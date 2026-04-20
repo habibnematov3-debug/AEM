@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 
 import CreateEventForm from '../components/CreateEventForm'
 import CompactEventCard from '../components/CompactEventCard'
+import PageSEO from '../components/PageSEO'
 import { useI18n } from '../i18n/LanguageContext'
 import Modal from '../components/Modal'
 import '../styles/organizer-events.css'
@@ -188,6 +189,11 @@ function OrganizerPage({
 
   return (
     <section className="organizer-events-page">
+      <PageSEO
+        title={t('organizerPage.title')}
+        description={t('organizerPage.subtitle')}
+        path="/organizer"
+      />
       <div className="organizer-events-page__topbar">
         <div className="organizer-events-page__intro" data-tour="organizer-intro">
           <p className="organizer-events-page__eyebrow">{t('organizerPage.eyebrow')}</p>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import CompactEventCard from '../components/CompactEventCard'
+import PageSEO from '../components/PageSEO'
 import { useI18n } from '../i18n/LanguageContext'
 import { fetchRecommendedEvents } from '../api/aemApi'
 import '../styles/students-events.css'
@@ -190,6 +191,11 @@ function StudentsPage({
 
   return (
     <section className="students-events-page" aria-busy={eventsLoading}>
+      <PageSEO
+        title={t('students.title')}
+        description={t('students.subtitle')}
+        path="/students"
+      />
       <div className="students-events-page__intro" data-tour="students-intro">
         <p className="students-events-page__eyebrow">
           {t('students.welcome', { name: currentUser?.name ?? t('common.defaultStudent') })}

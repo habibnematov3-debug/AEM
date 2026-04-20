@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/users
+Disallow: /profile
+Disallow: /check-in
+Disallow: /joined-events
+Disallow: /organizer
 
 Sitemap: https://www.eventajou.uz/sitemap.xml

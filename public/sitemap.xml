@@ -10,36 +10,12 @@
     <loc>https://www.eventajou.uz/students</loc>
     <lastmod>2026-04-20</lastmod>
     <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://www.eventajou.uz/events</loc>
+    <lastmod>2026-04-20</lastmod>
+    <changefreq>daily</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.eventajou.uz/joined-events</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.eventajou.uz/organizer</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.eventajou.uz/profile</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://www.eventajou.uz/admin</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://www.eventajou.uz/admin/users</loc>
-    <lastmod>2026-04-20</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.5</priority>
   </url>
 </urlset>

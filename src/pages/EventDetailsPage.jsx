@@ -12,6 +12,7 @@ import {
 } from '../api/aemApi'
 import { getCategoryLabel } from '../constants/eventCategories'
 import EventCheckInPass from '../components/EventCheckInPass'
+import PageSEO, { EventStructuredData } from '../components/PageSEO'
 import '../styles/event-details.css'
 
 function formatEventDate(eventDate, fallback, languageCode) {
@@ -320,6 +321,13 @@ function EventDetailsPage({ currentUser, onToggleEventLike = null }) {
 
   return (
     <section className="event-details-page">
+      <PageSEO
+        title={event.title}
+        description={event.description}
+        path={`/events/${event.id}`}
+        image={event.image}
+      />
+      <EventStructuredData event={event} />
       <button type="button" className="event-details-back" onClick={handleBack}>
         {t('eventDetails.backToEvents')}
       </button>

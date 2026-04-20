@@ -373,6 +373,7 @@ function AuthPage({ onSignIn, onGoogleSignIn, onSignUp }) {
 
           <div className="auth-card__header">
             <div>
+              <h1 className="sr-only">AEM - Ajou University Event Manager Platform</h1>
               <p className="auth-card__eyebrow">{content.eyebrow}</p>
               <h2>{content.title}</h2>
               <p className="auth-card__helper">{content.helper}</p>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import {
@@ -24,24 +24,24 @@ import {
   updateEvent,
   warmUpBackend,
 } from './api/aemApi'
-import AdminPage from './pages/AdminPage'
-import AdminUsersPage from './pages/AdminUsersPage'
 import Header from './components/Header'
-import OnboardingTour from './components/OnboardingTour'
 import { LanguageProvider, useI18n } from './i18n/LanguageContext'
 import { getStoredLanguageCode } from './i18n/translations'
-import AuthPage from './pages/AuthPage'
-import EventCheckInResultPage from './pages/EventCheckInResultPage'
-import EventCheckInScanPage from './pages/EventCheckInScanPage'
-import EventDetailsPage from './pages/EventDetailsPage'
-import JoinedEventsPage from './pages/JoinedEventsPage'
-import OrganizerPage from './pages/OrganizerPage'
-import ProfilePage from './pages/ProfilePage'
-import StudentsPage from './pages/StudentsPage'
 import './styles/app.css'
 import './styles/pages.css'
 
 const ONBOARDING_STORAGE_KEY_PREFIX = 'aem-onboarding-v1'
+const AuthPage = lazy(() => import('./pages/AuthPage'))
+const StudentsPage = lazy(() => import('./pages/StudentsPage'))
+const JoinedEventsPage = lazy(() => import('./pages/JoinedEventsPage'))
+const OrganizerPage = lazy(() => import('./pages/OrganizerPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const AdminUsersPage = lazy(() => import('./pages/AdminUsersPage'))
+const EventCheckInScanPage = lazy(() => import('./pages/EventCheckInScanPage'))
+const EventCheckInResultPage = lazy(() => import('./pages/EventCheckInResultPage'))
+const EventDetailsPage = lazy(() => import('./pages/EventDetailsPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const OnboardingTour = lazy(() => import('./components/OnboardingTour'))
 
 function getOnboardingStorageKey(user) {
   if (!user?.id) {
@@ -587,126 +587,139 @@ function App() {
           />
         )}
         <main id="main-content" className="page-shell" tabIndex={-1}>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <AuthPage
-                  onSignIn={handleSignIn}
-                  onGoogleSignIn={handleGoogleSignIn}
-                  onSignUp={handleSignUp}
-                />
-              }
-            />
-            <Route
-              path="/students"
-              element={
-                <StudentsPage
-                  currentUser={currentUser}
-                  events={events}
-                  eventsLoading={eventsLoading}
-                  searchValue={studentSearch}
-                  onClearSearch={() => setStudentSearch('')}
-                  onToggleEventLike={handleToggleEventLike}
-                  onParticipateEvent={handleParticipateInEvent}
-                />
-              }
-            />
-            <Route
-              path="/joined-events"
-              element={
-                <RequireAuth currentUser={currentUser} authReady={authReady}>
-                  <JoinedEventsPage
-                    currentUser={currentUser}
-                    searchValue={studentSearch}
+          <Suspense
+            fallback={
+              <section className="page">
+                <div className="route-card">
+                  <h2>Loading page</h2>
+                  <p>Please wait while we load the page.</p>
+                </div>
+              </section>
+            }
+          >
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  <AuthPage
+                    onSignIn={handleSignIn}
+                    onGoogleSignIn={handleGoogleSignIn}
+                    onSignUp={handleSignUp}
                   />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/organizer"
-              element={
-                <RequireAuth currentUser={currentUser} authReady={authReady}>
-                  <OrganizerPage
+                }
+              />
+              <Route
+                path="/students"
+                element={
+                  <StudentsPage
                     currentUser={currentUser}
                     events={events}
                     eventsLoading={eventsLoading}
                     searchValue={studentSearch}
-                    onCreateEvent={handleCreateEvent}
-                    onUpdateEvent={handleUpdateEvent}
-                    onDeleteEvent={handleDeleteEvent}
                     onClearSearch={() => setStudentSearch('')}
+                    onToggleEventLike={handleToggleEventLike}
+                    onParticipateEvent={handleParticipateInEvent}
                   />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
-                  <AdminPage
+                }
+              />
+              <Route
+                path="/joined-events"
+                element={
+                  <RequireAuth currentUser={currentUser} authReady={authReady}>
+                    <JoinedEventsPage
+                      currentUser={currentUser}
+                      searchValue={studentSearch}
+                    />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/organizer"
+                element={
+                  <RequireAuth currentUser={currentUser} authReady={authReady}>
+                    <OrganizerPage
+                      currentUser={currentUser}
+                      events={events}
+                      eventsLoading={eventsLoading}
+                      searchValue={studentSearch}
+                      onCreateEvent={handleCreateEvent}
+                      onUpdateEvent={handleUpdateEvent}
+                      onDeleteEvent={handleDeleteEvent}
+                      onClearSearch={() => setStudentSearch('')}
+                    />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/admin"
+                element={
+                  <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
+                    <AdminPage
+                      currentUser={currentUser}
+                      onModerateEvent={handleModerateEvent}
+                      onLoadStats={fetchAdminDashboard}
+                    />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/admin/users"
+                element={
+                  <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
+                    <AdminUsersPage currentUser={currentUser} />
+                  </RequireRole>
+                }
+              />
+              <Route
+                path="/events/:eventId/check-in"
+                element={
+                  <RequireAuth currentUser={currentUser} authReady={authReady}>
+                    <EventCheckInScanPage currentUser={currentUser} />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/events/:eventId/check-in/result"
+                element={
+                  <RequireAuth currentUser={currentUser} authReady={authReady}>
+                    <EventCheckInResultPage />
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/events/:eventId"
+                element={
+                  <EventDetailsPage
                     currentUser={currentUser}
-                    onModerateEvent={handleModerateEvent}
-                    onLoadStats={fetchAdminDashboard}
+                    onToggleEventLike={handleToggleEventLike}
                   />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <RequireRole currentUser={currentUser} authReady={authReady} allowedRoles={['admin']}>
-                  <AdminUsersPage currentUser={currentUser} />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/events/:eventId/check-in"
-              element={
-                <RequireAuth currentUser={currentUser} authReady={authReady}>
-                  <EventCheckInScanPage currentUser={currentUser} />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/events/:eventId/check-in/result"
-              element={
-                <RequireAuth currentUser={currentUser} authReady={authReady}>
-                  <EventCheckInResultPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/events/:eventId"
-              element={
-                <EventDetailsPage
-                  currentUser={currentUser}
-                  onToggleEventLike={handleToggleEventLike}
-                />
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <RequireAuth currentUser={currentUser} authReady={authReady}>
-                  <ProfilePage
-                    currentUser={currentUser}
-                    onUpdateProfile={handleProfileUpdate}
-                    onLogout={handleLogout}
-                  />
-                </RequireAuth>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <RequireAuth currentUser={currentUser} authReady={authReady}>
+                    <ProfilePage
+                      currentUser={currentUser}
+                      onUpdateProfile={handleProfileUpdate}
+                      onLogout={handleLogout}
+                    />
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </main>
         {isOnboardingOpen ? (
-          <OnboardingTour
-            key={`${currentUser?.id ?? 'guest'}-${onboardingRole}`}
-            role={onboardingRole}
-            onClose={handleCloseOnboarding}
-            onComplete={handleCloseOnboarding}
-          />
+          <Suspense fallback={null}>
+            <OnboardingTour
+              key={`${currentUser?.id ?? 'guest'}-${onboardingRole}`}
+              role={onboardingRole}
+              onClose={handleCloseOnboarding}
+              onComplete={handleCloseOnboarding}
+            />
+          </Suspense>
         ) : null}
       </div>
     </LanguageProvider>

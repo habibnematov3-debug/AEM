@@ -49,6 +49,7 @@ def ensure_core_schema() -> bool:
         """,
         'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ NULL',
         'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+        'ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL',
         'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
         'ALTER TABLE participations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ NULL',
         (

@@ -327,6 +327,10 @@ class CoreSchemaBootstrapTests(TestCase):
             executed_sql,
         )
         self.assertIn(
+            'ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL',
+            executed_sql,
+        )
+        self.assertIn(
             'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
             executed_sql,
         )

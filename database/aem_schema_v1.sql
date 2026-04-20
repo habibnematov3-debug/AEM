@@ -53,6 +53,7 @@ CREATE TABLE events (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     moderation_status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    rejection_reason TEXT NULL,
     capacity INTEGER NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

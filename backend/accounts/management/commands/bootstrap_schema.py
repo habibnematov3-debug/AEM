@@ -56,6 +56,7 @@ class Command(BaseCommand):
                 )
 
                 cursor.execute('ALTER TABLE events ADD COLUMN IF NOT EXISTS capacity INTEGER NULL')
+                cursor.execute('ALTER TABLE events ADD COLUMN IF NOT EXISTS rejection_reason TEXT NULL')
                 cursor.execute('ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL')
                 cursor.execute('ALTER TABLE participations ADD COLUMN IF NOT EXISTS reminder_sent_at TIMESTAMPTZ NULL')
                 cursor.execute('ALTER TABLE participations DROP CONSTRAINT IF EXISTS chk_participations_status')

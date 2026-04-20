@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 
 from django.contrib.auth.password_validation import validate_password
 from django.db import DatabaseError
@@ -654,7 +654,7 @@ class EventCreateSerializer(serializers.Serializer):
         )
 
         if end_time is None and start_time is not None:
-            candidate_end = (datetime.combine(time.min, start_time) + timedelta(hours=1)).time()
+            candidate_end = (datetime.combine(date.today(), start_time) + timedelta(hours=1)).time()
             if candidate_end <= start_time:
                 candidate_end = time(23, 59, 59)
 

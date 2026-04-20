@@ -71,7 +71,7 @@ function ParticipantModal({ isOpen, event, onClose, onRemoveParticipant, isLoadi
     setRemovingParticipationId(participationId)
     try {
       const response = await fetch(
-        `/api/admin/events/${event.id}/participants/`,
+        `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/admin/events/${event.id}/participants/`,
         {
           method: 'DELETE',
           headers: {

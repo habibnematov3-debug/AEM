@@ -104,19 +104,11 @@ function OrganizerPage({
   }, [ownedEvents, t])
 
   async function handleCreate(formData) {
-    try {
-      const createdEvent = await onCreateEvent(formData)
-      setFormFeedback({ type: 'success', message: t('organizerPage.createdSuccess') })
-      setEditingEvent(null)
-      setIsCreateFormOpen(false)
-      return createdEvent
-    } catch (error) {
-      setFormFeedback({
-        type: 'error',
-        message: error.message || t('organizerPage.createError'),
-      })
-      throw error
-    }
+    const createdEvent = await onCreateEvent(formData)
+    setFormFeedback({ type: 'success', message: t('organizerPage.createdSuccess') })
+    setEditingEvent(null)
+    setIsCreateFormOpen(false)
+    return createdEvent
   }
 
   function handleEdit(event) {
@@ -128,22 +120,14 @@ function OrganizerPage({
 
   async function handleUpdate(formData) {
     if (!editingEvent) {
-      return
+      return null
     }
 
-    try {
-      const updatedEvent = await onUpdateEvent(editingEvent.id, formData)
-      setFormFeedback({ type: 'success', message: t('organizerPage.updatedSuccess') })
-      setEditingEvent(null)
-      setIsCreateFormOpen(false)
-      return updatedEvent
-    } catch (error) {
-      setFormFeedback({
-        type: 'error',
-        message: error.message || t('organizerPage.updateError'),
-      })
-      throw error
-    }
+    const updatedEvent = await onUpdateEvent(editingEvent.id, formData)
+    setFormFeedback({ type: 'success', message: t('organizerPage.updatedSuccess') })
+    setEditingEvent(null)
+    setIsCreateFormOpen(false)
+    return updatedEvent
   }
 
   function handleCancelForm() {

@@ -5,6 +5,17 @@ import SearchableCategorySelect from './SearchableCategorySelect'
 import '../styles/searchable-category-select.css'
 
 const DEFAULT_EVENT_IMAGE = '/event-images/default-event.svg'
+const SERVER_FIELD_NAME_MAP = {
+  title: 'title',
+  description: 'description',
+  event_date: 'date',
+  start_time: 'startTime',
+  end_time: 'endTime',
+  location: 'location',
+  image_url: 'imageUrl',
+  category: 'category',
+  capacity: 'capacity',
+}
 
 const initialFormState = {
   title: '',
@@ -107,6 +118,69 @@ function formatTimeForBackend(timeValue) {
   return `${hours}:${minutes}:${seconds}`
 }
 
+function getErrorMessage(value) {
+  if (Array.isArray(value)) {
+    return value.map(getErrorMessage).filter(Boolean).join(' ')
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.values(value).map(getErrorMessage).filter(Boolean).join(' ')
+  }
+
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getFallbackSubmitError(error) {
+  if (error?.status === 401) {
+    return 'Your sign-in expired. Please sign in again and try again.'
+  }
+
+  if (error?.status === 408) {
+    return 'The server is taking too long to respond. Please try again in a moment.'
+  }
+
+  if (error?.code === 'NETWORK_UNREACHABLE' || error?.status === 503) {
+    return 'Could not reach the server. Please check your connection and try again.'
+  }
+
+  if (typeof error?.message === 'string' && error.message.trim()) {
+    return error.message.trim()
+  }
+
+  return 'Could not save the event. Please try again.'
+}
+
+function mapSubmitErrors(error) {
+  const fieldErrors = {}
+  let formError = ''
+  const payload = error?.payload
+
+  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
+    Object.entries(payload).forEach(([key, value]) => {
+      const message = getErrorMessage(value)
+      if (!message) {
+        return
+      }
+
+      const fieldName = SERVER_FIELD_NAME_MAP[key]
+      if (fieldName) {
+        fieldErrors[fieldName] = message
+        return
+      }
+
+      if (key === 'detail' || key === 'message' || key === 'non_field_errors') {
+        formError = formError || message
+      }
+    })
+  }
+
+  if (!formError && Object.keys(fieldErrors).length === 0) {
+    formError = getFallbackSubmitError(error)
+  }
+
+  return { fieldErrors, formError }
+}
+
 function buildFormState(initialValues) {
   if (!initialValues) {
     return initialFormState
@@ -135,6 +209,7 @@ function CreateEventForm({
 }) {
   const [formData, setFormData] = useState(() => buildFormState(initialValues))
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -156,13 +231,22 @@ function CreateEventForm({
   useEffect(() => {
     setFormData(buildFormState(initialValues))
     setErrors({})
+    setSubmitError('')
     setIsSubmitting(false)
     setIsUploadingImage(false)
+    setShowAdvanced(Boolean(initialValues?.endTime || initialValues?.capacity != null))
   }, [initialValues, mode])
+
+  useEffect(() => {
+    if (errors.endTime || errors.capacity) {
+      setShowAdvanced(true)
+    }
+  }, [errors.capacity, errors.endTime])
 
   function updateField(field, value) {
     setFormData((current) => ({ ...current, [field]: value }))
     setErrors((current) => ({ ...current, [field]: '' }))
+    setSubmitError('')
   }
 
   function openFilePicker() {
@@ -206,21 +290,17 @@ function CreateEventForm({
       return
     }
 
+    setSubmitError('')
     setIsSubmitting(true)
 
     try {
       const formattedStartTime = formatTimeForBackend(formData.startTime)
       const formattedEndTime = formatTimeForBackend(formData.endTime)
-      
-      console.log('Time formatting debug:', {
-        original: { startTime: formData.startTime, endTime: formData.endTime },
-        formatted: { startTime: formattedStartTime, endTime: formattedEndTime }
-      })
 
       const payload = {
         ...formData,
         startTime: formattedStartTime,
-        endTime: formattedEndTime, // Already returns null if empty
+        endTime: formattedEndTime,
         existingImage,
         capacity:
           formData.capacity === '' || formData.capacity == null
@@ -231,6 +311,15 @@ function CreateEventForm({
       await onSubmit(payload)
       setFormData(initialFormState)
       setErrors({})
+      setSubmitError('')
+    } catch (error) {
+      const { fieldErrors, formError } = mapSubmitErrors(error)
+      if (Object.keys(fieldErrors).length > 0) {
+        setErrors(fieldErrors)
+      }
+      if (formError) {
+        setSubmitError(formError)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -436,6 +525,12 @@ function CreateEventForm({
             </div>
           ) : null}
         </div>
+
+        {submitError ? (
+          <div className="create-event-form__submit-feedback" role="alert" aria-live="assertive">
+            {submitError}
+          </div>
+        ) : null}
 
         <footer className="create-event-form__actions create-event-form__actions--sticky">
           <button

@@ -623,10 +623,6 @@ class EventCreateSerializer(serializers.Serializer):
             self.instance.end_time if self.instance is not None else None,
         )
 
-        if end_time is None and start_time is not None:
-            attrs['end_time'] = start_time
-            end_time = start_time
-
         if start_time is not None and end_time is not None and end_time <= start_time:
             raise serializers.ValidationError(
                 {'end_time': 'End time must be later than start time.'},
@@ -687,7 +683,8 @@ class EventCreateSerializer(serializers.Serializer):
         )
         instance.event_date = validated_data.get('event_date', instance.event_date)
         instance.start_time = validated_data.get('start_time', instance.start_time)
-        instance.end_time = validated_data.get('end_time', instance.end_time)
+        if 'end_time' in validated_data:
+            instance.end_time = validated_data['end_time'] or instance.start_time
         if 'capacity' in validated_data:
             instance.capacity = validated_data['capacity']
         instance.updated_at = timezone.now()

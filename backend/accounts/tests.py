@@ -201,6 +201,75 @@ class RecommendedEventsAPIViewTests(UnmanagedModelTablesMixin, TestCase):
         self.assertEqual(music_count, 3)
 
 
+class EventCreateAPIViewTests(UnmanagedModelTablesMixin, TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.now = timezone.now()
+        self.today = timezone.localdate() + timedelta(days=1)
+        self.organizer = AEMUser.objects.create(
+            full_name='Organizer',
+            email='organizer-create@example.com',
+            password_hash='not-used',
+            role=AEMUser.Roles.ORGANIZER,
+            is_active=True,
+            last_seen_at=self.now,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+
+    def auth_headers(self):
+        return {
+            'HTTP_AUTHORIZATION': f'Bearer {issue_auth_token(self.organizer)}',
+        }
+
+    def test_create_event_allows_missing_end_time(self):
+        response = self.client.post(
+            reverse('events-list-create'),
+            data=json.dumps(
+                {
+                    'title': 'Open Workshop',
+                    'description': '',
+                    'category': 'general',
+                    'location': 'Main Hall',
+                    'event_date': self.today.isoformat(),
+                    'start_time': '10:00:00',
+                },
+            ),
+            content_type='application/json',
+            **self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 201)
+        payload = response.json()
+
+        self.assertEqual(payload['event']['start_time'], '10:00:00')
+        self.assertEqual(payload['event']['end_time'], '10:00:00')
+
+    def test_create_event_rejects_non_later_end_time(self):
+        response = self.client.post(
+            reverse('events-list-create'),
+            data=json.dumps(
+                {
+                    'title': 'Broken Workshop',
+                    'description': '',
+                    'category': 'general',
+                    'location': 'Main Hall',
+                    'event_date': self.today.isoformat(),
+                    'start_time': '10:00:00',
+                    'end_time': '10:00:00',
+                },
+            ),
+            content_type='application/json',
+            **self.auth_headers(),
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()['end_time'],
+            ['End time must be later than start time.'],
+        )
+
+
 class GoogleAuthAPIViewTests(UnmanagedModelTablesMixin, TestCase):
     def setUp(self):
         self.client = Client()

@@ -350,6 +350,17 @@
   margin: 0;
 }
 
+.create-event-form__submit-feedback {
+  margin: 0 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.16);
+  background: #fef2f2;
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 /* Image section */
 .create-event-form__image-group {
   display: flex;
@@ -693,6 +704,10 @@
 
   .create-event-form__actions {
     padding: 12px 14px;
+  }
+
+  .create-event-form__submit-feedback {
+    margin: 0 14px;
   }
 
   .create-event-form__secondary,

@@ -108,11 +108,16 @@ class Command(BaseCommand):
                                     'participation_waitlisted',
                                     'participation_cancelled',
                                     'waitlist_promoted',
-                                    'event_reminder'
+                                    'event_reminder',
+                                    'admin_broadcast'
                                 )
                             )
                     )
                     """
+                )
+                cursor.execute('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ NULL')
+                cursor.execute(
+                    'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()'
                 )
                 cursor.execute(
                     'CREATE INDEX IF NOT EXISTS idx_notifications_user_created_at '

@@ -1,6 +1,6 @@
 import json
 from datetime import time, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.db import connection
 from django.db import ProgrammingError
@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .auth_tokens import issue_auth_token
+from .core_schema import ensure_core_schema
 from .google_auth import GoogleTokenVerificationError
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
 from .participation_ops import calculate_no_show_count
@@ -308,6 +309,111 @@ class OwnerFlagTests(UnmanagedModelTablesMixin, TestCase):
         )
 
         self.assertTrue(user.is_owner)
+
+
+class CoreSchemaBootstrapTests(TestCase):
+    @patch('accounts.core_schema.connection')
+    def test_ensure_core_schema_bootstraps_optional_columns(self, mock_connection):
+        mock_connection.vendor = 'postgresql'
+        mock_cursor = MagicMock()
+        mock_connection.cursor.return_value.__enter__.return_value = mock_cursor
+
+        self.assertTrue(ensure_core_schema())
+
+        executed_sql = '\n'.join(sql_call.args[0] for sql_call in mock_cursor.execute.call_args_list)
+        self.assertIn('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS read_at TIMESTAMPTZ NULL', executed_sql)
+        self.assertIn(
+            'ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()',
+            executed_sql,
+        )
+        self.assertIn(
+            'ALTER TABLE participations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMPTZ NULL',
+            executed_sql,
+        )
+
+
+class NotificationListAPIViewResilienceTests(UnmanagedModelTablesMixin, TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.now = timezone.now()
+        self.user = AEMUser.objects.create(
+            full_name='Notify User',
+            email='notify@example.com',
+            password_hash='not-used',
+            role=AEMUser.Roles.STUDENT,
+            is_active=True,
+            last_seen_at=self.now,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+
+    def auth_headers(self):
+        return {
+            'HTTP_AUTHORIZATION': f'Bearer {issue_auth_token(self.user)}',
+        }
+
+    @patch('accounts.views.ensure_core_schema', return_value=True)
+    @patch(
+        'accounts.views._build_notifications_payload',
+        side_effect=[
+            ProgrammingError('column notifications.read_at does not exist'),
+            {'results': [], 'unread_count': 0},
+        ],
+    )
+    def test_notifications_retry_after_schema_repair(self, mock_payload_builder, mock_ensure_core_schema):
+        response = self.client.get(reverse('notifications-list'), **self.auth_headers())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['unread_count'], 0)
+        self.assertEqual(mock_payload_builder.call_count, 2)
+        mock_ensure_core_schema.assert_called_once()
+
+
+class AdminDashboardAPIViewResilienceTests(UnmanagedModelTablesMixin, TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.now = timezone.now()
+        self.admin = AEMUser.objects.create(
+            full_name='Admin User',
+            email='admin@example.com',
+            password_hash='not-used',
+            role=AEMUser.Roles.ADMIN,
+            is_active=True,
+            last_seen_at=self.now,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+
+    def auth_headers(self):
+        return {
+            'HTTP_AUTHORIZATION': f'Bearer {issue_auth_token(self.admin)}',
+        }
+
+    @patch('accounts.views.ensure_core_schema', return_value=True)
+    @patch(
+        'accounts.views._build_admin_dashboard_payload',
+        side_effect=[
+            ProgrammingError('column participations.checked_in_at does not exist'),
+            {
+                'stats': {'users': 1},
+                'activity_timeline': [],
+                'recent_events': [],
+                'recent_users': [],
+                'recent_participations': [],
+            },
+        ],
+    )
+    def test_admin_dashboard_retries_after_schema_repair(
+        self,
+        mock_dashboard_builder,
+        mock_ensure_core_schema,
+    ):
+        response = self.client.get(reverse('admin-dashboard'), **self.auth_headers())
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['stats']['users'], 1)
+        self.assertEqual(mock_dashboard_builder.call_count, 2)
+        mock_ensure_core_schema.assert_called_once()
 
 
 class EventSerializerResilienceTests(UnmanagedModelTablesMixin, TestCase):

@@ -20,6 +20,7 @@ from rest_framework.views import APIView
 
 from .auth_tokens import AuthTokenError, issue_auth_token, read_auth_token
 from .checkin_tokens import make_checkin_token, parse_checkin_token
+from .core_schema import ensure_core_schema
 from .google_auth import GoogleTokenVerificationError, verify_google_id_token
 from .broadcast_ops import execute_broadcast_send
 from .broadcast_schema import ensure_broadcast_schema
@@ -62,6 +63,18 @@ def _db_error_reason(exc):
     if not raw:
         return 'Unknown database error.'
     return raw.splitlines()[0][:280]
+
+
+def _core_schema_error_response(message, exc):
+    return Response(
+        {
+            'detail': (
+                f'{message} Apply `python backend/manage.py bootstrap_schema` on the target database '
+                f'and retry. DB reason: {_db_error_reason(exc)}'
+            ),
+        },
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
 
 
 PRESENCE_HEARTBEAT = timedelta(minutes=1)
@@ -404,6 +417,44 @@ def parse_boolean_query(value):
     if normalized in {'false', '0', 'no'}:
         return False
     return None
+
+
+def _build_notifications_payload(current_user, limit):
+    notifications = (
+        Notification.objects.select_related('event')
+        .filter(user_id=current_user.id)
+        .order_by('-created_at', '-id')[:limit]
+    )
+    unread_count = Notification.objects.filter(user_id=current_user.id, read_at__isnull=True).count()
+
+    return {
+        'results': NotificationSerializer(notifications, many=True).data,
+        'unread_count': unread_count,
+    }
+
+
+def _build_admin_dashboard_payload(current_user):
+    recent_events = Event.objects.select_related('creator').order_by('-created_at', '-id')[:5]
+    recent_users = AEMUser.objects.select_related('settings').order_by('-created_at', '-id')[:5]
+    recent_participations = Participation.objects.select_related('user', 'event').order_by(
+        '-joined_at',
+        '-id',
+    )[:5]
+
+    return {
+        'stats': get_admin_dashboard_stats(),
+        'activity_timeline': get_admin_activity_timeline(),
+        'recent_events': EventSerializer(
+            recent_events,
+            many=True,
+            context={'current_user': current_user},
+        ).data,
+        'recent_users': AdminUserSerializer(recent_users, many=True).data,
+        'recent_participations': ParticipationActivitySerializer(
+            recent_participations,
+            many=True,
+        ).data,
+    }
 
 
 def is_event_active(event):
@@ -1311,20 +1362,20 @@ class MyNotificationListAPIView(APIView):
             except (TypeError, ValueError):
                 limit = 20
 
-        notifications = (
-            Notification.objects.select_related('event')
-            .filter(user_id=current_user.id)
-            .order_by('-created_at', '-id')[:limit]
-        )
-        unread_count = Notification.objects.filter(user_id=current_user.id, read_at__isnull=True).count()
+        try:
+            payload = _build_notifications_payload(current_user, limit)
+        except DatabaseError as exc:
+            logger.exception('Failed to load notifications for user %s', current_user.id)
+            if ensure_core_schema():
+                try:
+                    payload = _build_notifications_payload(current_user, limit)
+                except DatabaseError as retry_exc:
+                    logger.exception('Notification query still failing after core schema bootstrap')
+                    return _core_schema_error_response('Notifications schema is not ready.', retry_exc)
+            else:
+                return _core_schema_error_response('Notifications schema is not ready.', exc)
 
-        return Response(
-            {
-                'results': NotificationSerializer(notifications, many=True).data,
-                'unread_count': unread_count,
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -1436,30 +1487,20 @@ class AdminDashboardAPIView(APIView):
         if not is_admin(current_user):
             return Response({'detail': 'Admin access required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        recent_events = Event.objects.select_related('creator').order_by('-created_at', '-id')[:5]
-        recent_users = AEMUser.objects.select_related('settings').order_by('-created_at', '-id')[:5]
-        recent_participations = Participation.objects.select_related('user', 'event').order_by(
-            '-joined_at',
-            '-id',
-        )[:5]
+        try:
+            payload = _build_admin_dashboard_payload(current_user)
+        except DatabaseError as exc:
+            logger.exception('Failed to load admin dashboard for user %s', current_user.id)
+            if ensure_core_schema():
+                try:
+                    payload = _build_admin_dashboard_payload(current_user)
+                except DatabaseError as retry_exc:
+                    logger.exception('Admin dashboard query still failing after core schema bootstrap')
+                    return _core_schema_error_response('Admin dashboard schema is not ready.', retry_exc)
+            else:
+                return _core_schema_error_response('Admin dashboard schema is not ready.', exc)
 
-        return Response(
-            {
-                'stats': get_admin_dashboard_stats(),
-                'activity_timeline': get_admin_activity_timeline(),
-                'recent_events': EventSerializer(
-                    recent_events,
-                    many=True,
-                    context={'current_user': current_user},
-                ).data,
-                'recent_users': AdminUserSerializer(recent_users, many=True).data,
-                'recent_participations': ParticipationActivitySerializer(
-                    recent_participations,
-                    many=True,
-                ).data,
-            },
-            status=status.HTTP_200_OK,
-        )
+        return Response(payload, status=status.HTTP_200_OK)
 
 
 class RecommendedEventsAPIView(APIView):

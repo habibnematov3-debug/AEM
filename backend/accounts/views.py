@@ -80,7 +80,12 @@ def normalize_event_category_key(category):
 def build_recommended_category_scores(user):
     category_scores = Counter()
 
-    liked_categories = EventLike.objects.filter(user=user).values_list('event__category', flat=True)
+    try:
+        liked_categories = EventLike.objects.filter(user=user).values_list('event__category', flat=True)
+    except DatabaseError as exc:
+        logger.warning('Recommended event like categories unavailable: %s', exc)
+        liked_categories = []
+
     joined_categories = Participation.objects.filter(
         user=user,
         status=Participation.Statuses.JOINED,
@@ -923,7 +928,14 @@ class EventLikeAPIView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        _, created = EventLike.objects.get_or_create(user_id=current_user.id, event_id=event.id)
+        try:
+            _, created = EventLike.objects.get_or_create(user_id=current_user.id, event_id=event.id)
+        except DatabaseError as exc:
+            logger.warning('Event like creation failed: %s', exc)
+            return Response(
+                {'detail': 'Event likes are temporarily unavailable.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         if not created:
             return Response(
                 {'detail': 'You have already liked this event.'},
@@ -948,7 +960,14 @@ class EventLikeAPIView(APIView):
             id=event_id,
         )
 
-        deleted_count, _ = EventLike.objects.filter(user_id=current_user.id, event_id=event.id).delete()
+        try:
+            deleted_count, _ = EventLike.objects.filter(user_id=current_user.id, event_id=event.id).delete()
+        except DatabaseError as exc:
+            logger.warning('Event like deletion failed: %s', exc)
+            return Response(
+                {'detail': 'Event likes are temporarily unavailable.'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
         if deleted_count == 0:
             return Response(
                 {'detail': 'You have not liked this event.'},

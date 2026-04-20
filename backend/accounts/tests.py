@@ -3,6 +3,7 @@ from datetime import time, timedelta
 from unittest.mock import patch
 
 from django.db import connection
+from django.db import ProgrammingError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -11,6 +12,7 @@ from .auth_tokens import issue_auth_token
 from .google_auth import GoogleTokenVerificationError
 from .models import AEMUser, Event, EventLike, Participation, UserSettings
 from .participation_ops import calculate_no_show_count
+from .serializers import EventSerializer
 
 
 class AttendanceMetricsTests(TestCase):
@@ -268,6 +270,57 @@ class EventCreateAPIViewTests(UnmanagedModelTablesMixin, TestCase):
             response.json()['end_time'],
             ['End time must be later than start time.'],
         )
+
+
+class EventSerializerResilienceTests(UnmanagedModelTablesMixin, TestCase):
+    def setUp(self):
+        self.now = timezone.now()
+        self.creator = AEMUser.objects.create(
+            full_name='Serializer Debug',
+            email='serializer-debug@example.com',
+            password_hash='not-used',
+            role=AEMUser.Roles.STUDENT,
+            is_active=True,
+            last_seen_at=self.now,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+        self.event = Event.objects.create(
+            creator=self.creator,
+            title='Serializer Debug Event',
+            description='Debug',
+            category='general',
+            location='Campus Hall',
+            image_url='',
+            event_date=timezone.localdate() + timedelta(days=1),
+            start_time=time(10, 0),
+            end_time=time(12, 0),
+            moderation_status=Event.ModerationStatuses.APPROVED,
+            capacity=10,
+            created_at=self.now,
+            updated_at=self.now,
+        )
+
+    def test_event_serializer_tolerates_optional_metric_query_errors(self):
+        original_participation_filter = Participation.objects.filter
+        original_like_filter = EventLike.objects.filter
+
+        def flaky_participation_filter(*args, **kwargs):
+            if 'checked_in_at__isnull' in kwargs:
+                raise ProgrammingError('column participations.checked_in_at does not exist')
+            return original_participation_filter(*args, **kwargs)
+
+        def flaky_like_filter(*args, **kwargs):
+            raise ProgrammingError('relation event_likes does not exist')
+
+        with patch.object(Participation.objects, 'filter', side_effect=flaky_participation_filter):
+            with patch.object(EventLike.objects, 'filter', side_effect=flaky_like_filter):
+                data = EventSerializer(self.event, context={'current_user': self.creator}).data
+
+        self.assertEqual(data['checked_in_count'], 0)
+        self.assertEqual(data['no_show_count'], 0)
+        self.assertEqual(data['likes_count'], 0)
+        self.assertFalse(data['is_liked'])
 
 
 class GoogleAuthAPIViewTests(UnmanagedModelTablesMixin, TestCase):

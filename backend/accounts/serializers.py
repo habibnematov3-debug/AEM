@@ -1,4 +1,6 @@
+import logging
 from django.contrib.auth.password_validation import validate_password
+from django.db import DatabaseError
 from django.db import transaction
 from datetime import timedelta
 from django.utils import timezone
@@ -10,6 +12,7 @@ from .participation_ops import calculate_no_show_count, count_joined_for_event
 
 
 ONLINE_WINDOW = timedelta(minutes=5)
+logger = logging.getLogger(__name__)
 
 
 def is_data_image_url(value):
@@ -296,6 +299,20 @@ class EventSerializer(serializers.ModelSerializer):
     is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
 
+    def _safe_query_count(self, query_factory, *, fallback=0, label='query'):
+        try:
+            return query_factory().count()
+        except DatabaseError as exc:
+            logger.warning('Event serializer %s count failed: %s', label, exc)
+            return fallback
+
+    def _safe_query_exists(self, query_factory, *, fallback=False, label='query'):
+        try:
+            return query_factory().exists()
+        except DatabaseError as exc:
+            logger.warning('Event serializer %s exists check failed: %s', label, exc)
+            return fallback
+
     def get_image_url(self, obj):
         return sanitize_image_url(obj.image_url)
 
@@ -322,11 +339,14 @@ class EventSerializer(serializers.ModelSerializer):
         return self._waitlist_count_value(obj)
 
     def get_checked_in_count(self, obj):
-        return Participation.objects.filter(
-            event_id=obj.id,
-            status=Participation.Statuses.JOINED,
-            checked_in_at__isnull=False,
-        ).count()
+        return self._safe_query_count(
+            lambda: Participation.objects.filter(
+                event_id=obj.id,
+                status=Participation.Statuses.JOINED,
+                checked_in_at__isnull=False,
+            ),
+            label='checked-in',
+        )
 
     def get_spots_remaining(self, obj):
         if obj.capacity is None:
@@ -391,10 +411,16 @@ class EventSerializer(serializers.ModelSerializer):
         if current_user is None:
             return False
 
-        return EventLike.objects.filter(user_id=current_user.id, event_id=obj.id).exists()
+        return self._safe_query_exists(
+            lambda: EventLike.objects.filter(user_id=current_user.id, event_id=obj.id),
+            label='is-liked',
+        )
 
     def get_likes_count(self, obj):
-        return EventLike.objects.filter(event_id=obj.id).count()
+        return self._safe_query_count(
+            lambda: EventLike.objects.filter(event_id=obj.id),
+            label='likes',
+        )
 
     class Meta:
         model = Event

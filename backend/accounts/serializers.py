@@ -587,7 +587,7 @@ class EventCreateSerializer(serializers.Serializer):
     image_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     event_date = serializers.DateField()
     start_time = serializers.TimeField()
-    end_time = serializers.TimeField()
+    end_time = serializers.TimeField(required=False, allow_null=True)
     capacity = serializers.IntegerField(required=False, allow_null=True, min_value=1)
 
     def validate_title(self, value):
@@ -626,6 +626,10 @@ class EventCreateSerializer(serializers.Serializer):
             self.instance.end_time if self.instance is not None else None,
         )
 
+        if end_time is None and start_time is not None:
+            attrs['end_time'] = start_time
+            end_time = start_time
+
         if start_time is not None and end_time is not None and end_time <= start_time:
             raise serializers.ValidationError(
                 {'end_time': 'End time must be later than start time.'},
@@ -651,7 +655,7 @@ class EventCreateSerializer(serializers.Serializer):
             image_url=sanitize_image_url(validated_data.get('image_url')),
             event_date=validated_data['event_date'],
             start_time=validated_data['start_time'],
-            end_time=validated_data['end_time'],
+            end_time=validated_data.get('end_time') or validated_data['start_time'],
             capacity=validated_data.get('capacity'),
             moderation_status=Event.ModerationStatuses.PENDING,
             created_at=now,

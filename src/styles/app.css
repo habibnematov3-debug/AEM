@@ -1,87 +1,94 @@
+/* AEM Shell - app.css */
+
 .app-shell {
   position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  background: var(--bg);
 }
 
+/* Skip link */
 .skip-link {
   position: absolute;
-  left: 12px;
+  left: 14px;
   top: 0;
-  z-index: 100;
-  padding: 10px 18px;
+  z-index: 200;
+  padding: 10px 20px;
   border-radius: var(--radius-pill);
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+  background: var(--accent);
   color: #fff;
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
   text-decoration: none;
   box-shadow: var(--shadow-md);
   transform: translateY(-120%);
-  transition: transform var(--duration-fast) var(--ease-out);
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .skip-link:focus {
   outline: none;
   transform: translateY(12px);
+  box-shadow: var(--shadow-lg), 0 0 0 3px rgba(194, 65, 12, 0.3);
 }
 
-.skip-link:focus-visible {
-  box-shadow:
-    var(--shadow-md),
-    0 0 0 3px rgba(29, 100, 182, 0.28);
-}
-
+/* Main content focus */
 #main-content:focus {
   outline: none;
 }
 
-#main-content:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-  border-radius: var(--radius-sm);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .skip-link {
-    transition: none;
-  }
-}
-
+/* Page shell */
 .page-shell {
-  width: min(1180px, calc(100% - 28px));
+  width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
-  padding: 28px 0 calc(48px + env(safe-area-inset-bottom));
+  padding: 32px 0 calc(64px + env(safe-area-inset-bottom));
   flex: 1;
 }
 
 .page-shell > * {
-  animation: pageEnter var(--duration-med) var(--ease-out) both;
+  animation: fadeUp var(--duration-med) var(--ease-out) both;
 }
 
-@keyframes pageEnter {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Route loading card */
+.route-card {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  padding: var(--space-8);
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .page-shell > * {
-    animation: none;
-  }
+.route-card h2 {
+  font-size: 1.25rem;
+  color: var(--text);
+  margin: 0 0 8px;
 }
 
-@media (max-width: 640px) {
+.route-card p {
+  color: var(--text-2);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
   .page-shell {
-    width: min(100%, calc(100% - 16px));
-    padding: 14px 0 calc(24px + env(safe-area-inset-bottom));
+    width: min(100%, calc(100% - 20px));
+    padding: 16px 0 calc(32px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 480px) {
+  .page-shell {
+    width: 100%;
+    padding: 12px 0 calc(24px + env(safe-area-inset-bottom));
   }
 }

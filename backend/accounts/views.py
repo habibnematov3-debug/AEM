@@ -492,12 +492,26 @@ def is_event_active(event):
     )
 
 
+def is_event_in_progress(event):
+    """Check if an event is currently in-progress (happening right now)."""
+    now = timezone.localtime()
+    today = now.date()
+    current_time = now.time()
+    
+    return (
+        event.event_date == today and 
+        event.start_time <= current_time and 
+        event.end_time >= current_time
+    )
+
+
 def can_delete_event(event):
     """
     Check if an event can be deleted.
     Returns: (can_delete: bool, reason: str, details: dict)
     """
-    if is_event_active(event):
+    # Only prevent deletion if event is currently in-progress
+    if is_event_in_progress(event):
         participant_count = Participation.objects.filter(
             event=event,
             status=Participation.Statuses.JOINED

@@ -561,7 +561,7 @@ const CSS = `
 .sp-root {
   width: 100%;
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr) 280px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 0;
   min-height: 100vh;
   background: #ffffff;
@@ -571,11 +571,11 @@ const CSS = `
 
 /* ── LEFT SIDEBAR ── */
 .sp-sidebar-left {
+  display: none;
   background: #ffffff;
   border-right: 1px solid var(--color-border);
   min-height: 100vh;
   padding: 24px 12px;
-  display: flex;
   flex-direction: column;
   gap: 12px;
   position: sticky;
@@ -1306,7 +1306,7 @@ const CSS = `
 /* ── Responsive ── */
 @media (max-width: 1200px) {
   .sp-root {
-    grid-template-columns: 200px minmax(0, 1fr) 240px;
+    grid-template-columns: minmax(0, 1fr) 240px;
   }
   .sp-main {
     padding: 36px 40px;

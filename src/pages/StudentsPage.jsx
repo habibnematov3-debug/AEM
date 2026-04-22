@@ -540,23 +540,41 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 .sp-root {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 32px 24px 60px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
+  display: grid;
+  grid-template-columns: 220px minmax(0,1fr) 280px;
+  gap: 0;
   background: #f2f0ec;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  align-items: start;
 }
 
 /* ── LEFT SIDEBAR ── */
 .sp-sidebar-left {
-  display: none;
+  background: #fff;
+  border-right: 1px solid #e9e6e0;
+  min-height: 100vh;
+  padding: 20px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .sp-user-chip {
-  display: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8f7f4;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
 }
 
 .sp-user-avatar {
@@ -571,7 +589,7 @@ const CSS = `
 .sp-user-avatar span { color:#fff; font-size:.85rem; font-weight:700; }
 .sp-user-name { font-size:.84rem; font-weight:600; color:#1c1917; flex:1; }
 
-.sp-cat-nav { display: none; }
+.sp-cat-nav { display:flex; flex-direction:column; gap:3px; }
 
 .sp-cat-item {
   display: flex; align-items: center; gap: 10px;
@@ -591,7 +609,7 @@ const CSS = `
   font-size: .95rem; flex-shrink: 0;
 }
 
-.sp-sidebar-trending { display: none; }
+.sp-sidebar-trending { margin-top: 16px; }
 .sp-sidebar-label {
   font-size: .66rem; font-weight: 700; letter-spacing: .12em;
   color: #a8a29e; margin: 0 0 10px 2px;
@@ -627,10 +645,9 @@ const CSS = `
 
 /* ── MAIN ── */
 .sp-main {
-  padding: 0;
-  display: flex; flex-direction: column; gap: 28px;
+  padding: 32px 28px 60px;
+  display: flex; flex-direction: column; gap: 22px;
   min-width: 0;
-  width: 100%;
 }
 
 .sp-intro { }
@@ -863,7 +880,12 @@ const CSS = `
 
 /* ── RIGHT SIDEBAR ── */
 .sp-sidebar-right {
-  display: none;
+  background: #fff;
+  border-left: 1px solid #e9e6e0;
+  min-height: 100vh;
+  padding: 28px 16px;
+  display: flex; flex-direction: column; gap: 20px;
+  position: sticky; top: 0; overflow-y: auto; max-height: 100vh;
 }
 
 .sp-right-trending { display:flex; flex-direction:column; gap:14px; }

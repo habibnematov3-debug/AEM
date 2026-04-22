@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from email.utils import formataddr, parseaddr
 
 import dj_database_url
 
@@ -167,10 +168,19 @@ EMAIL_HOST_PASSWORD = get_str_env('AEM_EMAIL_HOST_PASSWORD', '')
 EMAIL_USE_TLS = get_bool_env('AEM_EMAIL_USE_TLS', True)
 EMAIL_USE_SSL = get_bool_env('AEM_EMAIL_USE_SSL', False)
 EMAIL_TIMEOUT = int(get_str_env('AEM_EMAIL_TIMEOUT', '10'))
-DEFAULT_FROM_EMAIL = get_str_env(
-    'AEM_DEFAULT_FROM_EMAIL',
-    EMAIL_HOST_USER or 'no-reply@aem.local',
+AEM_DEFAULT_FROM_NAME = get_str_env('AEM_DEFAULT_FROM_NAME', 'AEM Notifications').strip()
+_configured_from_email = get_str_env('AEM_DEFAULT_FROM_EMAIL', '').strip()
+_from_email_address = (
+    parseaddr(_configured_from_email)[1]
+    or EMAIL_HOST_USER
+    or 'no-reply@aem.local'
 )
+DEFAULT_FROM_EMAIL = (
+    formataddr((AEM_DEFAULT_FROM_NAME, _from_email_address))
+    if AEM_DEFAULT_FROM_NAME
+    else _from_email_address
+)
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 AEM_EMAIL_ENABLED = get_bool_env('AEM_EMAIL_ENABLED', bool(EMAIL_HOST))
 
 

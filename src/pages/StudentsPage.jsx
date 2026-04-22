@@ -465,8 +465,16 @@ function StudentsPage({
             <div className="sp-empty">
               <span className="sp-empty-icon">🗓️</span>
               <p>No events found</p>
-              <small>Try a different category or check back later</small>
-              {searchValue && <button onClick={onClearSearch} className="sp-filter-pill sp-filter-pill--active" style={{marginTop:12}}>Clear search</button>}
+              <small>
+                {searchValue
+                  ? 'We couldn\'t find any events matching your search. Try adjusting your filters or search terms.'
+                  : 'No events are currently available. Check back soon or explore other categories!'}
+              </small>
+              {searchValue && (
+                <button onClick={onClearSearch} className="sp-filter-pill sp-filter-pill--active">
+                  ✕ Clear search
+                </button>
+              )}
             </div>
           ) : (
             <div className="sp-event-list">
@@ -832,12 +840,32 @@ const CSS = `
 
 /* ── Empty state ── */
 .sp-empty {
-  padding:52px 24px; text-align:center;
-  display:flex; flex-direction:column; align-items:center; gap:6px;
+  padding:64px 32px; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+  background: linear-gradient(135deg, rgba(59,130,246,.02) 0%, rgba(139,92,246,.02) 100%);
+  border-radius: 16px;
+  min-height: 280px;
+  justify-content: center;
 }
-.sp-empty-icon { font-size:2.5rem; }
-.sp-empty p { font-size:1rem; font-weight:700; color:#0f172a; margin:0; }
-.sp-empty small { font-size:.84rem; color:#a8a29e; }
+.sp-empty-icon {
+  font-size:4rem; display:block;
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.sp-empty p {
+  font-size:1.2rem; font-weight:700; color:#0f172a; margin:0;
+  letter-spacing: -.01em;
+}
+.sp-empty small {
+  font-size:.9rem; color:#78716c; margin: 0;
+  max-width: 340px; line-height: 1.5;
+}
+.sp-empty button {
+  margin-top: 8px;
+}
 
 /* ── Skeleton ── */
 .sp-skeleton-list { padding:12px; display:flex; flex-direction:column; gap:10px; }

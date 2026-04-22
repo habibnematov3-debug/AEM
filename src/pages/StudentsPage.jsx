@@ -94,19 +94,17 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
       <div className="sp-event-body">
         <div className="sp-event-top">
           <CategoryPill category={event.category} />
-          {!isCreator && (
-            <button
-              className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
-              onClick={handleLike}
-              disabled={likeLoading}
-              aria-label="Like event"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
-              </svg>
-              {event.likesCount ?? 0}
-            </button>
-          )}
+          <button
+            className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
+            onClick={handleLike}
+            disabled={likeLoading}
+            aria-label="Like event"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
+            </svg>
+            {event.likesCount ?? 0}
+          </button>
         </div>
 
         <Link to={`/events/${event.id}`} className="sp-event-name">{event.title}</Link>
@@ -137,20 +135,7 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
       )}
       <div className={`sp-event-action ${isFinished ? 'sp-event-action--dim' : ''}`}>
         {isCreator ? (
-          <>
-            <span className="sp-action-mine">Your event</span>
-            <button
-              className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
-              onClick={handleLike}
-              disabled={likeLoading}
-              aria-label="Like event"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
-              </svg>
-              {event.likesCount ?? 0}
-            </button>
-          </>
+          <span className="sp-action-mine">Your event</span>
         ) : joined ? (
           <span className="sp-action-joined">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -906,7 +891,7 @@ const CSS = `
 /* ── Event card ── */
 .sp-event-card {
   display: grid;
-  grid-template-columns: 140px minmax(0, 1fr) minmax(140px, auto);
+  grid-template-columns: 140px minmax(0, 1fr) 168px;
   align-items: center;
   gap: 18px;
   background: var(--color-surface);
@@ -1061,7 +1046,8 @@ const CSS = `
   align-items: flex-end;
   justify-self: end;
   gap: 8px;
-  min-width: 132px;
+  width: 168px;
+  min-width: 168px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -1078,6 +1064,16 @@ const CSS = `
   font-family: inherit; cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.sp-action-join,
+.sp-action-mine,
+.sp-event-action .sp-action-joined,
+.sp-action-finished,
+.sp-action-wait,
+.sp-action-view {
+  width: 100%;
+  justify-content: center;
 }
 
 .sp-action-join:hover:not(:disabled) {
@@ -1413,8 +1409,19 @@ const CSS = `
     flex-wrap: wrap;
     justify-content: flex-end;
     align-items: center;
+    width: 100%;
     min-width: 0;
     text-align: left;
+  }
+
+  .sp-action-join,
+  .sp-action-mine,
+  .sp-event-action .sp-action-joined,
+  .sp-action-finished,
+  .sp-action-wait,
+  .sp-action-view {
+    width: auto;
+    justify-content: flex-start;
   }
 }
 

@@ -540,9 +540,9 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 .sp-root {
-  max-width: 1400px;
+  max-width: 1800px;
   margin: 0 auto;
-  padding: 32px 24px 60px;
+  padding: 32px 40px 60px;
   display: grid;
   grid-template-columns: 220px minmax(0,1fr) 280px;
   gap: 0;

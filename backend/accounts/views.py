@@ -748,7 +748,6 @@ class EventListCreateAPIView(APIView):
                 events = events.filter(creator_id=current_user.id)
             else:
                 events = events.filter(moderation_status=Event.ModerationStatuses.APPROVED)
-                events = exclude_ended_events(events)
 
             events = events.annotate(
                 joined_count=Count(

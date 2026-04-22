@@ -64,8 +64,9 @@ function CategoryPill({ category }) {
 
 function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticipating }) {
   const [likeLoading, setLikeLoading] = useState(false)
+  const isFinished = getEventLifecycle(event, Date.now()) === 'finished'
   const isCreator  = currentUser?.id === event.creatorId
-  const canJoin    = currentUser?.id && !isCreator && event.moderationStatus === 'approved'
+  const canJoin    = currentUser?.id && !isCreator && event.moderationStatus === 'approved' && !isFinished
   const joined     = event.isJoined
   const waitlisted = event.isWaitlisted
 
@@ -131,7 +132,10 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
         </div>
       </div>
 
-      <div className="sp-event-action">
+      {isFinished && (
+        <div className="sp-finished-badge">Finished</div>
+      )}
+      <div className={`sp-event-action ${isFinished ? 'sp-event-action--dim' : ''}`}>
         {isCreator ? (
           <>
             <span className="sp-action-mine">Your event</span>
@@ -156,6 +160,13 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
           </span>
         ) : waitlisted ? (
           <span className="sp-action-wait">Waitlisted</span>
+        ) : isFinished ? (
+          <span className="sp-action-finished">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2v20M2 12h20"/>
+            </svg>
+            Finished
+          </span>
         ) : canJoin ? (
           <button
             className="sp-action-join"
@@ -278,9 +289,8 @@ function StudentsPage({
     return () => { mounted = false }
   }, [currentUser])
 
-  // Active (non-finished) events
-  const activeEvents = useMemo(() =>
-    events.filter(e => getEventLifecycle(e, now) !== 'finished'), [events, now])
+  // Show all approved events — backend no longer excludes ended ones
+  const activeEvents = events
 
   // All unique categories from active events
   const categories = useMemo(() => {

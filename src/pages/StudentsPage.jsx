@@ -905,11 +905,14 @@ const CSS = `
 
 /* ── Event card ── */
 .sp-event-card {
-  display: flex; align-items: center; gap: 18px;
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) minmax(140px, auto);
+  align-items: center;
+  gap: 18px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 18px;
+  padding: 18px;
   transition: all 0.2s ease;
   cursor: default;
   position: relative;
@@ -957,14 +960,15 @@ const CSS = `
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .sp-event-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 2px;
 }
 
 .sp-pill {
@@ -1014,6 +1018,7 @@ const CSS = `
   align-items: center;
   gap: 16px;
   flex-wrap: wrap;
+  row-gap: 10px;
   margin-top: auto;
 }
 
@@ -1053,9 +1058,16 @@ const CSS = `
 .sp-event-action {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: flex-end;
+  justify-self: end;
+  gap: 8px;
+  min-width: 132px;
+  text-align: right;
   flex-shrink: 0;
+}
+
+.sp-event-action--dim {
+  opacity: 0.78;
 }
 
 .sp-action-join {
@@ -1081,6 +1093,7 @@ const CSS = `
 
 .sp-action-mine,
 .sp-event-action .sp-action-joined,
+.sp-action-finished,
 .sp-action-wait,
 .sp-action-view {
   font-size: 0.82rem;
@@ -1103,6 +1116,12 @@ const CSS = `
   background: rgba(16, 185, 129, 0.1);
   color: #16a34a;
   border: 1.5px solid rgba(16, 185, 129, 0.3);
+}
+
+.sp-action-finished {
+  background: rgba(107, 114, 128, 0.1);
+  color: #4b5563;
+  border: 1.5px solid rgba(107, 114, 128, 0.2);
 }
 
 .sp-action-wait {
@@ -1382,6 +1401,21 @@ const CSS = `
   .sp-main {
     padding: 24px 20px;
   }
+
+  .sp-event-card {
+    grid-template-columns: 120px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .sp-event-action {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 0;
+    text-align: left;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1415,6 +1449,10 @@ const CSS = `
   .sp-event-meta {
     gap: 12px;
     font-size: 0.85rem;
+  }
+
+  .sp-event-action {
+    justify-content: flex-start;
   }
 }
 `

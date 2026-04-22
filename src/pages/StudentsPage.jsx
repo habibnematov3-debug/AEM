@@ -1193,7 +1193,7 @@ const CSS = `
 .sp-sidebar-right {
   background: var(--card-bg);
   border-radius: var(--radius-xl);
-  padding: 24px 18px;
+  padding: 20px 16px;
   height: fit-content;
   box-shadow: var(--shadow-sm);
   position: sticky;
@@ -1359,33 +1359,52 @@ const CSS = `
 }
 
 /* ── Responsive ── */
-@media (max-width: 1280px) {
-  .sp-root {
-    grid-template-columns: 200px 1fr 240px;
-    gap: 24px;
-  }
-}
-
 @media (max-width: 1024px) {
   .sp-root {
     grid-template-columns: 1fr;
-    padding: 20px;
+    padding: 16px 12px;
+    gap: 20px;
   }
   .sp-sidebar-left,
   .sp-sidebar-right {
     display: none;
   }
   .sp-main {
-    padding: 28px 24px;
+    padding: 24px 20px;
   }
 }
 
 @media (max-width: 640px) {
-  .sp-root {
-    padding: 16px 12px;
-  }
   .sp-main {
-    padding: 24px 16px;
+    padding: 20px 16px;
+  }
+
+  .sp-stats {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .sp-event-list {
+    gap: 16px;
+  }
+
+  .sp-event-card {
+    padding: 14px;
+    gap: 12px;
+  }
+
+  .sp-event-thumb {
+    width: 100px;
+    height: 76px;
+  }
+
+  .sp-event-name {
+    font-size: 1.05rem;
+  }
+
+  .sp-event-meta {
+    gap: 12px;
+    font-size: 0.85rem;
   }
 }
 `

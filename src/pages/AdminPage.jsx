@@ -505,11 +505,14 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
   }, [stats])
 
   const completionRate = useMemo(() => {
-    if (!stats?.approved) {
+    const completedEvents = (stats?.finished ?? 0) + (stats?.inProgress ?? 0)
+    const totalApproved = stats?.approved ?? 0
+
+    if (!totalApproved || completedEvents > totalApproved) {
       return 0
     }
 
-    return clampPercentage((stats.finished / stats.approved) * 100)
+    return clampPercentage((completedEvents / totalApproved) * 100)
   }, [stats])
 
   const attendanceRate = useMemo(() => {
@@ -596,12 +599,6 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
               color: '#7cc321',
             },
             {
-              key: 'finished',
-              label: t('adminPage.breakdownFinished'),
-              value: stats.finished,
-              color: '#33c5a1',
-            },
-            {
               key: 'pending',
               label: t('adminPage.breakdownPending'),
               value: stats.pending,
@@ -618,7 +615,34 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
     [stats, t],
   )
 
-  const participationFunnel = useMemo(
+  const lifecycleBreakdown = useMemo(
+    () =>
+      stats
+        ? [
+            {
+              key: 'upcoming',
+              label: t('adminPage.breakdownUpcoming'),
+              value: stats.upcoming,
+              color: '#4c9cff',
+            },
+            {
+              key: 'inProgress',
+              label: t('adminPage.breakdownInProgress'),
+              value: stats.inProgress,
+              color: '#d18b1f',
+            },
+            {
+              key: 'finished',
+              label: t('adminPage.breakdownFinished'),
+              value: stats.finished,
+              color: '#33c5a1',
+            },
+          ]
+        : [],
+    [stats, t],
+  )
+
+  const participationSummary = useMemo(
     () =>
       stats
         ? [
@@ -683,8 +707,9 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
     lifecycleSegments.reduce((sum, segment) => sum + segment.value, 0),
   )
   const lifecycleTicks = Array.from({ length: 6 }, (_, index) => Math.round((lifecycleMax / 5) * (5 - index)))
-  const funnelMax = Math.max(1, ...participationFunnel.map((item) => item.value))
+  const funnelMax = Math.max(1, ...participationSummary.map((item) => item.value))
   const totalStatusCount = statusBreakdown.reduce((sum, segment) => sum + segment.value, 0)
+  const totalLifecycleCount = lifecycleBreakdown.reduce((sum, segment) => sum + segment.value, 0)
 
   async function handleModeration(eventId, moderationStatus) {
     // If rejecting, show the rejection modal first
@@ -1059,7 +1084,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
               </div>
 
               <div className="admin-page__legend">
-                {participationFunnel.map((item) => (
+                {participationSummary.map((item) => (
                   <span key={item.key} className="admin-page__legend-item">
                     <span className="admin-page__legend-swatch" style={{ backgroundColor: item.color }} />
                     {item.label}
@@ -1068,7 +1093,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
               </div>
 
               <div className="admin-page__funnel-chart">
-                {participationFunnel.map((item) => (
+                {participationSummary.map((item) => (
                   <div key={item.key} className="admin-page__funnel-row">
                     <span className="admin-page__funnel-label">{item.label}</span>
                     <div className="admin-page__funnel-track">
@@ -1083,6 +1108,29 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </article>
+
+            <article className="admin-page__viz-card">
+              <div className="admin-page__viz-card-top">
+                <h3>Event Lifecycle</h3>
+              </div>
+
+              <div className="admin-page__legend">
+                {lifecycleBreakdown.map((segment) => (
+                  <span key={segment.key} className="admin-page__legend-item">
+                    <span className="admin-page__legend-swatch" style={{ backgroundColor: segment.color }} />
+                    {segment.label} {segment.value}
+                  </span>
+                ))}
+              </div>
+
+              <div className="admin-page__status-breakdown">
+                <DonutChart
+                  segments={lifecycleBreakdown}
+                  totalValue={totalLifecycleCount}
+                  totalLabel={t('common.events').toLowerCase()}
+                />
               </div>
             </article>
           </div>

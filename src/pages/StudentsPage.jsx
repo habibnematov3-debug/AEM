@@ -564,14 +564,14 @@ const CSS = `
   grid-template-columns: 220px minmax(0, 1fr) 280px;
   gap: 0;
   min-height: 100vh;
-  background: var(--color-surface-alt);
+  background: #ffffff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   align-items: start;
 }
 
 /* ── LEFT SIDEBAR ── */
 .sp-sidebar-left {
-  background: var(--color-surface-alt);
+  background: #ffffff;
   border-right: 1px solid var(--color-border);
   min-height: 100vh;
   padding: 24px 12px;
@@ -694,6 +694,7 @@ const CSS = `
   display: flex; flex-direction: column; gap: 32px;
   min-width: 0;
   width: 100%;
+  background: #ffffff;
 }
 
 .sp-intro { }
@@ -1136,7 +1137,7 @@ const CSS = `
 
 /* ── RIGHT SIDEBAR ── */
 .sp-sidebar-right {
-  background: var(--color-surface-alt);
+  background: #ffffff;
   border-left: 1px solid var(--color-border);
   min-height: 100vh;
   padding: 40px 18px;

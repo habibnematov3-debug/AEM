@@ -1113,7 +1113,7 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
 
             <article className="admin-page__viz-card">
               <div className="admin-page__viz-card-top">
-                <h3>Event Lifecycle</h3>
+                <h3>{t('adminPage.lifecycleTitle')}</h3>
               </div>
 
               <div className="admin-page__legend">

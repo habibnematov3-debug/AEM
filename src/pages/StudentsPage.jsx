@@ -928,11 +928,18 @@ const CSS = `
 }
 
 .sp-event-body {
-  flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .sp-event-top {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .sp-pill {
@@ -943,25 +950,29 @@ const CSS = `
 }
 
 .sp-like-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  border: 1.5px solid var(--color-border); background: var(--color-surface);
-  border-radius: 12px;
-  padding: 7px 14px; font-size: .8rem; font-weight: 700;
-  color: var(--color-text-secondary); cursor: pointer; font-family: inherit;
-  transition: all 0.15s ease;
-  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid #f1f1f1;
+  border-radius: 9999px;
+  padding: 6px 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ef4444;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
 .sp-like-btn:hover {
+  background: #fff;
   border-color: #ef4444;
-  color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
+  transform: scale(1.05);
 }
 
 .sp-like-btn--liked {
-  color: #ef4444;
-  border-color: #fca5a5;
-  background: rgba(239, 68, 68, 0.08);
+  background: #fff1f2;
+  border-color: #ef4444;
 }
 
 .sp-event-name {
@@ -974,8 +985,11 @@ const CSS = `
 .sp-event-name:hover { color: var(--color-primary); }
 
 .sp-event-meta {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  font-size: .85rem;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: auto;
 }
 
 .sp-meta-item {
@@ -1036,33 +1050,44 @@ const CSS = `
   cursor: not-allowed;
 }
 
-.sp-action-joined {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(16, 185, 129, 0.1);
-  color: #16a34a; border: 1.5px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px; padding: 11px 18px; font-size: .875rem; font-weight: 700;
-}
-
-.sp-action-wait {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: rgba(217, 119, 6, 0.1);
-  color: #d97706; border: 1.5px solid rgba(217, 119, 6, 0.3);
-  border-radius: 12px; padding: 11px 18px; font-size: .875rem; font-weight: 700;
+.sp-action-mine,
+.sp-event-action .sp-action-joined,
+.sp-action-wait,
+.sp-action-view {
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .sp-action-mine {
-  font-size: .8rem; color: var(--color-text-tertiary); font-weight: 600;
-  background: var(--color-surface-alt); padding: 11px 16px; border-radius: 12px;
-  display: inline-block; border: 1px solid var(--color-border);
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.sp-event-action .sp-action-joined {
+  background: rgba(16, 185, 129, 0.1);
+  color: #16a34a;
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
+}
+
+.sp-action-wait {
+  background: rgba(217, 119, 6, 0.1);
+  color: #d97706;
+  border: 1.5px solid rgba(217, 119, 6, 0.3);
 }
 
 .sp-action-view {
-  display: inline-flex; align-items: center; gap: 6px;
   background: var(--color-surface-alt);
-  color: var(--color-primary); border-radius: 12px;
-  padding: 11px 18px; font-size: .875rem; font-weight: 700;
-  text-decoration: none; transition: all 0.15s ease;
+  color: var(--color-primary);
   border: 1px solid var(--color-border);
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
 .sp-action-view:hover {

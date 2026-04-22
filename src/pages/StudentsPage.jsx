@@ -540,12 +540,11 @@ const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 .sp-root {
-  max-width: 1800px;
-  margin: 0 auto;
-  padding: 32px 40px 60px;
+  width: 100%;
   display: grid;
   grid-template-columns: 220px minmax(0,1fr) 280px;
   gap: 0;
+  min-height: 100vh;
   background: #f2f0ec;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   align-items: start;
@@ -645,9 +644,10 @@ const CSS = `
 
 /* ── MAIN ── */
 .sp-main {
-  padding: 32px 28px 60px;
+  padding: 32px 36px 60px;
   display: flex; flex-direction: column; gap: 22px;
   min-width: 0;
+  width: 100%;
 }
 
 .sp-intro { }
@@ -969,7 +969,6 @@ const CSS = `
 @media (max-width:1200px) {
   .sp-root { 
     grid-template-columns: 200px minmax(0,1fr) 240px;
-    max-width: 1200px;
   }
   .sp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sp-headline { font-size: 2rem; }
@@ -978,11 +977,10 @@ const CSS = `
 @media (max-width:1024px) {
   .sp-root { 
     grid-template-columns: 1fr;
-    padding: 24px 20px 50px;
-    max-width: 100%;
+    padding: 0;
   }
   .sp-sidebar-left, .sp-sidebar-right { display: none; }
-  .sp-main { padding: 0; gap: 20px; }
+  .sp-main { padding: 24px 28px 50px; gap: 20px; }
   .sp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sp-stat-card { padding: 14px 16px; gap: 12px; }
   .sp-stat-icon { width: 38px; height: 38px; }
@@ -995,7 +993,7 @@ const CSS = `
 }
 
 @media (max-width:768px) {
-  .sp-root { padding: 20px 16px 40px; }
+  .sp-main { padding: 20px 20px 40px; }
   .sp-stats { grid-template-columns: 1fr; gap: 10px; }
   .sp-stat-card { padding: 12px 14px; }
   .sp-stat-body { gap: 0px; }
@@ -1016,7 +1014,7 @@ const CSS = `
 }
 
 @media (max-width:640px) {
-  .sp-root { padding: 18px 14px 36px; }
+  .sp-main { padding: 18px 16px 36px; }
   .sp-welcome { font-size: .85rem; }
   .sp-headline { font-size: 1.6rem; }
   .sp-sub { font-size: .85rem; }
@@ -1052,7 +1050,7 @@ const CSS = `
 }
 
 @media (max-width:480px) {
-  .sp-root { padding: 16px 12px 32px; }
+  .sp-main { padding: 16px 14px 32px; }
   .sp-intro { margin-bottom: 12px; }
   .sp-welcome { font-size: .8rem; margin: 0 0 4px; }
   .sp-headline { font-size: 1.4rem; margin: 0 0 4px; }

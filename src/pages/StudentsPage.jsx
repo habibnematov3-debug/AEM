@@ -571,7 +571,7 @@ const CSS = `
 
 /* ── LEFT SIDEBAR ── */
 .sp-sidebar-left {
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   border-right: 1px solid var(--color-border);
   min-height: 100vh;
   padding: 24px 12px;
@@ -1136,7 +1136,7 @@ const CSS = `
 
 /* ── RIGHT SIDEBAR ── */
 .sp-sidebar-right {
-  background: var(--color-surface);
+  background: var(--color-surface-alt);
   border-left: 1px solid var(--color-border);
   min-height: 100vh;
   padding: 40px 18px;

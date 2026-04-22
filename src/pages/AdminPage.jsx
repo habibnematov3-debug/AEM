@@ -782,11 +782,16 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
       return
     }
 
-    // Show enhanced confirmation with event details
+    // Build confirmation message
+    const hasParticipants = (eventToDelete.joinedCount || 0) > 0 || (eventToDelete.waitlistedCount || 0) > 0
+    const participantWarning = hasParticipants 
+      ? `\n⚠️  WARNING: This event has ${eventToDelete.joinedCount || 0} participant(s) and ${eventToDelete.waitlistedCount || 0} waitlisted.\nThey will be notified of the deletion.`
+      : ''
+
     const confirmMsg = `Are you sure you want to delete this event?\n\n` +
       `Event: ${eventToDelete.title}\n` +
       `Date: ${eventToDelete.eventDate}\n` +
-      `Status: ${eventToDelete.moderationStatus}\n\n` +
+      `Status: ${eventToDelete.moderationStatus}${participantWarning}\n\n` +
       `This action cannot be undone.`
 
     if (!window.confirm(confirmMsg)) {
@@ -811,22 +816,10 @@ function AdminPage({ currentUser, onModerateEvent, onLoadStats }) {
         message: t('adminPage.deleteSuccess'),
       })
     } catch (error) {
-      // Check if it's an active event error
-      const payload = error.payload || {}
-      if (payload.reason === 'active_event') {
-        const details = payload.details || {}
-        const participants = details.participant_count || 0
-        const waitlisted = details.waitlist_count || 0
-        setFeedback({
-          type: 'error',
-          message: `Cannot delete active event. It has ${participants} participant(s) and ${waitlisted} waitlisted. Please wait until the event is finished.`,
-        })
-      } else {
-        setFeedback({
-          type: 'error',
-          message: error.message || t('adminPage.deleteError'),
-        })
-      }
+      setFeedback({
+        type: 'error',
+        message: error.message || t('adminPage.deleteError'),
+      })
     } finally {
       setDeletingEventId('')
     }

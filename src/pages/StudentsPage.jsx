@@ -541,7 +541,7 @@ const CSS = `
 
 .sp-root {
   display: grid;
-  grid-template-columns: 220px minmax(0,1fr) 280px;
+  grid-template-columns: 160px minmax(0,1fr) 200px;
   gap: 0;
   min-height: 100vh;
   background: #f2f0ec;
@@ -554,7 +554,7 @@ const CSS = `
   background: #fff;
   border-right: 1px solid #e9e6e0;
   min-height: 100vh;
-  padding: 20px 14px;
+  padding: 18px 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -643,8 +643,8 @@ const CSS = `
 
 /* ── MAIN ── */
 .sp-main {
-  padding: 32px 28px 60px;
-  display: flex; flex-direction: column; gap: 22px;
+  padding: 32px 40px 60px;
+  display: flex; flex-direction: column; gap: 28px;
   min-width: 0;
 }
 
@@ -661,15 +661,15 @@ const CSS = `
 .sp-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0,1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .sp-stat-card {
   background: #fff;
   border: 1.5px solid var(--sc);
   border-radius: 16px;
-  padding: 16px 18px;
-  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  display: flex; align-items: center; gap: 16px;
   box-shadow: 0 1px 4px rgba(0,0,0,.05);
   transition: transform .15s, box-shadow .15s;
 }
@@ -730,13 +730,13 @@ const CSS = `
   background:#f4f1eb; padding:4px 10px; border-radius:999px;
 }
 
-.sp-event-list { padding:12px; display:flex; flex-direction:column; gap:10px; }
+.sp-event-list { padding:16px; display:flex; flex-direction:column; gap:12px; }
 
 /* ── Event card ── */
 .sp-event-card {
-  display:flex; align-items:center; gap:16px;
+  display:flex; align-items:center; gap:18px;
   background:#fff; border:1.5px solid #e9e6e0; border-radius:16px;
-  padding:14px; transition:border-color .14s, box-shadow .14s;
+  padding:16px; transition:border-color .14s, box-shadow .14s;
   cursor:default;
 }
 .sp-event-card:hover { border-color:#c4b9aa; box-shadow:0 2px 12px rgba(0,0,0,.07); }
@@ -881,7 +881,7 @@ const CSS = `
   background: #fff;
   border-left: 1px solid #e9e6e0;
   min-height: 100vh;
-  padding: 28px 16px;
+  padding: 28px 12px;
   display: flex; flex-direction: column; gap: 20px;
   position: sticky; top: 0; overflow-y: auto; max-height: 100vh;
 }

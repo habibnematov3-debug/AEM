@@ -93,17 +93,19 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
       <div className="sp-event-body">
         <div className="sp-event-top">
           <CategoryPill category={event.category} />
-          <button
-            className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
-            onClick={handleLike}
-            disabled={likeLoading}
-            aria-label="Like event"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
-            </svg>
-            {event.likesCount ?? 0}
-          </button>
+          {!isCreator && (
+            <button
+              className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
+              onClick={handleLike}
+              disabled={likeLoading}
+              aria-label="Like event"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
+              </svg>
+              {event.likesCount ?? 0}
+            </button>
+          )}
         </div>
 
         <Link to={`/events/${event.id}`} className="sp-event-name">{event.title}</Link>
@@ -131,7 +133,20 @@ function EventCard({ event, currentUser, onParticipate, onToggleLike, isParticip
 
       <div className="sp-event-action">
         {isCreator ? (
-          <span className="sp-action-mine">Your event</span>
+          <>
+            <span className="sp-action-mine">Your event</span>
+            <button
+              className={`sp-like-btn ${event.isLiked ? 'sp-like-btn--liked' : ''}`}
+              onClick={handleLike}
+              disabled={likeLoading}
+              aria-label="Like event"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 20.5 4.9 13.9A4.95 4.95 0 0 1 12 7.1a4.95 4.95 0 0 1 7.1 6.8L12 20.5Z"/>
+              </svg>
+              {event.likesCount ?? 0}
+            </button>
+          </>
         ) : joined ? (
           <span className="sp-action-joined">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1026,6 +1041,10 @@ const CSS = `
 
 /* ── Action buttons ── */
 .sp-event-action {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
   flex-shrink: 0;
 }
 

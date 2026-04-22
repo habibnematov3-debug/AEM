@@ -966,13 +966,16 @@ const CSS = `
 .sp-like-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  width: 88px;
   background: rgba(255, 255, 255, 0.9);
   border: 2px solid #f1f1f1;
   border-radius: 9999px;
   padding: 6px 14px;
   font-size: 0.9rem;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: #ef4444;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
@@ -1422,6 +1425,11 @@ const CSS = `
   .sp-action-view {
     width: auto;
     justify-content: flex-start;
+  }
+
+  .sp-like-btn {
+    width: auto;
+    min-width: 76px;
   }
 }
 

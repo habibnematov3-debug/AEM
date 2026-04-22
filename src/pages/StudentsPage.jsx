@@ -967,19 +967,118 @@ const CSS = `
 
 /* ── Responsive ── */
 @media (max-width:1200px) {
-  .sp-root { grid-template-columns: 200px minmax(0,1fr) 240px; }
-}
-@media (max-width:1024px) {
-  .sp-root { grid-template-columns: 1fr; }
-  .sp-sidebar-left, .sp-sidebar-right {
-    display:none;
+  .sp-root { 
+    grid-template-columns: 200px minmax(0,1fr) 240px;
+    max-width: 1200px;
   }
-  .sp-stats { grid-template-columns:repeat(2,1fr); }
+  .sp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .sp-headline { font-size: 2rem; }
 }
-@media (max-width:600px) {
-  .sp-main { padding:20px 16px 40px; }
-  .sp-stats { grid-template-columns:1fr 1fr; }
-  .sp-headline { font-size:1.8rem; }
+
+@media (max-width:1024px) {
+  .sp-root { 
+    grid-template-columns: 1fr;
+    padding: 24px 20px 50px;
+    max-width: 100%;
+  }
+  .sp-sidebar-left, .sp-sidebar-right { display: none; }
+  .sp-main { padding: 0; gap: 20px; }
+  .sp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .sp-stat-card { padding: 14px 16px; gap: 12px; }
+  .sp-stat-icon { width: 38px; height: 38px; }
+  .sp-stat-value { font-size: 1.4rem; }
+  .sp-headline { font-size: 1.8rem; }
+  .sp-panel { border-radius: 16px; }
+  .sp-event-card { padding: 12px; gap: 14px; }
+  .sp-event-thumb { width: 100px; height: 72px; }
+  .sp-event-name { font-size: 1rem; }
+}
+
+@media (max-width:768px) {
+  .sp-root { padding: 20px 16px 40px; }
+  .sp-stats { grid-template-columns: 1fr; gap: 10px; }
+  .sp-stat-card { padding: 12px 14px; }
+  .sp-stat-body { gap: 0px; }
+  .sp-stat-label { font-size: .7rem; }
+  .sp-stat-value { font-size: 1.3rem; }
+  .sp-filter-row { gap: 6px; }
+  .sp-filter-pill { padding: 7px 14px; font-size: .8rem; }
+  .sp-panel-header { padding: 16px 18px 0; }
+  .sp-panel-title { font-size: .95rem; }
+  .sp-event-list { padding: 12px 8px; gap: 8px; }
+  .sp-event-card { padding: 10px; border-radius: 14px; }
+  .sp-event-thumb { width: 90px; height: 65px; }
+  .sp-event-body { gap: 5px; }
+  .sp-event-name { font-size: .95rem; }
+  .sp-event-meta { gap: 10px; font-size: .75rem; }
+  .sp-meta-item { font-size: .72rem; }
+  .sp-action-join { padding: 9px 16px; font-size: .8rem; }
+}
+
+@media (max-width:640px) {
+  .sp-root { padding: 18px 14px 36px; }
+  .sp-welcome { font-size: .85rem; }
+  .sp-headline { font-size: 1.6rem; }
+  .sp-sub { font-size: .85rem; }
+  .sp-stats { gap: 8px; }
+  .sp-stat-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 10px 12px; }
+  .sp-stat-icon { width: 36px; height: 36px; }
+  .sp-stat-body { width: 100%; }
+  .sp-stat-label { font-size: .65rem; }
+  .sp-stat-value { font-size: 1.2rem; }
+  .sp-filter-row { gap: 5px; }
+  .sp-filter-pill { padding: 6px 12px; font-size: .75rem; }
+  .sp-search-bar { font-size: .8rem; padding: 8px 12px; }
+  .sp-clear-btn { padding: 3px 8px; font-size: .72rem; }
+  .sp-panel { border-radius: 14px; border: 1px solid #e9e6e0; }
+  .sp-panel-header { flex-direction: column; align-items: flex-start; gap: 8px; padding: 14px 16px 0; }
+  .sp-panel-title { font-size: .9rem; }
+  .sp-panel-count { font-size: .7rem; }
+  .sp-event-list { padding: 10px 6px; gap: 6px; }
+  .sp-event-card { flex-direction: column; align-items: flex-start; padding: 10px; gap: 10px; }
+  .sp-event-thumb { width: 100%; height: 180px; border-radius: 12px; }
+  .sp-event-body { width: 100%; }
+  .sp-event-top { width: 100%; }
+  .sp-event-name { font-size: .95rem; }
+  .sp-event-meta { gap: 8px; font-size: .7rem; }
+  .sp-event-action { width: 100%; }
+  .sp-action-join { width: 100%; justify-content: center; padding: 10px 16px; font-size: .8rem; }
+  .sp-action-view { width: 100%; justify-content: center; }
+  .sp-action-joined, .sp-action-wait { width: 100%; justify-content: center; }
+  .sp-empty { padding: 40px 20px; min-height: 220px; }
+  .sp-empty-icon { font-size: 2rem; }
+  .sp-empty p { font-size: .95rem; }
+  .sp-empty small { font-size: .8rem; }
+}
+
+@media (max-width:480px) {
+  .sp-root { padding: 16px 12px 32px; }
+  .sp-intro { margin-bottom: 12px; }
+  .sp-welcome { font-size: .8rem; margin: 0 0 4px; }
+  .sp-headline { font-size: 1.4rem; margin: 0 0 4px; }
+  .sp-sub { font-size: .8rem; }
+  .sp-stats { gap: 6px; }
+  .sp-stat-card { padding: 8px 10px; }
+  .sp-stat-icon { width: 32px; height: 32px; }
+  .sp-stat-body { gap: 0px; }
+  .sp-stat-label { font-size: .6rem; }
+  .sp-stat-value { font-size: 1.1rem; }
+  .sp-filter-row { gap: 4px; margin-bottom: 8px; }
+  .sp-filter-pill { padding: 5px 10px; font-size: .7rem; border-radius: 999px; }
+  .sp-search-bar { font-size: .75rem; padding: 6px 10px; gap: 6px; border-radius: 10px; }
+  .sp-clear-btn { padding: 2px 6px; font-size: .65rem; }
+  .sp-panel-header { padding: 12px 14px 0; }
+  .sp-panel-title { font-size: .85rem; }
+  .sp-panel-count { font-size: .65rem; }
+  .sp-event-list { padding: 8px 4px; gap: 6px; }
+  .sp-event-card { padding: 8px; }
+  .sp-event-thumb { height: 160px; }
+  .sp-event-name { font-size: .9rem; }
+  .sp-event-meta { gap: 6px; font-size: .65rem; }
+  .sp-action-join { padding: 8px 12px; font-size: .75rem; }
+  .sp-pill { font-size: .6rem; padding: 3px 8px; }
+  .sp-like-btn { font-size: .75rem; padding: 4px 10px; }
+  .sp-like-btn svg { width: 12px; height: 12px; }
 }
 `
 

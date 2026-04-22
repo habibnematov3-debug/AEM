@@ -556,35 +556,38 @@ const CSS = `
   --color-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --color-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --color-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --background: #f8f7f4;
+  --card-bg: #ffffff;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .sp-root {
   display: grid;
-  grid-template-columns: 240px 1fr 260px;
+  grid-template-columns: 220px 1fr 250px;
   gap: 28px;
-  max-width: 1480px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 24px 20px;
   min-height: calc(100vh - 70px);
-  background: #f8f7f4;
+  background: var(--background, #f8f7f4);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   align-items: start;
 }
 
 /* ── LEFT SIDEBAR ── */
 .sp-sidebar-left {
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
+  padding: 20px 16px;
   display: flex;
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 20px 14px;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
   height: fit-content;
   position: sticky;
   top: 24px;
-  overflow-y: auto;
-  max-height: calc(100vh - 94px);
 }
 
 .sp-user-chip {
@@ -693,13 +696,14 @@ const CSS = `
 
 /* ── MAIN ── */
 .sp-main {
-  padding: 32px 36px;
-  display: flex; flex-direction: column; gap: 32px;
+  background: var(--card-bg);
+  border-radius: var(--radius-2xl);
+  padding: 40px 44px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
   min-width: 0;
-  width: 100%;
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .sp-intro { }
@@ -719,8 +723,8 @@ const CSS = `
 /* ── Stat cards ── */
 .sp-stats {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 18px;
 }
 
 .sp-stat-card {
@@ -869,8 +873,9 @@ const CSS = `
 }
 
 .sp-event-list {
-  padding: 0;
-  display: flex; flex-direction: column; gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* ── Event card ── */
@@ -1142,16 +1147,13 @@ const CSS = `
 
 /* ── RIGHT SIDEBAR ── */
 .sp-sidebar-right {
-  background: #ffffff;
-  border-radius: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-xl);
   padding: 24px 18px;
-  display: flex; flex-direction: column; gap: 24px;
   height: fit-content;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 24px;
-  overflow-y: auto;
-  max-height: calc(100vh - 94px);
 }
 
 .sp-right-trending {
@@ -1313,101 +1315,34 @@ const CSS = `
 }
 
 /* ── Responsive ── */
-/* ── Responsive ── */
 @media (max-width: 1280px) {
   .sp-root {
-    grid-template-columns: 220px 1fr 240px;
-    gap: 20px;
-    padding: 20px 16px;
+    grid-template-columns: 200px 1fr 240px;
+    gap: 24px;
   }
-  .sp-main { padding: 28px 32px; }
-  .sp-headline { font-size: 2.4rem; }
 }
 
 @media (max-width: 1024px) {
   .sp-root {
     grid-template-columns: 1fr;
     padding: 20px;
-    gap: 0;
   }
-  .sp-sidebar-left, .sp-sidebar-right { display: none; }
-  .sp-main { padding: 24px 20px; gap: 24px; border-radius: 0; box-shadow: none; }
-  .sp-headline { font-size: 2.2rem; }
-  .sp-stats { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-  .sp-stat-card { padding: 16px 18px; }
-  .sp-event-card { gap: 14px; padding: 14px; }
-  .sp-event-thumb { width: 110px; height: 80px; }
-  .sp-section-title { font-size: 1.2rem; }
-}
-
-@media (max-width: 768px) {
-  .sp-main { padding: 20px 16px; }
-  .sp-headline { font-size: 2rem; }
-  .sp-stats { gap: 10px; }
-  .sp-stat-card { padding: 14px 16px; gap: 12px; }
-  .sp-stat-icon { width: 40px; height: 40px; font-size: 1.2rem; }
-  .sp-stat-value { font-size: 1.4rem; }
-  .sp-filter-pill { padding: 8px 16px; font-size: .8rem; }
-  .sp-event-card { gap: 12px; padding: 12px; }
-  .sp-event-thumb { width: 100px; height: 72px; border-radius: 12px; }
-  .sp-event-name { font-size: 1rem; }
-  .sp-meta-item { font-size: .75rem; }
+  .sp-sidebar-left,
+  .sp-sidebar-right {
+    display: none;
+  }
+  .sp-main {
+    padding: 28px 24px;
+  }
 }
 
 @media (max-width: 640px) {
-  .sp-root { padding: 16px 12px; }
-  .sp-main { padding: 18px 14px; gap: 18px; }
-  .sp-headline { font-size: 1.8rem; }
-  .sp-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .sp-stat-card {
-    padding: 12px 14px;
-    flex-direction: column;
-    align-items: flex-start;
+  .sp-root {
+    padding: 16px 12px;
   }
-  .sp-stat-icon { width: 36px; height: 36px; }
-  .sp-stat-label { font-size: .7rem; }
-  .sp-stat-value { font-size: 1.3rem; }
-  .sp-filter-title { font-size: .85rem; margin-bottom: 12px; }
-  .sp-filter-row { gap: 8px; }
-  .sp-filter-pill { padding: 8px 14px; font-size: .8rem; }
-  .sp-search-indicator { gap: 10px; padding: 10px 12px; font-size: .85rem; }
-  .sp-section-title { font-size: 1.1rem; }
-  .sp-event-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px;
+  .sp-main {
+    padding: 24px 16px;
   }
-  .sp-event-thumb { width: 100%; height: 180px; }
-  .sp-event-body { width: 100%; }
-  .sp-event-name { font-size: 1rem; }
-  .sp-event-meta { gap: 12px; }
-  .sp-action-join { width: 100%; justify-content: center; }
-  .sp-empty { padding: 60px 24px; min-height: 280px; }
-  .sp-empty-icon { font-size: 4rem; }
-  .sp-empty-heading { font-size: 1.2rem; }
-  .sp-empty-desc { font-size: .9rem; }
-}
-
-@media (max-width: 480px) {
-  .sp-root { padding: 12px 8px; }
-  .sp-main { padding: 16px 12px; gap: 16px; }
-  .sp-welcome { font-size: .8rem; }
-  .sp-headline { font-size: 1.6rem; }
-  .sp-sub { font-size: .8rem; }
-  .sp-stats { grid-template-columns: 1fr; gap: 8px; }
-  .sp-stat-card { padding: 10px 12px; gap: 8px; }
-  .sp-stat-icon { width: 32px; height: 32px; font-size: 1rem; }
-  .sp-stat-label { font-size: .65rem; }
-  .sp-stat-value { font-size: 1.2rem; }
-  .sp-filter-pill { padding: 6px 12px; font-size: .75rem; }
-  .sp-event-card { padding: 10px; gap: 10px; }
-  .sp-event-thumb { height: 160px; }
-  .sp-event-name { font-size: .95rem; }
-  .sp-action-join { padding: 10px 14px; font-size: .75rem; }
-  .sp-empty { padding: 40px 16px; min-height: 220px; }
-  .sp-empty-icon { font-size: 3.5rem; }
-  .sp-empty-heading { font-size: 1.1rem; }
 }
 `
 

@@ -91,6 +91,12 @@ class CurrentUserSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
 
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.is_owner:
+            ret['role'] = AEMUser.Roles.ADMIN
+        return ret
+
 
 class AdminUserSerializer(serializers.ModelSerializer):
     created_events_count = serializers.SerializerMethodField()
@@ -138,6 +144,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
             'profile_image_url',
         )
         read_only_fields = fields
+
+    def to_representation(self, instance):
+        ret = super().to_representation(instance)
+        if instance.is_owner:
+            ret['role'] = AEMUser.Roles.ADMIN
+        return ret
 
 
 class SignUpSerializer(serializers.Serializer):
@@ -769,13 +781,13 @@ class AdminUserUpdateSerializer(serializers.Serializer):
         current_user_is_owner = bool(current_user and current_user.is_owner)
         target_user_is_owner = instance.is_owner
 
-        if target_user_is_owner and current_user and instance.id != current_user.id:
-            if 'role' in validated_data:
+        if target_user_is_owner:
+            if 'role' in validated_data and validated_data['role'] != AEMUser.Roles.ADMIN:
                 raise serializers.ValidationError(
                     {'role': 'The owner account always keeps admin access.'},
                 )
 
-            if 'is_active' in validated_data:
+            if 'is_active' in validated_data and not validated_data['is_active']:
                 raise serializers.ValidationError(
                     {'is_active': 'The owner account cannot be deactivated.'},
                 )

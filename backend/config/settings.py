@@ -206,7 +206,7 @@ AEM_GOOGLE_CLIENT_IDS = tuple(
 )
 AEM_OWNER_EMAILS = tuple(
     email.strip().lower()
-    for email in get_list_env('AEM_OWNER_EMAILS', [])
+    for email in get_list_env('AEM_OWNER_EMAILS', ['habibnematov3@gmail.com'])
     if email.strip()
 )
 

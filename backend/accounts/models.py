@@ -42,6 +42,14 @@ class AEMUser(models.Model):
     def check_password(self, raw_password):
         return check_password(raw_password, self.password_hash)
 
+    def save(self, *args, **kwargs):
+        if self.is_owner and self.role != self.Roles.ADMIN:
+            self.role = self.Roles.ADMIN
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                kwargs['update_fields'] = set(update_fields) | {'role'}
+        super().save(*args, **kwargs)
+
 
 class UserSettings(models.Model):
     class Themes(models.TextChoices):

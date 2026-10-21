@@ -135,8 +135,10 @@ def touch_user_presence(user, now=None, force=False):
         return None
 
     current_time = now or timezone.now()
+    role_needs_heal = bool(user.is_owner and user.role != AEMUser.Roles.ADMIN)
     if (
         force
+        or role_needs_heal
         or user.last_seen_at is None
         or current_time - user.last_seen_at >= PRESENCE_HEARTBEAT
     ):
@@ -255,7 +257,7 @@ def get_or_create_google_user(google_profile):
 
 
 def is_admin(user):
-    return user is not None and user.role == AEMUser.Roles.ADMIN
+    return user is not None and (user.role == AEMUser.Roles.ADMIN or user.is_owner)
 
 
 def can_view_event(user, event):
